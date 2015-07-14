@@ -1,0 +1,1 @@
+{"version":3,"sources":["index.js"],"names":[],"mappings":"aAAA,MAAM,CAAC,OAAO,GAAG,CAAC,CAAC,EAAC,CAAC,EAAC,CAAC,CAAC,CAAC,GAAG,CAAC,UAAA,CAAC,UAAI,CAAC,GAAG,CAAC,EAAA,CAAC,CAAC","file":"index.js","sourcesContent":["module.exports = [1,2,3].map(x => x * 2);\r\n"],"sourceRoot":"../"}
