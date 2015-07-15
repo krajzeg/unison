@@ -1,6 +1,8 @@
 var gulp = require('gulp');
 var path = require('path');
 
+gulp.task('default', ['compile']);
+
 gulp.task('test', ['compile'], function() {
 	var mocha = require('gulp-mocha');
 	return gulp.src('dist/test/**/*.js', {read: false})
@@ -23,7 +25,7 @@ function makeES6CompileTask(sourceDirectory) {
 	        .pipe(sourcemaps.init())
 	        .pipe(babel({retainLines: true}))
 	        .pipe(sourcemaps.write('.', {
-	            sourceRoot: '../'
+	            sourceRoot: '../../' + sourceDirectory
 	        }))
 	        .pipe(gulp.dest(destination));		
 	}
