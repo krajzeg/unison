@@ -28,7 +28,29 @@ UnisonNode = (function () {
 
 
     function path() {
-      return this._path;} }, { key: 'state', value: 
+      return this._path;} }, { key: 'id', value: 
+
+
+    function id() {
+      var path = this.path();
+      if (path === '') {
+        throw new Error('The root object has no id.');} else 
+      {
+        return _.last(path.split('.'));}} }, { key: 'parent', value: 
+
+
+
+    function parent() {
+      var path = this.path();
+      if (path === '') {
+        throw new Error('The root object has no parent.');} else 
+      {
+        var pathElements = path.split('.');
+        pathElements.pop();
+        var parentPath = pathElements.join('.');
+
+        return this._unison.grab(parentPath);}} }, { key: 'state', value: 
+
 
 
     function state() {
@@ -59,7 +81,7 @@ UnisonNode = (function () {
 
       // sanity checks
       var state = this.state();
-      expectObject(state, 'Can\'t add child at ' + this.path);
+      expectObject(state, 'Can\'t add child at ' + this._path);
       if (state[id] !== undefined) {
         throw new Error('Can\'t add child \'' + id + '\' at ' + this._path + ' - it already exists.');}
 
@@ -80,7 +102,7 @@ UnisonNode = (function () {
       var state = this.state();
 
       // sanity checks
-      expectObject(state, 'Can\'t remove child at ' + this.path);
+      expectObject(state, 'Can\'t remove child at ' + this._path);
 
       // does it even exist?
       if (state[id] === undefined) {
@@ -96,7 +118,13 @@ UnisonNode = (function () {
       this._unison.trigger(childPath, 'destroyed');
 
       // done
-      return true;} }]);return UnisonNode;})();
+      return true;} }, { key: 'destroy', value: 
+
+
+    function destroy() {
+      // straightforward translation
+      expectObject(this.state(), 'Can\'t destroy ${this._path}');
+      return this.parent().remove(this.id());} }]);return UnisonNode;})();
 
 
 

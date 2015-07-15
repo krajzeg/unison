@@ -127,6 +127,26 @@ describe('remove()', function () {
 
 
 describe('destroy()', function () {
-  it('should remove the object from its parent and return true');
-  it('should break for non-existent nodes');});
+  var $$;
+  beforeEach(function () {
+    $$ = unison.local({ 
+      things: { 
+        screwdriver: { name: 'screwdriver' }, 
+        lemon: { name: 'lemon' } } });});
+
+
+
+
+  it('should remove the object from its parent and return true', function () {
+    $$('things.screwdriver').destroy();
+
+    assert.strictEqual($$('things.screwdriver').state(), undefined);
+    assert.deepEqual($$('things').state(), { 
+      lemon: { name: 'lemon' } });});
+
+
+
+  it('should throw for non-existent nodes', function () {
+    assert.throws(function () {
+      $$('things.bogus').destroy();});});});
 //# sourceMappingURL=basic-updates-test.js.map
