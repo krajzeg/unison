@@ -1,5 +1,4 @@
 var assert = require('chai').assert;
-
 var unison = require('../lib');
 
 describe("Grabbing nodes and their state", () => {

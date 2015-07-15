@@ -1,5 +1,4 @@
 'use strict';var assert = require('chai').assert;
-
 var unison = require('../lib');
 
 describe('Grabbing nodes and their state', function () {
@@ -30,4 +29,4 @@ describe('Grabbing nodes and their state', function () {
   it('should work for deep paths', function () {
     assert.equal($$.grab('relations.wife').state(), 'Jill');
     assert.equal($$.grab('relations.brother').state(), 'Jeff');});});
-//# sourceMappingURL=basic-test.js.map
+//# sourceMappingURL=basic-reading-test.js.map

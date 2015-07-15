@@ -9,9 +9,20 @@ gulp.task('test', ['compile'], function() {
 			.pipe(mocha());
 });
 
-gulp.task('compile', ['compile-lib', 'compile-test'])
-gulp.task('compile-lib', makeES6CompileTask('lib'));
-gulp.task('compile-test', makeES6CompileTask('test'));
+gulp.task('compile', ['compile-lib', 'compile-test']);
+
+gulp.task('clean-lib', makeCleanTask('dist/lib'));
+gulp.task('compile-lib', ['clean-lib'], makeES6CompileTask('lib'));
+gulp.task('clean-test', makeCleanTask('dist/test'));
+gulp.task('compile-test', ['clean-test'], makeES6CompileTask('test'));
+
+
+function makeCleanTask(directory) {
+  var del = require('del');
+  return function(cb) {
+    del(directory, cb);
+  }
+}
 
 function makeES6CompileTask(sourceDirectory) {
 	var sources = path.join(sourceDirectory, '**/*.js');
@@ -21,12 +32,12 @@ function makeES6CompileTask(sourceDirectory) {
 		var babel = require('gulp-babel');
 		var sourcemaps = require('gulp-sourcemaps');
 
-	    return gulp.src(sources)
-	        .pipe(sourcemaps.init())
-	        .pipe(babel({retainLines: true}))
-	        .pipe(sourcemaps.write('.', {
-	            sourceRoot: '../../' + sourceDirectory
-	        }))
-	        .pipe(gulp.dest(destination));		
+    return gulp.src(sources)
+        .pipe(sourcemaps.init())
+        .pipe(babel({retainLines: true}))
+        .pipe(sourcemaps.write('.', {
+            sourceRoot: '../../' + sourceDirectory
+        }))
+        .pipe(gulp.dest(destination));
 	}
 }
