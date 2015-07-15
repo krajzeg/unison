@@ -3,29 +3,39 @@
 
 Unison = (function () {
   function Unison() {var initialState = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];_classCallCheck(this, Unison);
-    this.state = initialState;}_createClass(Unison, [{ key: 'grab', value: 
+    this._state = initialState;
+    this._nextId = 1;}_createClass(Unison, [{ key: 'grab', value: 
 
 
     function grab(path) {
       return new UnisonNode(this, path);} }, { key: 'trigger', value: 
 
 
-    function trigger(path, event) {} }]);return Unison;})();exports['default'] = Unison;var 
+    function trigger(path, event) {} }, { key: 'nextId', value: 
+
+
+
+    function nextId() {
+      return this._nextId++;} }]);return Unison;})();exports['default'] = Unison;var 
 
 
 
 
 UnisonNode = (function () {
   function UnisonNode(unison, path) {_classCallCheck(this, UnisonNode);
-    this.unison = unison;
-    this.path = path;}_createClass(UnisonNode, [{ key: 'state', value: 
+    this._unison = unison;
+    this._path = path;}_createClass(UnisonNode, [{ key: 'path', value: 
+
+
+    function path() {
+      return this._path;} }, { key: 'state', value: 
 
 
     function state() {
-      if (this.path === '') {
-        return this.unison.state;} else 
+      if (this._path === '') {
+        return this._unison._state;} else 
       {
-        return _.get(this.unison.state, this.path);}} }, { key: 'update', value: 
+        return _.get(this._unison._state, this._path);}} }, { key: 'update', value: 
 
 
 
@@ -34,5 +44,32 @@ UnisonNode = (function () {
       if (state === undefined) return;
 
       _.extend(state, props);
-      this.unison.trigger(this.path, 'updated');} }]);return UnisonNode;})();module.exports = exports['default']; // nothing for now
+      this._unison.trigger(this._path, 'updated');} }, { key: 'add', value: 
+
+
+    function add() {
+      // extract arguments (either (child) or (id, child))
+      var id = undefined, child = undefined;for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}
+      if (args.length == 2) {
+        id = args[0];child = args[1];} else 
+      {
+        child = args[0];
+        id = this._unison.nextId();}
+
+
+      // can't add if it already exists
+      if (this.state()[id] !== undefined) {
+        throw new Error('Can\'t add child \'' + id + '\' at ' + this._path + ' - it already exists.');}
+
+
+      // add it
+      this.state()[id] = child;
+
+      // trigger events
+      var childPath = [this._path, id].join('.');
+      this._unison.trigger(this._path, 'childAdded', id);
+      this._unison.trigger(childPath, 'created');
+
+      // return the path to the newly created child
+      return childPath;} }]);return UnisonNode;})();module.exports = exports['default']; // nothing for now
 //# sourceMappingURL=base.js.map
