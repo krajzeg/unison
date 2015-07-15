@@ -77,15 +77,53 @@ describe('add()', function () {
 
   it('should throw on non-existent nodes', function () {
     assert.throws(function () {
-      $$('bogus').add({ something: 'here' });});});});
+      $$('bogus').add({ something: 'here' });});});
+
+
+
+  it('should throw when adding to a non-object', function () {
+    assert.throws(function () {
+      $$('things.screwdriver.name').add({ something: 'here' });});});});
 
 
 
 
 describe('remove()', function () {
-  it('should remove existing children and return true');
-  it('should return false if we attempt to remove a non-existent child');
-  it('should break on non-existent nodes');});
+  var $$;
+  beforeEach(function () {
+    $$ = unison.local({ 
+      things: { 
+        screwdriver: { name: 'screwdriver' }, 
+        lemon: { name: 'lemon' } } });});
+
+
+
+
+  it('should remove existing children and return true', function () {
+    var removed = $$('things').remove('screwdriver');
+    assert.strictEqual(removed, true);
+    assert.strictEqual($$('things.screwdriver').state(), undefined);
+    assert.deepEqual($$('things').state(), { 
+      lemon: { name: 'lemon' } });});
+
+
+
+  it('should return false if we attempt to remove a non-existent child', function () {
+    var removed = $$('things').remove('leafblower');
+    assert.strictEqual(removed, false);});
+
+
+  it('should throw on non-existent nodes', function () {
+    assert.throws(function () {
+      $$('bogus').remove('makes-no-sense');});});
+
+
+
+  it('should throw when removing from non-objects', function () {
+    assert.throws(function () {
+      $$('things.screwdriver.name').remove('makes-no-sense');});});});
+
+
 
 
 describe('destroy()', function () {

@@ -57,13 +57,15 @@ UnisonNode = (function () {
         id = this._unison.nextId();}
 
 
-      // can't add if it already exists
-      if (this.state()[id] !== undefined) {
+      // sanity checks
+      var state = this.state();
+      expectObject(state, 'Can\'t add child at ' + this.path);
+      if (state[id] !== undefined) {
         throw new Error('Can\'t add child \'' + id + '\' at ' + this._path + ' - it already exists.');}
 
 
       // add it
-      this.state()[id] = child;
+      state[id] = child;
 
       // trigger events
       var childPath = [this._path, id].join('.');
@@ -71,5 +73,37 @@ UnisonNode = (function () {
       this._unison.trigger(childPath, 'created');
 
       // return the path to the newly created child
-      return childPath;} }]);return UnisonNode;})();module.exports = exports['default']; // nothing for now
+      return childPath;} }, { key: 'remove', value: 
+
+
+    function remove(id) {
+      var state = this.state();
+
+      // sanity checks
+      expectObject(state, 'Can\'t remove child at ' + this.path);
+
+      // does it even exist?
+      if (state[id] === undefined) {
+        return false;}
+
+
+      // it does, let's remove it
+      delete state[id];
+
+      // trigger events
+      var childPath = [this._path, id].join('.');
+      this._unison.trigger(this._path, 'childRemoved', id);
+      this._unison.trigger(childPath, 'destroyed');
+
+      // done
+      return true;} }]);return UnisonNode;})();
+
+
+
+function expectObject(state, msg) {
+  if (state === undefined) {
+    throw new Error(msg + ' - node does not exist.');}
+
+  if (typeof state != 'object') {
+    throw new Error(msg + ' - \'' + state + '\' is not an object.');}}module.exports = exports['default']; // nothing for now
 //# sourceMappingURL=base.js.map
