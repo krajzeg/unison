@@ -66,6 +66,8 @@ var Unison = (function () {
           _this.collectEvents(childPath, directEvent, childEvent, acc);
         }
       });
+
+      return acc;
     }
   }, {
     key: 'nextId',
@@ -135,7 +137,7 @@ var UnisonEvents = (function () {
       var _this2 = this;
 
       _.each(events, function (event) {
-        _this2.trigger.apply(event);
+        _this2.trigger.apply(_this2, event);
       });
     }
   }]);
@@ -165,6 +167,11 @@ var UnisonNode = (function () {
     key: 'parent',
     value: function parent() {
       return this._unison.grab(parentPath(this.path()));
+    }
+  }, {
+    key: 'child',
+    value: function child(id) {
+      return this._unison.grab([this._path, id].join('.'));
     }
   }, {
     key: 'state',

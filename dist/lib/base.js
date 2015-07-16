@@ -26,9 +26,11 @@ Unison = (function () {
       _.each(object, function (key, value) {
         if (typeof value === 'object' && !(value instanceof Array)) {
           // that's a child, trigger childAdded and recurse into it
-          _this.collectEvents(childPath, directEvent, childEvent, acc);}});} }, { key: 'nextId', value: 
+          _this.collectEvents(childPath, directEvent, childEvent, acc);}});
 
 
+
+      return acc;} }, { key: 'nextId', value: 
 
 
     function nextId() {
@@ -76,7 +78,7 @@ UnisonEvents = (function () {
 
     function triggerAll(events) {var _this2 = this;
       _.each(events, function (event) {
-        _this2.trigger.apply(event);});} }]);return UnisonEvents;})();var 
+        _this2.trigger.apply(_this2, event);});} }]);return UnisonEvents;})();var 
 
 
 
@@ -96,7 +98,11 @@ UnisonNode = (function () {
 
 
     function parent() {
-      return this._unison.grab(parentPath(this.path()));} }, { key: 'state', value: 
+      return this._unison.grab(parentPath(this.path()));} }, { key: 'child', value: 
+
+
+    function child(id) {
+      return this._unison.grab([this._path, id].join('.'));} }, { key: 'state', value: 
 
 
     function state() {
