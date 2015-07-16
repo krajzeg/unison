@@ -1,0 +1,28 @@
+{
+  "name": "unison",
+  "version": "1.0.0",
+  "homepage": "https://github.com/krajzeg/unison",
+  "authors": [
+    "Jakub Wasilewski <wasyl@wasyl.eu>"
+  ],
+  "description": "Library for keeping mutable server state synchronized with multiple clients and their views.",
+  "main": "dist/browser/main.js",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "sync",
+    "server",
+    "client",
+    "view",
+    "state"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

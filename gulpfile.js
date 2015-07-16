@@ -9,13 +9,14 @@ gulp.task('test', ['compile'], function() {
 			.pipe(mocha());
 });
 
-gulp.task('compile', ['compile-lib', 'compile-test']);
+gulp.task('compile', ['compile-browser', 'compile-lib', 'compile-test']);
 
 gulp.task('clean-lib', makeCleanTask('dist/lib'));
 gulp.task('compile-lib', ['clean-lib'], makeES6CompileTask('lib'));
 gulp.task('clean-test', makeCleanTask('dist/test'));
 gulp.task('compile-test', ['clean-test'], makeES6CompileTask('test'));
 
+gulp.task('compile-browser', makeBrowserifyTask('lib/browser.js'));
 
 function makeCleanTask(directory) {
   var del = require('del');
@@ -40,4 +41,25 @@ function makeES6CompileTask(sourceDirectory) {
         }))
         .pipe(gulp.dest(destination));
 	}
+}
+
+function makeBrowserifyTask(sourceFile) {
+	var browserify = require('browserify');
+	var babelify = require('babelify');
+	var source = require('vinyl-source-stream');
+
+	return function() {
+	    return browserify({
+		    entries: [sourceFile],
+		    transform: [babelify]
+	    })
+	    .bundle()
+	    .on('error', logErrors)
+	    .pipe(source('main.js'))
+	    .pipe(gulp.dest('./dist/browser'));
+	};
+}
+
+function logErrors(e) {
+	console.error("Build error:", e.message);
 }
