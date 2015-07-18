@@ -6,11 +6,19 @@ Unison = (function () {
     this._state = initialState;
     this._nextId = 1;
 
-    this._events = new UnisonEvents();}_createClass(Unison, [{ key: 'grab', value: 
+    this._events = new UnisonEvents();
+
+    // each Unison object has its own pseudo-class for nodes that can be extended by plugins
+    this._nodeBase = Object.create(UnisonNode.prototype);
+    this._makeNode = function (unison, path) {
+      UnisonNode.apply(this, [unison, path]);};
+
+    this._makeNode.prototype = this._nodeBase;}_createClass(Unison, [{ key: 'grab', value: 
 
 
     function grab(path) {
-      return new UnisonNode(this, path);} }, { key: 'listen', value: 
+      var Node = this._makeNode;
+      return new Node(this, path);} }, { key: 'listen', value: 
 
 
     function listen() {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}return this._events.listen.apply(this._events, args);} }, { key: 'unlisten', value: 

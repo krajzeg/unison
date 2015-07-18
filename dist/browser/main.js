@@ -21,12 +21,20 @@ var Unison = (function () {
     this._nextId = 1;
 
     this._events = new UnisonEvents();
+
+    // each Unison object has its own pseudo-class for nodes that can be extended by plugins
+    this._nodeBase = Object.create(UnisonNode.prototype);
+    this._makeNode = function (unison, path) {
+      UnisonNode.apply(this, [unison, path]);
+    };
+    this._makeNode.prototype = this._nodeBase;
   }
 
   _createClass(Unison, [{
     key: 'grab',
     value: function grab(path) {
-      return new UnisonNode(this, path);
+      var Node = this._makeNode;
+      return new Node(this, path);
     }
   }, {
     key: 'listen',
@@ -318,22 +326,44 @@ window.Unison = require('./index');
 },{"./index":3}],3:[function(require,module,exports){
 'use strict';
 
+var _ = require('lodash');
 var BaseUnison = require('./base');
 var functionize = require('./util').functionize;
 
 module.exports = {
   local: function local(initialState, options) {
-    return functionize(new BaseUnison(initialState, options), 'grab', ['grab']);
+    var base = new BaseUnison(initialState, options);
+    var unison = functionize(base, 'grab', ['grab']);
+
+    unison.plugin = addPlugin;
+
+    return unison;
   }
 };
 
-},{"./base":1,"./util":4}],4:[function(require,module,exports){
+// ===========================
+
+function addPlugin(plugin) {
+  var _this = this;
+
+  var additions = plugin(this) || {};
+
+  _.each(additions.methods || {}, function (method, name) {
+    console.log(_this);
+    _this[name] = method;
+  });
+
+  _.each(additions.nodeMethods || {}, function (method, name) {
+    _this.base._nodeBase[name] = method;
+  });
+}
+
+},{"./base":1,"./util":4,"lodash":5}],4:[function(require,module,exports){
 "use strict";
 
 module.exports = {
   functionize: function functionize(object, defaultMethod, methods) {
-    // turns an object into a function that calls a chosen method by default,
-    // and exposes the other methods correctly
+    // turn the object into a function that calls a chosen method by default
     var fn = function fn() {
       for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
         args[_key] = arguments[_key];
@@ -341,6 +371,7 @@ module.exports = {
 
       return object[defaultMethod].apply(object, args);
     };
+    // expose other methods on the function object
     methods.map(function (methodName) {
       fn[methodName] = function () {
         for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
@@ -351,6 +382,10 @@ module.exports = {
       };
     });
 
+    // remember what we're based on
+    fn.base = object;
+
+    // return!
     return fn;
   }
 };
