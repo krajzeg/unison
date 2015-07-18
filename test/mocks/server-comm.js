@@ -24,6 +24,12 @@ export default class ServerCommMock {
     return this.sentPerClient[clientId] || [];
   }
 
+  containsMessageFor(clientId, message) {
+    return this.sentPerClient[clientId].some((msg) =>
+      JSON.stringify(msg) == JSON.stringify(message)
+    );
+  }
+
   pushClientMessage(clientId, message) {
     let msgString = JSON.stringify(message);
     this.callbacks.onReceive(clientId, msgString);

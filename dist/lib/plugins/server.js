@@ -37,12 +37,12 @@ ServerPlugin = (function () {
       this.clients.splice(position, 1);} }, { key: "receive", value: 
 
 
-    function receive(msgString) {var _this2 = this;
+    function receive(client, msgString) {var _this2 = this;
       (0, _clientServerBase.parseMessage)(msgString, function (message) {var _message = _slicedToArray(
         message, 1);var messageType = _message[0];
         switch (messageType) {
           case _clientServerBase.INTENT:
-            return _this2.applyIntent(message);
+            return _this2.applyIntent(client, message);
           case _clientServerBase.COMMAND:
             throw new Error("Servers do not obey commands.");}});} }, { key: "sendToAll", value: 
 
@@ -56,8 +56,12 @@ ServerPlugin = (function () {
 
 
 
-    function applyIntent(_ref2) {var _ref22 = _slicedToArray(_ref2, 4);var code = _ref22[0];var intentName = _ref22[1];var objectPath = _ref22[2];var parameters = _ref22[3];
-      var intentFn = this.intents[intent];} }, { key: "generateCommandMethods", value: 
+    function applyIntent(client, _ref2) {var _ref22 = _slicedToArray(_ref2, 4);var code = _ref22[0];var intentName = _ref22[1];var objectPath = _ref22[2];var parameters = _ref22[3];
+      var intentFn = this.intents[intentName];
+      var $$ = this.$$, target = $$(objectPath);
+
+      var fullParameters = parameters.concat(client);
+      return intentFn.apply(target, fullParameters);} }, { key: "generateCommandMethods", value: 
 
 
     function generateCommandMethods() {var _this4 = this;

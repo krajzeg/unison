@@ -21,7 +21,13 @@
 
 
     function messagesSentTo(clientId) {
-      return this.sentPerClient[clientId] || [];} }, { key: "pushClientMessage", value: 
+      return this.sentPerClient[clientId] || [];} }, { key: "containsMessageFor", value: 
+
+
+    function containsMessageFor(clientId, message) {
+      return this.sentPerClient[clientId].some(function (msg) {return (
+        JSON.stringify(msg) == JSON.stringify(message));});} }, { key: "pushClientMessage", value: 
+
 
 
     function pushClientMessage(clientId, message) {
