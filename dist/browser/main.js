@@ -349,7 +349,6 @@ function addPlugin(plugin) {
   var additions = plugin(this) || {};
 
   _.each(additions.methods || {}, function (method, name) {
-    console.log(_this);
     _this[name] = method;
   });
 
