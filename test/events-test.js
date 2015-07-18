@@ -2,7 +2,7 @@ let assert = require('chai').assert;
 let sinon = require('sinon');
 let unison = require('../lib');
 
-describe("Update listeners", () => {
+describe("When objects are updated", () => {
   let $$;
   beforeEach(() => {
     $$ = unison.local({
@@ -10,7 +10,7 @@ describe("Update listeners", () => {
     });
   });
 
-  it("should be triggered once after each update", () => {
+  it("events should be triggered once for each update", () => {
     let callback = sinon.spy();
 
     $$('bird').on('updated', callback);
@@ -19,6 +19,92 @@ describe("Update listeners", () => {
 
     assert.ok(callback.calledTwice);
   });
+});
 
+describe("When children are added", () => {
+  let $$;
+  beforeEach(() => {
+    $$ = unison.local({
+      food: {}
+    });
+  });
 
+  it("a correct 'childAdded' event should trigger on its parent", () => {
+    let spy = sinon.spy();
+
+    $$('food').on('childAdded', spy);
+    $$('food').add('cucumber', {name: 'cucumber'});
+
+    assert.ok(spy.calledOnce);
+    assert.ok(spy.calledWith('cucumber'));
+  });
+
+  it("a correct 'created' event should trigger on the child", () => {
+    let spy = sinon.spy();
+
+    $$('food.cucumber').on('created', spy);
+    $$('food').add('cucumber', {name: 'cucumber'});
+
+    assert.ok(spy.calledOnce);
+  });
+
+  it("'childAdded' and 'created' events should trigger for nested objects", () => {
+    let created = sinon.spy(), childAdded = sinon.spy(), deepCreated = sinon.spy();
+
+    $$('food.apple.seed.inside').on('created', deepCreated);
+    $$('food.apple.seed.outside').on('created', deepCreated);
+    $$('food.apple.seed').on('created', created);
+    $$('food.apple').on('childAdded', childAdded);
+
+    $$('food').add('apple', { seed: { inside: {}, outside: {} } });
+
+    assert.ok(created.calledOnce);
+    assert.ok(childAdded.calledOnce);
+    assert.ok(deepCreated.calledTwice);
+  });
+});
+
+describe("When children are removed", () => {
+  let $$;
+  beforeEach(() => {
+    $$ = unison.local({
+      food: {
+        apple: {seed: {inside: {}, outside: {}}}
+      }
+    });
+  });
+
+  it("a correct 'childRemoved' event should trigger on its parent", () => {
+    let spy = sinon.spy();
+
+    $$('food.apple.seed').on('childRemoved', spy);
+    $$('food.apple.seed.inside').destroy();
+
+    assert.ok(spy.calledOnce);
+    assert.ok(spy.calledWith('inside'));
+  });
+
+  it("a correct 'destroyed' event should trigger on the child", () => {
+    let spy = sinon.spy();
+
+    $$('food.apple.seed.inside').on('destroyed', spy);
+    $$('food.apple.seed.inside').destroy();
+
+    assert.ok(spy.calledOnce);
+  });
+
+  it("'childRemoved' and 'destroyed' events should trigger for nested objects", () => {
+    let destroyed = sinon.spy(), childRemoved = sinon.spy(), deepDestroyed = sinon.spy();
+
+    $$('food.apple.seed.inside').on('destroyed', deepDestroyed);
+    $$('food.apple.seed.outside').on('destroyed', deepDestroyed);
+    $$('food.apple.seed').on('destroyed', destroyed);
+    $$('food.apple').on('childRemoved', childRemoved);
+
+    $$('food.apple').destroy();
+
+    assert.ok(destroyed.calledOnce);
+    assert.ok(childRemoved.calledOnce);
+    assert.ok(deepDestroyed.calledTwice);
+  });
 });

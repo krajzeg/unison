@@ -58,12 +58,12 @@ var Unison = (function () {
       var object = _.get(this._state, path);
 
       acc.push([parent, childEvent, id]);
-      acc.push([object, directEvent]);
+      acc.push([path, directEvent]);
 
-      _.each(object, function (key, value) {
-        if (typeof value === 'object' && !(value instanceof Array)) {
+      _.each(object, function (subchild, id) {
+        if (typeof subchild === 'object' && !(subchild instanceof Array)) {
           // that's a child, trigger childAdded and recurse into it
-          _this.collectEvents(childPath, directEvent, childEvent, acc);
+          _this.collectEvents(childPath(path, id), directEvent, childEvent, acc);
         }
       });
 
@@ -302,6 +302,10 @@ function parentPath(path) {
     var pathElements = path.split('.');
     return pathElements.slice(0, pathElements.length - 1).join('.');
   }
+}
+
+function childPath(path, id) {
+  return [path, id].join('.');
 }
 module.exports = exports['default'];
 
