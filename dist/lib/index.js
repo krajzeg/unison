@@ -26,5 +26,8 @@ function addPlugin(plugin) {var _this = this;
 
 
   _.each(additions.nodeMethods || {}, function (method, name) {
-    _this.base._nodeBase[name] = method;});}
+    _this.base._nodeBase[name] = method;});
+
+
+  return this;}
 //# sourceMappingURL=index.js.map

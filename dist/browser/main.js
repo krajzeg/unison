@@ -356,6 +356,8 @@ function addPlugin(plugin) {
   _.each(additions.nodeMethods || {}, function (method, name) {
     _this.base._nodeBase[name] = method;
   });
+
+  return this;
 }
 
 },{"./base":1,"./util":4,"lodash":5}],4:[function(require,module,exports){

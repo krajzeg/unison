@@ -1,5 +1,6 @@
 var gulp = require('gulp');
 var path = require('path');
+var _ = require('lodash');
 
 gulp.task('default', ['compile']);
 
@@ -26,21 +27,28 @@ function makeCleanTask(directory) {
 }
 
 function makeES6CompileTask(sourceDirectory) {
-	var sources = path.join(sourceDirectory, '**/*.js');
-	var destination = path.join('dist', sourceDirectory);
+  var sources = path.join(sourceDirectory, '**/*.js');
+  var destination = path.join('dist', sourceDirectory);
 
-	return function() {
-		var babel = require('gulp-babel');
-		var sourcemaps = require('gulp-sourcemaps');
+  return function() {
+    var babel = require('gulp-babel');
+    var sourcemaps = require('gulp-sourcemaps');
 
     return gulp.src(sources)
-        .pipe(sourcemaps.init())
-        .pipe(babel({retainLines: true}))
-        .pipe(sourcemaps.write('.', {
-            sourceRoot: '../../' + sourceDirectory
-        }))
-        .pipe(gulp.dest(destination));
-	}
+      .pipe(sourcemaps.init())
+      .pipe(babel({
+        retainLines: true
+      }))
+      .pipe(sourcemaps.write('.', {
+        sourceRoot: function(file) {
+          // we have to go the right number of directories up
+          var depth = file.relative.split(path.sep).length + 1;
+          var rootRelativePath = _.range(0, depth).map(function() { return '..' + path.sep;} ).join('');
+          return rootRelativePath + sourceDirectory;
+        }
+      }))
+      .pipe(gulp.dest(destination));
+  }
 }
 
 function makeBrowserifyTask(sourceFile) {
