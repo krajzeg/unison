@@ -67,4 +67,20 @@ describe("Unison network client", () => {
 
     // if we reach the end of the test, we should be OK
   });
+
+  it("should handle _seed commands out of the box", () => {
+    let comm = new CommunicationMock();
+    let $$ = unison
+      .local({})
+      .plugin(client({
+        communication: comm,
+        commands: {},
+        intents: {}
+      }));
+
+    comm.pushServerCommand('_seed', '', {bird: {wingspan: 6}, seeded: true});
+
+    assert.equal($$('seeded').state(), true);
+    assert.equal($$('bird').state().wingspan, 6);
+  });
 });

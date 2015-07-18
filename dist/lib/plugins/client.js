@@ -12,6 +12,8 @@ client;function _classCallCheck(instance, Constructor) {if (!(instance instanceo
 ClientPlugin = (function () {
   function ClientPlugin(_ref) {var _this = this;var communication = _ref.communication;var _ref$intents = _ref.intents;var intents = _ref$intents === undefined ? {} : _ref$intents;var _ref$commands = _ref.commands;var commands = _ref$commands === undefined ? {} : _ref$commands;_classCallCheck(this, ClientPlugin);
     _.extend(this, { communication: communication, intents: intents, commands: commands });
+
+    _.extend(this.commands, _clientServerBase.BUILTIN_COMMANDS);
     this.communication.onReceive(function (msg) {return _this.receive(msg);});}_createClass(ClientPlugin, [{ key: "send", 
 
 

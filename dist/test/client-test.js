@@ -66,6 +66,21 @@ describe('Unison network client', function () {
     comm.pushServerCommand('bogusCommand', 'bogusObject', 'bogus'); // non-existent command
 
     // if we reach the end of the test, we should be OK
-  });}); // body irrelevant on the client
+  });
+
+  it('should handle _seed commands out of the box', function () {
+    var comm = new CommunicationMock();
+    var $$ = unison.
+    local({}).
+    plugin(client({ 
+      communication: comm, 
+      commands: {}, 
+      intents: {} }));
+
+
+    comm.pushServerCommand('_seed', '', { bird: { wingspan: 6 }, seeded: true });
+
+    assert.equal($$('seeded').state(), true);
+    assert.equal($$('bird').state().wingspan, 6);});}); // body irrelevant on the client
 // body irrelevant on the client
 //# sourceMappingURL=client-test.js.map

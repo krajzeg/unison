@@ -360,36 +360,44 @@ function addPlugin(plugin) {
 }
 
 },{"./base":1,"./util":4,"lodash":5}],4:[function(require,module,exports){
-"use strict";
+'use strict';
 
-module.exports = {
-  functionize: function functionize(object, defaultMethod, methods) {
-    // turn the object into a function that calls a chosen method by default
-    var fn = function fn() {
-      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+exports.functionize = functionize;
+exports.isObject = isObject;
+
+function functionize(object, defaultMethod, methods) {
+  // turn the object into a function that calls a chosen method by default
+  var fn = function fn() {
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    return object[defaultMethod].apply(object, args);
+  };
+  // expose other methods on the function object
+  methods.map(function (methodName) {
+    fn[methodName] = function () {
+      for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        args[_key2] = arguments[_key2];
       }
 
-      return object[defaultMethod].apply(object, args);
+      return object[methodName].apply(object, args);
     };
-    // expose other methods on the function object
-    methods.map(function (methodName) {
-      fn[methodName] = function () {
-        for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-          args[_key2] = arguments[_key2];
-        }
+  });
 
-        return object[methodName].apply(object, args);
-      };
-    });
+  // remember what we're based on
+  fn.base = object;
 
-    // remember what we're based on
-    fn.base = object;
+  // return!
+  return fn;
+}
 
-    // return!
-    return fn;
-  }
-};
+function isObject(thing) {
+  return typeof thing == 'object' && !thing instanceof Array;
+}
 
 },{}],5:[function(require,module,exports){
 (function (global){
