@@ -326,20 +326,22 @@ window.Unison = require('./index');
 },{"./index":3}],3:[function(require,module,exports){
 'use strict';
 
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+exports['default'] = unison;
 var _ = require('lodash');
 var BaseUnison = require('./base');
 var functionize = require('./util').functionize;
 
-module.exports = {
-  local: function local(initialState, options) {
-    var base = new BaseUnison(initialState, options);
-    var unison = functionize(base, 'grab', ['grab']);
+function unison(initialState, options) {
+  var base = new BaseUnison(initialState, options);
+  var unison = functionize(base, 'grab', ['grab']);
 
-    unison.plugin = addPlugin;
+  unison.plugin = addPlugin;
 
-    return unison;
-  }
-};
+  return unison;
+}
 
 // ===========================
 
@@ -358,6 +360,7 @@ function addPlugin(plugin) {
 
   return this;
 }
+module.exports = exports['default'];
 
 },{"./base":1,"./util":4,"lodash":5}],4:[function(require,module,exports){
 'use strict';

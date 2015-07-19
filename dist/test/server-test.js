@@ -8,8 +8,7 @@ describe('Unison network server', function () {
   it('should translate command methods into local changes and network messages to all clients', function () {
     var comm = new CommunicationMock();
 
-    var $$ = unison.
-    local({ bird: {} }).
+    var $$ = unison({ bird: {} }).
     plugin(server({ 
       communication: comm, 
       commands: { 
@@ -37,8 +36,7 @@ describe('Unison network server', function () {
   it('should translate intents from clients into command executions via the intent methods', function () {
     var comm = new CommunicationMock();
 
-    var $$ = unison.
-    local({ bird: {} }).
+    var $$ = unison({ bird: {} }).
     plugin(server({ 
       communication: comm, 
       commands: { 
@@ -68,8 +66,7 @@ describe('Unison network server', function () {
   it('should not send commands to clients that have already detached', function () {
     var comm = new CommunicationMock();
 
-    var $$ = unison.
-    local({ bird: {} }).
+    var $$ = unison({ bird: {} }).
     plugin(server({ 
       communication: comm, 
       commands: { 
@@ -92,8 +89,7 @@ describe('Unison network server', function () {
   it('should send a \'seed\' command with the current state to newly attached clients', function () {
     var comm = new CommunicationMock();
 
-    var $$ = unison.
-    local({ bird: { wingspan: 6 } }).
+    var $$ = unison({ bird: { wingspan: 6 } }).
     plugin(server({ 
       communication: comm, 
       commands: { 

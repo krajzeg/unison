@@ -7,8 +7,7 @@ describe("Unison network client", () => {
   it("should translate intent methods into network messages properly", () => {
     let comm = new CommunicationMock();
 
-    let $$ = unison
-      .local({bird: {}})
+    let $$ = unison({bird: {}})
       .plugin(client({
         communication: comm,
         commands: {},
@@ -33,8 +32,7 @@ describe("Unison network client", () => {
 
   it("should apply commands sent by the server", () => {
     let comm = new CommunicationMock();
-    let $$ = unison
-      .local({bird: {}})
+    let $$ = unison({bird: {}})
       .plugin(client({
         communication: comm,
         commands: {
@@ -52,8 +50,7 @@ describe("Unison network client", () => {
 
   it("should not break on receiving various broken messages", () => {
     let comm = new CommunicationMock();
-    let $$ = unison
-      .local({bird: {}})
+    let $$ = unison({bird: {}})
       .plugin(client({
         communication: comm,
         commands: {}, intents: {}
@@ -70,8 +67,7 @@ describe("Unison network client", () => {
 
   it("should handle _seed commands out of the box", () => {
     let comm = new CommunicationMock();
-    let $$ = unison
-      .local({})
+    let $$ = unison({})
       .plugin(client({
         communication: comm,
         commands: {},

@@ -10,7 +10,7 @@ describe('Grabbing nodes and their state', function () {
       brother: 'Jeff' } };
 
 
-  var $$ = unison.local(state);
+  var $$ = unison(state);
 
   // this all should work
   it('should work for one-element paths', function () {

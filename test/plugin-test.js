@@ -3,7 +3,7 @@ let unison = require('../lib');
 
 describe("Plugins", () => {
   it("should be able to add methods to the core Unison object", () => {
-    let $$ = unison.local({});
+    let $$ = unison({});
 
     $$.plugin(() => {
       return {
@@ -17,7 +17,7 @@ describe("Plugins", () => {
   });
 
   it("should be able to add methods to nodes", () => {
-    let $$ = unison.local({'apple': {}});
+    let $$ = unison({'apple': {}});
     $$.plugin(() => {
       return {
         nodeMethods: {
@@ -30,7 +30,7 @@ describe("Plugins", () => {
   });
 
   it("should be able to affect the Unison object directly if really needed", () => {
-    let $$ = unison.local({});
+    let $$ = unison({});
 
     $$.plugin((unison) => {
       unison.iWasThere = true;

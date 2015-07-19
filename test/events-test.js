@@ -5,7 +5,7 @@ let unison = require('../lib');
 describe("When objects are updated", () => {
   let $$;
   beforeEach(() => {
-    $$ = unison.local({
+    $$ = unison({
       bird: {name: 'eagle'}
     });
   });
@@ -24,7 +24,7 @@ describe("When objects are updated", () => {
 describe("When children are added", () => {
   let $$;
   beforeEach(() => {
-    $$ = unison.local({
+    $$ = unison({
       food: {}
     });
   });
@@ -67,7 +67,7 @@ describe("When children are added", () => {
 describe("When children are removed", () => {
   let $$;
   beforeEach(() => {
-    $$ = unison.local({
+    $$ = unison({
       food: {
         apple: {seed: {inside: {}, outside: {}}}
       }

@@ -5,7 +5,7 @@ var unison = require('../lib');
 describe('When objects are updated', function () {
   var $$ = undefined;
   beforeEach(function () {
-    $$ = unison.local({ 
+    $$ = unison({ 
       bird: { name: 'eagle' } });});
 
 
@@ -24,7 +24,7 @@ describe('When objects are updated', function () {
 describe('When children are added', function () {
   var $$ = undefined;
   beforeEach(function () {
-    $$ = unison.local({ 
+    $$ = unison({ 
       food: {} });});
 
 
@@ -67,7 +67,7 @@ describe('When children are added', function () {
 describe('When children are removed', function () {
   var $$ = undefined;
   beforeEach(function () {
-    $$ = unison.local({ 
+    $$ = unison({ 
       food: { 
         apple: { seed: { inside: {}, outside: {} } } } });});
 

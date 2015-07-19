@@ -4,7 +4,7 @@ var unison = require('../lib');
 describe("update()", () => {
   var $$;
   beforeEach(() => {
-    $$ = unison.local({
+    $$ = unison({
       bird: {
         name: 'eagle'
       }
@@ -41,7 +41,7 @@ describe("update()", () => {
 describe("add()", () => {
   var $$;
   beforeEach(() => {
-    $$ = unison.local({
+    $$ = unison({
       things: {
         screwdriver: {name: "screwdriver"}
       }
@@ -91,7 +91,7 @@ describe("add()", () => {
 describe("remove()", () => {
   var $$;
   beforeEach(() => {
-    $$ = unison.local({
+    $$ = unison({
       things: {
         screwdriver: {name: "screwdriver"},
         lemon: {name: 'lemon'}
@@ -129,7 +129,7 @@ describe("remove()", () => {
 describe("destroy()", () => {
   var $$;
   beforeEach(() => {
-    $$ = unison.local({
+    $$ = unison({
       things: {
         screwdriver: {name: "screwdriver"},
         lemon: {name: 'lemon'}
