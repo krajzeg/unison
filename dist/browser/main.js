@@ -399,7 +399,7 @@ function functionize(object, defaultMethod, methods) {
 }
 
 function isObject(thing) {
-  return typeof thing == 'object' && !thing instanceof Array;
+  return typeof thing == 'object' && !(thing instanceof Array);
 }
 
 },{}],5:[function(require,module,exports){

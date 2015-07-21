@@ -1,5 +1,6 @@
 'use strict';var assert = require('chai').assert;
 var unison = require('../lib');
+var sinon = require('sinon');
 var client = require('../lib/plugins/client');
 var CommunicationMock = require('./mocks/client-comm');
 
@@ -74,9 +75,13 @@ describe('Unison network client', function () {
       intents: {} }));
 
 
+    var listener = sinon.spy();
+    $$('').on('childAdded', listener);
+
     comm.pushServerCommand('_seed', '', { bird: { wingspan: 6 }, seeded: true });
 
     assert.equal($$('seeded').state(), true);
-    assert.equal($$('bird').state().wingspan, 6);});}); // body irrelevant on the client
+    assert.equal($$('bird').state().wingspan, 6);
+    assert.ok(listener.calledOnce);});}); // body irrelevant on the client
 // body irrelevant on the client
 //# sourceMappingURL=client-test.js.map
