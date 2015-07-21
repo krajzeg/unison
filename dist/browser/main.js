@@ -179,7 +179,7 @@ var UnisonNode = (function () {
   }, {
     key: 'child',
     value: function child(id) {
-      return this._unison.grab([this._path, id].join('.'));
+      return this._unison.grab(childPath(this.path(), id));
     }
   }, {
     key: 'state',
@@ -231,11 +231,11 @@ var UnisonNode = (function () {
       state[id] = child;
 
       // trigger events
-      var childPath = [this._path, id].join('.');
-      unison._events.triggerAll(unison.collectEvents(childPath, 'created', 'childAdded'));
+      var pathToChild = childPath(this.path(), id);
+      unison._events.triggerAll(unison.collectEvents(pathToChild, 'created', 'childAdded'));
 
       // return the path to the newly created child
-      return childPath;
+      return pathToChild;
     }
   }, {
     key: 'remove',
@@ -313,7 +313,7 @@ function parentPath(path) {
 }
 
 function childPath(path, id) {
-  return [path, id].join('.');
+  if (path == '') return id;else return [path, id].join('.');
 }
 module.exports = exports['default'];
 
