@@ -1,11 +1,11 @@
 'use strict';var _ = require('lodash');
 var assert = require('chai').assert;
 var unison = require('../lib');
-var server = require('../lib/plugins/server');
+var server = require('../lib').server;
 var CommunicationMock = require('./mocks/server-comm');
 
-describe('Unison network server', function () {
-  it('should translate command methods into local changes and network messages to all clients', function () {
+describe("Unison network server", function () {
+  it("should translate command methods into local changes and network messages to all clients", function () {
     var comm = new CommunicationMock();
 
     var $$ = unison({ bird: {} }).
@@ -33,7 +33,7 @@ describe('Unison network server', function () {
 
 
 
-  it('should translate intents from clients into command executions via the intent methods', function () {
+  it("should translate intents from clients into command executions via the intent methods", function () {
     var comm = new CommunicationMock();
 
     var $$ = unison({ bird: {} }).
@@ -63,7 +63,7 @@ describe('Unison network server', function () {
 
 
 
-  it('should not send commands to clients that have already detached', function () {
+  it("should not send commands to clients that have already detached", function () {
     var comm = new CommunicationMock();
 
     var $$ = unison({ bird: {} }).
@@ -86,7 +86,7 @@ describe('Unison network server', function () {
     assert.deepEqual(frobMessages[0], ['c', 'frob', 'bird', ['lightly']]);});
 
 
-  it('should send a \'seed\' command with the current state to newly attached clients', function () {
+  it("should send a 'seed' command with the current state to newly attached clients", function () {
     var comm = new CommunicationMock();
 
     var $$ = unison({ bird: { wingspan: 6 } }).

@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var assert = require('chai').assert;
 var unison = require('../lib');
-var server = require('../lib/plugins/server');
+var server = require('../lib').server;
 var CommunicationMock = require('./mocks/server-comm');
 
 describe("Unison network server", () => {

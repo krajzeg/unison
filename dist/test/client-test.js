@@ -1,11 +1,11 @@
 'use strict';var assert = require('chai').assert;
 var unison = require('../lib');
+var client = require('../lib').client;
 var sinon = require('sinon');
-var client = require('../lib/plugins/client');
 var CommunicationMock = require('./mocks/client-comm');
 
-describe('Unison network client', function () {
-  it('should translate intent methods into network messages properly', function () {
+describe("Unison network client", function () {
+  it("should translate intent methods into network messages properly", function () {
     var comm = new CommunicationMock();
 
     var $$ = unison({ bird: {} }).
@@ -13,12 +13,12 @@ describe('Unison network client', function () {
       communication: comm, 
       commands: {}, 
       intents: { 
-        frob: function frob(howHard) {}, 
-
-
-        ageBy: function ageBy(howMany, units) {} } }));
-
-
+        frob: function frob(howHard) {
+          // body irrelevant on the client
+        }, 
+        ageBy: function ageBy(howMany, units) {
+          // body irrelevant on the client
+        } } }));
 
 
 
@@ -31,7 +31,7 @@ describe('Unison network client', function () {
 
 
 
-  it('should apply commands sent by the server', function () {
+  it("should apply commands sent by the server", function () {
     var comm = new CommunicationMock();
     var $$ = unison({ bird: {} }).
     plugin(client({ 
@@ -49,7 +49,7 @@ describe('Unison network client', function () {
     assert.equal($$('bird').state().frobbed, 'very hard');});
 
 
-  it('should not break on receiving various broken messages', function () {
+  it("should not break on receiving various broken messages", function () {
     var comm = new CommunicationMock();
     var $$ = unison({ bird: {} }).
     plugin(client({ 
@@ -57,16 +57,16 @@ describe('Unison network client', function () {
       commands: {}, intents: {} }));
 
 
-    comm.pushServerString('['); // broken JSON
-    comm.pushServerString('fw0ur0q923'); // not JSON
-    comm.pushServerString('123'); // not a command or intent
-    comm.pushServerString('[1,2,3,4]'); // bad format
+    comm.pushServerString("["); // broken JSON
+    comm.pushServerString("fw0ur0q923"); // not JSON
+    comm.pushServerString("123"); // not a command or intent
+    comm.pushServerString("[1,2,3,4]"); // bad format
     comm.pushServerCommand('bogusCommand', 'bogusObject', 'bogus'); // non-existent command
 
     // if we reach the end of the test, we should be OK
   });
 
-  it('should handle _seed commands out of the box', function () {
+  it("should handle _seed commands out of the box", function () {
     var comm = new CommunicationMock();
     var $$ = unison({}).
     plugin(client({ 
@@ -82,6 +82,5 @@ describe('Unison network client', function () {
 
     assert.equal($$('seeded').state(), true);
     assert.equal($$('bird').state().wingspan, 6);
-    assert.ok(listener.calledOnce);});}); // body irrelevant on the client
-// body irrelevant on the client
+    assert.ok(listener.calledOnce);});});
 //# sourceMappingURL=client-test.js.map

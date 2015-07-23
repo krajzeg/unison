@@ -1,1 +1,1 @@
-{"version":3,"sources":["browser.js"],"names":[],"mappings":";aACA,MAAM,CAAC,MAAM,GAAG,OAAO,CAAC,SAAS,CAAC,CAAC","file":"browser.js","sourcesContent":["// Root file for the browser version of Unison.\r\nwindow.Unison = require('./index');\r\n"],"sourceRoot":"..\\..\\lib"}
+{"version":3,"sources":["browser.js"],"names":[],"mappings":";aACA,MAAM,CAAC,MAAM,GAAG,OAAO,CAAC,SAAS,CAAC,CAAC","file":"browser.js","sourcesContent":["// Root file for the browser version of Unison.\nwindow.Unison = require('./index');\n"],"sourceRoot":"../../lib"}

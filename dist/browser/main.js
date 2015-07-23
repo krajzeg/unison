@@ -252,8 +252,8 @@ var UnisonNode = (function () {
       }
 
       // store events for later, as the object themselves will disappear
-      var childPath = [this._path, id].join('.');
-      var events = unison.collectEvents(childPath, 'destroyed', 'childRemoved');
+      var childPath = [this._path, id].join(".");
+      var events = unison.collectEvents(childPath, "destroyed", "childRemoved");
 
       // remove the object
       delete state[id];
@@ -268,7 +268,7 @@ var UnisonNode = (function () {
     key: 'destroy',
     value: function destroy() {
       // straightforward translation
-      expectObject(this.state(), 'Can\'t destroy ${this._path}');
+      expectObject(this.state(), "Can't destroy ${this._path}");
       return this.parent().remove(this.id());
     }
   }, {
@@ -299,7 +299,7 @@ function idFromPath(path) {
   if (path === '') {
     throw new Error('The root object has no id.');
   } else {
-    return _.last(path.split('.'));
+    return _.last(path.split("."));
   }
 }
 
@@ -307,8 +307,8 @@ function parentPath(path) {
   if (path === '') {
     throw new Error('The root object has no parent.');
   } else {
-    var pathElements = path.split('.');
-    return pathElements.slice(0, pathElements.length - 1).join('.');
+    var pathElements = path.split(".");
+    return pathElements.slice(0, pathElements.length - 1).join(".");
   }
 }
 
@@ -317,7 +317,7 @@ function childPath(path, id) {
 }
 module.exports = exports['default'];
 
-},{"lodash":5}],2:[function(require,module,exports){
+},{"lodash":8}],2:[function(require,module,exports){
 // Root file for the browser version of Unison.
 'use strict';
 
@@ -326,14 +326,11 @@ window.Unison = require('./index');
 },{"./index":3}],3:[function(require,module,exports){
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
-  value: true
-});
-exports['default'] = unison;
 var _ = require('lodash');
 var BaseUnison = require('./base');
 var functionize = require('./util').functionize;
 
+// the base functionality
 function unison(initialState, options) {
   var base = new BaseUnison(initialState, options);
   var unison = functionize(base, 'grab', ['grab']);
@@ -342,6 +339,11 @@ function unison(initialState, options) {
 
   return unison;
 }
+
+// bundle base and plugins together
+module.exports = unison;
+module.exports.server = require('./plugins/server');
+module.exports.client = require('./plugins/client');
 
 // ===========================
 
@@ -360,9 +362,426 @@ function addPlugin(plugin) {
 
   return this;
 }
+
+},{"./base":1,"./plugins/client":5,"./plugins/server":6,"./util":7,"lodash":8}],4:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+
+var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
+
+exports.parseMessage = parseMessage;
+
+var _util = require('../util');
+
+var _ = require('lodash');
+var COMMAND = 'c',
+    INTENT = 'i';
+exports.COMMAND = COMMAND;
+exports.INTENT = INTENT;
+var BUILTIN_COMMANDS = {
+  _seed: function _seed(state) {
+    var _this = this;
+
+    // we have to do this through .update() and .add() to trigger events properly
+    var children = _.pick(state, _util.isObject);
+    var props = _.pick(state, _.negate(_util.isObject));
+
+    // set all properties
+    this.update(props);
+
+    // add all children
+    _.each(children, function (child, id) {
+      _this.add(id, child);
+    });
+  }
+};
+
+exports.BUILTIN_COMMANDS = BUILTIN_COMMANDS;
+
+function parseMessage(msgString, callback) {
+  // parse the message
+  var message = undefined;
+  try {
+    message = JSON.parse(msgString);
+    var valid = messageValid(message);
+    if (!valid) throw new Error('Incorrect message format.');
+  } catch (e) {
+    console.error('Received garbage message: \'' + msgString + '\'.');
+    console.error(e);
+    return;
+  }
+
+  // try to act upon it
+  try {
+    callback(message);
+  } catch (e) {
+    console.error('Problem encountered when handling message \'' + msgString + '\':');
+    console.error(e.stack || e);
+  }
+}
+
+function messageValid(message) {
+  if (!(message instanceof Array)) return false;
+  if (message.length != 4) return false;
+
+  var _message = _slicedToArray(message, 1);
+
+  var code = _message[0];
+
+  if (code != COMMAND && code != INTENT) return false;
+
+  return true;
+}
+
+},{"../util":7,"lodash":8}],5:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; })();
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+exports["default"] = client;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var _clientServerBase = require("./client-server-base");
+
+var _ = require('lodash');
+
+function client(options) {
+  var clientPlugin = new ClientPlugin(options);
+  return function () {
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    return clientPlugin.applyPlugin.apply(clientPlugin, args);
+  };
+}
+
+var ClientPlugin = (function () {
+  function ClientPlugin(_ref) {
+    var _this = this;
+
+    var communication = _ref.communication;
+    var _ref$intents = _ref.intents;
+    var intents = _ref$intents === undefined ? {} : _ref$intents;
+    var _ref$commands = _ref.commands;
+    var commands = _ref$commands === undefined ? {} : _ref$commands;
+
+    _classCallCheck(this, ClientPlugin);
+
+    _.extend(this, { communication: communication, intents: intents, commands: commands });
+
+    _.extend(this.commands, _clientServerBase.BUILTIN_COMMANDS);
+    this.communication.onReceive(function (msg) {
+      return _this.receive(msg);
+    });
+  }
+
+  // Send a message over the provided 'communication' object.
+
+  _createClass(ClientPlugin, [{
+    key: "send",
+    value: function send(message) {
+      var msgString = JSON.stringify(message);
+      this.communication.send(msgString);
+    }
+
+    // Called whenever a message is receive on the 'communication' object, will execute
+    // commands receive from the server in response.
+  }, {
+    key: "receive",
+    value: function receive(msgString) {
+      var _this2 = this;
+
+      (0, _clientServerBase.parseMessage)(msgString, function (message) {
+        var _message = _slicedToArray(message, 1);
+
+        var messageType = _message[0];
+
+        switch (messageType) {
+          case _clientServerBase.COMMAND:
+            return _this2.applyCommand(message);
+          case _clientServerBase.INTENT:
+            throw new Error("Intents should not be sent to clients.");
+        }
+      });
+    }
+
+    // This method is called (indirectly) by $$.plugin(client).
+  }, {
+    key: "applyPlugin",
+    value: function applyPlugin($$) {
+      this.$$ = $$;
+      return {
+        nodeMethods: this.generateIntentSendingMethods()
+      };
+    }
+
+    // Generates a map of methods that will send named intents when called.
+  }, {
+    key: "generateIntentSendingMethods",
+    value: function generateIntentSendingMethods() {
+      var _this3 = this;
+
+      return _.object(_.map(this.intents, function (intentCode, intentName) {
+        return [intentName, _this3.makeIntentMethod(intentName)];
+      }));
+    }
+
+    // Generates a single method that will send a named intent with the right parameters when called.
+  }, {
+    key: "makeIntentMethod",
+    value: function makeIntentMethod(intentName) {
+      var client = this;
+      return function () {
+        for (var _len2 = arguments.length, parameters = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+          parameters[_key2] = arguments[_key2];
+        }
+
+        // this here will be the node we're called upon
+        var intent = [_clientServerBase.INTENT, intentName, this.path(), parameters];
+        client.send(intent);
+      };
+    }
+
+    // Applies a command received from the server to the local state.
+  }, {
+    key: "applyCommand",
+    value: function applyCommand(_ref2) {
+      var _ref22 = _slicedToArray(_ref2, 4);
+
+      var code = _ref22[0];
+      var commandName = _ref22[1];
+      var objectPath = _ref22[2];
+      var parameters = _ref22[3];
+
+      // find the right one
+      var command = this.commands[commandName];
+      if (!command) throw new Error("Received unknown command: '" + commandName + "'.");
+
+      var $$ = this.$$;
+      var target = $$(objectPath);
+
+      return command.apply(target, parameters);
+    }
+  }]);
+
+  return ClientPlugin;
+})()
+
+/*
+ intent:
+ function moveMagnet(clientId, $$magnet, newPosition) {
+ $$magnet.moveTo(newPosition);
+ }
+
+ command:
+ function moveTo($$magnet, newPosition) {
+ $$magnet.update({x: newPosition.x, y: newPosition.y});
+ }
+
+ tryMovingMagnet(clientId, newPosition) {
+  this.command.moveTo(newPosition);
+ }
+ moveMagnetTo(newPosition) {
+  this.update({x: newPosition.x, y: newPosition.y})
+ }
+
+magnet.intent.move({x: 12, y: 44});
+ */
+
+/*
+
+ COMMUNICATION LOGIC:
+ client - intent method:   send [object, intent, parameters] to the server
+ client - command method:  < not present >
+ client - apply intent:    < not present >
+ client - apply command:   execute the code
+
+ server - intent method:   virtual send [object, intent, parameters] to yourself
+ server - apply intent:    execute the code, calling one or more command method or rejecting the intent
+ server - command method:  execute the code, send [object, command, parameters] to all clients
+ server - apply command:   < not present >
+
+ intent code - runs on the server, translates intent into commands
+ command code - runs on both, applies changes to state
+ */
+;
+
+module.exports = exports["default"];
+
+},{"./client-server-base":4,"lodash":8}],6:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+
+var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+exports['default'] = server;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var _clientServerBase = require("./client-server-base");
+
+var _ = require('lodash');
+
+function server(options) {
+  var serverPlugin = new ServerPlugin(options);
+  return function () {
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    return serverPlugin.applyPlugin.apply(serverPlugin, args);
+  };
+}
+
+var ServerPlugin = (function () {
+  function ServerPlugin(_ref) {
+    var _this = this;
+
+    var communication = _ref.communication;
+    var _ref$intents = _ref.intents;
+    var intents = _ref$intents === undefined ? {} : _ref$intents;
+    var _ref$commands = _ref.commands;
+    var commands = _ref$commands === undefined ? {} : _ref$commands;
+
+    _classCallCheck(this, ServerPlugin);
+
+    _.extend(this, { communication: communication, intents: intents, commands: commands });
+    _.extend(this.commands, _clientServerBase.BUILTIN_COMMANDS);
+
+    this.clients = [];
+
+    this.communication.onAttach(function (client) {
+      return _this.attach(client);
+    });
+    this.communication.onDetach(function (client) {
+      return _this.detach(client);
+    });
+    this.communication.onReceive(function (client, msg) {
+      return _this.receive(client, msg);
+    });
+  }
+
+  _createClass(ServerPlugin, [{
+    key: 'applyPlugin',
+    value: function applyPlugin($$) {
+      this.$$ = $$;
+      return {
+        nodeMethods: this.generateCommandMethods()
+      };
+    }
+  }, {
+    key: 'attach',
+    value: function attach(client) {
+      this.clients.push(client);
+
+      var $$ = this.$$,
+          rootState = $$('').state();
+      this.sendTo(client, [_clientServerBase.COMMAND, '_seed', '', [rootState]]);
+    }
+  }, {
+    key: 'detach',
+    value: function detach(client) {
+      var position = this.clients.indexOf(client);
+      if (position >= 0) this.clients.splice(position, 1);
+    }
+  }, {
+    key: 'receive',
+    value: function receive(client, msgString) {
+      var _this2 = this;
+
+      (0, _clientServerBase.parseMessage)(msgString, function (message) {
+        var _message = _slicedToArray(message, 1);
+
+        var messageType = _message[0];
+
+        switch (messageType) {
+          case _clientServerBase.INTENT:
+            return _this2.applyIntent(client, message);
+          case _clientServerBase.COMMAND:
+            throw new Error("Servers do not obey commands.");
+        }
+      });
+    }
+  }, {
+    key: 'sendToAll',
+    value: function sendToAll(message) {
+      var _this3 = this;
+
+      var msgString = JSON.stringify(message);
+      _.each(this.clients, function (client) {
+        _this3.communication.sendTo(client, msgString);
+      });
+    }
+  }, {
+    key: 'sendTo',
+    value: function sendTo(client, message) {
+      var msgString = JSON.stringify(message);
+      this.communication.sendTo(client, msgString);
+    }
+  }, {
+    key: 'applyIntent',
+    value: function applyIntent(client, _ref2) {
+      var _ref22 = _slicedToArray(_ref2, 4);
+
+      var code = _ref22[0];
+      var intentName = _ref22[1];
+      var objectPath = _ref22[2];
+      var parameters = _ref22[3];
+
+      var intentFn = this.intents[intentName];
+      var $$ = this.$$,
+          target = $$(objectPath);
+
+      var fullParameters = parameters.concat(client);
+      return intentFn.apply(target, fullParameters);
+    }
+  }, {
+    key: 'generateCommandMethods',
+    value: function generateCommandMethods() {
+      var _this4 = this;
+
+      return _.object(_.map(this.commands, function (commandFn, commandName) {
+        return [commandName, _this4.makeCommandMethod(commandName, commandFn)];
+      }));
+    }
+  }, {
+    key: 'makeCommandMethod',
+    value: function makeCommandMethod(commandName, commandFn) {
+      var server = this;
+      return function () {
+        for (var _len2 = arguments.length, parameters = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+          parameters[_key2] = arguments[_key2];
+        }
+
+        // 'this' refers to the Node on which the method was called here
+        commandFn.apply(this, parameters); // apply the changes on the server
+        server.sendToAll([_clientServerBase.COMMAND, commandName, this.path(), parameters]); // send the changes to all the clients
+      };
+    }
+  }]);
+
+  return ServerPlugin;
+})();
+
 module.exports = exports['default'];
 
-},{"./base":1,"./util":4,"lodash":5}],4:[function(require,module,exports){
+},{"./client-server-base":4,"lodash":8}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -402,7 +821,7 @@ function isObject(thing) {
   return typeof thing == 'object' && !(thing instanceof Array);
 }
 
-},{}],5:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 (function (global){
 /**
  * @license

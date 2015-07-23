@@ -1,8 +1,9 @@
-'use strict';Object.defineProperty(exports, '__esModule', { value: true });exports['default'] = 
+'use strict';var _ = require('lodash');
+var BaseUnison = require('./base');
+var functionize = require('./util').functionize;
 
-
-
-unison;var _ = require('lodash');var BaseUnison = require('./base');var functionize = require('./util').functionize;function unison(initialState, options) {
+// the base functionality
+function unison(initialState, options) {
   var base = new BaseUnison(initialState, options);
   var unison = functionize(
   base, 'grab', ['grab']);
@@ -12,6 +13,11 @@ unison;var _ = require('lodash');var BaseUnison = require('./base');var function
 
   return unison;}
 
+
+// bundle base and plugins together
+module.exports = unison;
+module.exports.server = require('./plugins/server');
+module.exports.client = require('./plugins/client');
 
 // ===========================
 
@@ -26,5 +32,5 @@ function addPlugin(plugin) {var _this = this;
     _this.base._nodeBase[name] = method;});
 
 
-  return this;}module.exports = exports['default'];
+  return this;}
 //# sourceMappingURL=index.js.map

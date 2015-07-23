@@ -172,8 +172,8 @@ UnisonNode = (function () {
 
 
       // store events for later, as the object themselves will disappear
-      var childPath = [this._path, id].join('.');
-      var events = unison.collectEvents(childPath, 'destroyed', 'childRemoved');
+      var childPath = [this._path, id].join(".");
+      var events = unison.collectEvents(childPath, "destroyed", "childRemoved");
 
       // remove the object
       delete state[id];
@@ -187,7 +187,7 @@ UnisonNode = (function () {
 
     function destroy() {
       // straightforward translation
-      expectObject(this.state(), 'Can\'t destroy ${this._path}');
+      expectObject(this.state(), "Can't destroy ${this._path}");
       return this.parent().remove(this.id());} }, { key: 'on', value: 
 
 
@@ -213,7 +213,7 @@ function idFromPath(path) {
   if (path === '') {
     throw new Error('The root object has no id.');} else 
   {
-    return _.last(path.split('.'));}}
+    return _.last(path.split("."));}}
 
 
 
@@ -221,10 +221,10 @@ function parentPath(path) {
   if (path === '') {
     throw new Error('The root object has no parent.');} else 
   {
-    var pathElements = path.split('.');
+    var pathElements = path.split(".");
     return pathElements.
     slice(0, pathElements.length - 1).
-    join('.');}}
+    join(".");}}
 
 
 

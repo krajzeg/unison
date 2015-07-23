@@ -1,7 +1,7 @@
 var assert = require('chai').assert;
 var unison = require('../lib');
+var client = require('../lib').client;
 var sinon = require('sinon');
-var client = require('../lib/plugins/client');
 var CommunicationMock = require('./mocks/client-comm');
 
 describe("Unison network client", () => {
