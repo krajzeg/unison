@@ -21,6 +21,15 @@ describe("Views plugin: watch()", () => {
     assert.ok(spies.destroyed.calledOnce);
   });
 
-  it("should automatically unbind all listeners when the node is destroyed");
-  it("should send a fake 'updated' event after the initial watch()");
+  it("should automatically unbind all listeners when the node is destroyed", () => {
+    let spies = {childAdded: sinon.spy()};
+
+    $$('stuff').watch(spies);
+    $$('stuff').destroy();
+
+    $$('').add('stuff', {});
+    $$('stuff').add('psych', {});
+
+    assert.ok(!spies.childAdded.called);
+  });
 });

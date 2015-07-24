@@ -813,7 +813,7 @@ function watch(object) {
     var method = object[eventName];
     if (method && typeof method == 'function') {
       var listener = method.bind(object);
-      node.on(eventName, method.bind(object));
+      node.on(eventName, listener);
       boundListeners.push({ event: eventName, listener: listener });
     }
   });
@@ -829,7 +829,7 @@ function watch(object) {
     });
   };
   node.on('destroyed', unbindListener);
-  boundListeners.push(unbindListener);
+  boundListeners.push({ event: 'destroyed', listener: unbindListener });
 }
 module.exports = exports['default'];
 
