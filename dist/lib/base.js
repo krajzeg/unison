@@ -42,7 +42,7 @@ Unison = (function () {
 
 
     function nextId() {
-      return this._nextId++;} }]);return Unison;})();exports['default'] = Unison;var 
+      return (this._nextId++).toString();} }]);return Unison;})();exports['default'] = Unison;var 
 
 
 
@@ -57,7 +57,7 @@ UnisonEvents = (function () {
 
     function listen(path, event, callback) {
       var key = this.key(path, event);
-      var existingListeners = [];
+      var existingListeners = this._listeners[key] || [];
       this._listeners[key] = existingListeners.concat([callback]);} }, { key: 'unlisten', value: 
 
 
@@ -172,8 +172,8 @@ UnisonNode = (function () {
 
 
       // store events for later, as the object themselves will disappear
-      var childPath = [this._path, id].join(".");
-      var events = unison.collectEvents(childPath, "destroyed", "childRemoved");
+      var pathToChild = childPath(this._path, id);
+      var events = unison.collectEvents(pathToChild, "destroyed", "childRemoved");
 
       // remove the object
       delete state[id];

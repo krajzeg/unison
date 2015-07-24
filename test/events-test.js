@@ -21,6 +21,20 @@ describe("When objects are updated", () => {
   });
 });
 
+describe("Multiple listeners per event", () => {
+  it("should be supported", () => {
+    let $$ = unison({}), spy1 = sinon.spy(), spy2 = sinon.spy();
+    $$('').on('childAdded', spy1);
+    $$('').on('childAdded', spy2);
+
+    $$('').add({});
+    $$('').add({});
+
+    assert.ok(spy1.calledTwice);
+    assert.ok(spy2.calledTwice);
+  });
+});
+
 describe("When children are added", () => {
   let $$;
   beforeEach(() => {

@@ -80,7 +80,7 @@ var Unison = (function () {
   }, {
     key: 'nextId',
     value: function nextId() {
-      return this._nextId++;
+      return (this._nextId++).toString();
     }
   }]);
 
@@ -105,7 +105,7 @@ var UnisonEvents = (function () {
     key: 'listen',
     value: function listen(path, event, callback) {
       var key = this.key(path, event);
-      var existingListeners = [];
+      var existingListeners = this._listeners[key] || [];
       this._listeners[key] = existingListeners.concat([callback]);
     }
   }, {
@@ -252,8 +252,8 @@ var UnisonNode = (function () {
       }
 
       // store events for later, as the object themselves will disappear
-      var childPath = [this._path, id].join(".");
-      var events = unison.collectEvents(childPath, "destroyed", "childRemoved");
+      var pathToChild = childPath(this._path, id);
+      var events = unison.collectEvents(pathToChild, "destroyed", "childRemoved");
 
       // remove the object
       delete state[id];
@@ -317,7 +317,7 @@ function childPath(path, id) {
 }
 module.exports = exports['default'];
 
-},{"lodash":8}],2:[function(require,module,exports){
+},{"lodash":9}],2:[function(require,module,exports){
 // Root file for the browser version of Unison.
 'use strict';
 
@@ -344,6 +344,7 @@ function unison(initialState, options) {
 module.exports = unison;
 module.exports.server = require('./plugins/server');
 module.exports.client = require('./plugins/client');
+module.exports.views = require('./plugins/views');
 
 // ===========================
 
@@ -363,7 +364,7 @@ function addPlugin(plugin) {
   return this;
 }
 
-},{"./base":1,"./plugins/client":5,"./plugins/server":6,"./util":7,"lodash":8}],4:[function(require,module,exports){
+},{"./base":1,"./plugins/client":5,"./plugins/server":6,"./plugins/views":7,"./util":8,"lodash":9}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -436,7 +437,7 @@ function messageValid(message) {
   return true;
 }
 
-},{"../util":7,"lodash":8}],5:[function(require,module,exports){
+},{"../util":8,"lodash":9}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -619,7 +620,7 @@ magnet.intent.move({x: 12, y: 44});
 
 module.exports = exports["default"];
 
-},{"./client-server-base":4,"lodash":8}],6:[function(require,module,exports){
+},{"./client-server-base":4,"lodash":9}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -781,7 +782,58 @@ var ServerPlugin = (function () {
 
 module.exports = exports['default'];
 
-},{"./client-server-base":4,"lodash":8}],7:[function(require,module,exports){
+},{"./client-server-base":4,"lodash":9}],7:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+exports['default'] = views;
+var _ = require('lodash');
+
+function views(options) {
+  return function ($$) {
+    return {
+      nodeMethods: {
+        watch: watch
+      }
+    };
+  };
+}
+
+var EVENTS = ['updated', 'destroyed', 'childAdded', 'childRemoved'];
+
+function watch(object) {
+  var boundListeners = [];
+  var node = this;
+
+  // scan all methods of the object looking for matches with event names
+  // register all such methods as listeners
+  EVENTS.forEach(function (eventName) {
+    var method = object[eventName];
+    if (method && typeof method == 'function') {
+      var listener = method.bind(object);
+      node.on(eventName, method.bind(object));
+      boundListeners.push({ event: eventName, listener: listener });
+    }
+  });
+
+  // when the node we are watching gets destroyed, we want to unbind all those listeners
+  // (including the listener that keeps track of it)
+  var unbindListener = function unbindListener() {
+    _.each(boundListeners, function (_ref) {
+      var event = _ref.event;
+      var listener = _ref.listener;
+
+      node.off(event, listener);
+    });
+  };
+  node.on('destroyed', unbindListener);
+  boundListeners.push(unbindListener);
+}
+module.exports = exports['default'];
+
+},{"lodash":9}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -821,7 +873,7 @@ function isObject(thing) {
   return typeof thing == 'object' && !(thing instanceof Array);
 }
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 (function (global){
 /**
  * @license
