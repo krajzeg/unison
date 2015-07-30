@@ -82,6 +82,23 @@ var Unison = (function () {
     value: function nextId() {
       return (this._nextId++).toString();
     }
+  }, {
+    key: 'plugin',
+    value: function plugin(pluginFn) {
+      var _this2 = this;
+
+      var additions = pluginFn(this.fn) || {};
+
+      _.each(additions.methods || {}, function (method, name) {
+        _this2.fn[name] = method;
+      });
+
+      _.each(additions.nodeMethods || {}, function (method, name) {
+        _this2._nodeBase[name] = method;
+      });
+
+      return this.fn;
+    }
   }]);
 
   return Unison;
@@ -142,10 +159,10 @@ var UnisonEvents = (function () {
   }, {
     key: 'triggerAll',
     value: function triggerAll(events) {
-      var _this2 = this;
+      var _this3 = this;
 
       _.each(events, function (event) {
-        _this2.trigger.apply(_this2, event);
+        _this3.trigger.apply(_this3, event);
       });
     }
   }]);
@@ -330,14 +347,10 @@ var _ = require('lodash');
 var BaseUnison = require('./base');
 var functionize = require('./util').functionize;
 
-// the base functionality
+// creates a new Unison function-object hybrid
 function unison(initialState, options) {
   var base = new BaseUnison(initialState, options);
-  var unison = functionize(base, 'grab', ['grab']);
-
-  unison.plugin = addPlugin;
-
-  return unison;
+  return functionize(base, 'grab', ['grab', 'plugin']);
 }
 
 // bundle base and plugins together
@@ -345,24 +358,6 @@ module.exports = unison;
 module.exports.server = require('./plugins/server');
 module.exports.client = require('./plugins/client');
 module.exports.views = require('./plugins/views');
-
-// ===========================
-
-function addPlugin(plugin) {
-  var _this = this;
-
-  var additions = plugin(this) || {};
-
-  _.each(additions.methods || {}, function (method, name) {
-    _this[name] = method;
-  });
-
-  _.each(additions.nodeMethods || {}, function (method, name) {
-    _this.base._nodeBase[name] = method;
-  });
-
-  return this;
-}
 
 },{"./base":1,"./plugins/client":5,"./plugins/server":6,"./plugins/views":7,"./util":8,"lodash":9}],4:[function(require,module,exports){
 'use strict';
@@ -862,8 +857,9 @@ function functionize(object, defaultMethod, methods) {
     };
   });
 
-  // remember what we're based on
+  // make sure we can reach both the base from the function and vice-versa
   fn.base = object;
+  object.fn = fn;
 
   // return!
   return fn;

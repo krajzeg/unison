@@ -42,7 +42,21 @@ Unison = (function () {
 
 
     function nextId() {
-      return (this._nextId++).toString();} }]);return Unison;})();exports['default'] = Unison;var 
+      return (this._nextId++).toString();} }, { key: 'plugin', value: 
+
+
+    function plugin(pluginFn) {var _this2 = this;
+      var additions = pluginFn(this.fn) || {};
+
+      _.each(additions.methods || {}, function (method, name) {
+        _this2.fn[name] = method;});
+
+
+      _.each(additions.nodeMethods || {}, function (method, name) {
+        _this2._nodeBase[name] = method;});
+
+
+      return this.fn;} }]);return Unison;})();exports['default'] = Unison;var 
 
 
 
@@ -84,9 +98,9 @@ UnisonEvents = (function () {
 
 
 
-    function triggerAll(events) {var _this2 = this;
+    function triggerAll(events) {var _this3 = this;
       _.each(events, function (event) {
-        _this2.trigger.apply(_this2, event);});} }]);return UnisonEvents;})();var 
+        _this3.trigger.apply(_this3, event);});} }]);return UnisonEvents;})();var 
 
 
 
