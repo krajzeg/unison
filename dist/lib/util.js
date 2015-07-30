@@ -1,4 +1,6 @@
-'use strict';Object.defineProperty(exports, '__esModule', { value: true });exports.functionize = functionize;exports.
+'use strict';Object.defineProperty(exports, '__esModule', { value: true });exports.
+
+functionized = functionized;exports.
 
 
 
@@ -16,9 +18,11 @@
 
 
 
-isObject = isObject;function functionize(object, defaultMethod, methods) {// turn the object into a function that calls a chosen method by default
-  var fn = function fn() {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}return object[defaultMethod].apply(object, args);}; // expose other methods on the function object
-  methods.map(function (methodName) {fn[methodName] = function () {for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {args[_key2] = arguments[_key2];}return object[methodName].apply(object, args);};}); // make sure we can reach both the base from the function and vice-versa
-  fn.base = object;object.fn = fn; // return!
+
+
+isObject = isObject;var _ = require('lodash');function functionized(clazz, ctorArgs, defaultMethod) {// create a function that calls a chosen method by default
+  var fn = function fn() {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}return fn[defaultMethod].apply(fn, args);}; // simulate calling the class constructor on the fn object
+  clazz.apply(fn, ctorArgs); // set up prototypes correctly
+  var generatedPrototype = Object.create(function () {});_.extend(generatedPrototype, clazz.prototype);fn.__proto__ = generatedPrototype; // return!
   return fn;}function isObject(thing) {return typeof thing == 'object' && !(thing instanceof Array);}
 //# sourceMappingURL=util.js.map

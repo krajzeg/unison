@@ -7,104 +7,95 @@ Object.defineProperty(exports, '__esModule', {
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
+exports['default'] = Unison;
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var _ = require('lodash');
 
-var Unison = (function () {
-  function Unison() {
-    var initialState = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+// Main Unison object.
+// Uses classical instead of ES6 classes to allow Unison.apply(...) down the road.
 
-    _classCallCheck(this, Unison);
+function Unison() {
+  var initialState = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
-    this._state = initialState;
-    this._nextId = 1;
+  this._state = initialState;
+  this._nextId = 1;
 
-    this._events = new UnisonEvents();
+  this._events = new UnisonEvents();
 
-    // each Unison object has its own pseudo-class for nodes that can be extended by plugins
-    this._nodeBase = Object.create(UnisonNode.prototype);
-    this._makeNode = function (unison, path) {
-      UnisonNode.apply(this, [unison, path]);
-    };
-    this._makeNode.prototype = this._nodeBase;
+  // each Unison object has its own pseudo-class for nodes that can be extended by plugins
+  this._nodeBase = Object.create(UnisonNode.prototype);
+  this._makeNode = function (unison, path) {
+    UnisonNode.apply(this, [unison, path]);
+  };
+  this._makeNode.prototype = this._nodeBase;
+}
+
+Unison.prototype = {
+  grab: function grab(path) {
+    var Node = this._makeNode;
+    return new Node(this, path);
+  },
+
+  listen: function listen() {
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    return this._events.listen.apply(this._events, args);
+  },
+  unlisten: function unlisten() {
+    for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+      args[_key2] = arguments[_key2];
+    }
+
+    return this._events.unlisten.apply(this._events, args);
+  },
+
+  collectEvents: function collectEvents(path, directEvent, childEvent) {
+    var _this = this;
+
+    var acc = arguments.length <= 3 || arguments[3] === undefined ? [] : arguments[3];
+
+    var parent = parentPath(path),
+        id = idFromPath(path);
+    var object = _.get(this._state, path);
+
+    acc.push([parent, childEvent, id]);
+    acc.push([path, directEvent]);
+
+    _.each(object, function (subchild, id) {
+      if (typeof subchild === 'object' && !(subchild instanceof Array)) {
+        // that's a child, trigger childAdded and recurse into it
+        _this.collectEvents(childPath(path, id), directEvent, childEvent, acc);
+      }
+    });
+
+    return acc;
+  },
+
+  nextId: function nextId() {
+    return (this._nextId++).toString();
+  },
+
+  registerGlobalProperties: function registerGlobalProperties(props) {
+    _.extend(this, props);
+  },
+
+  registerNodeProperties: function registerNodeProperties(props) {
+    console.log(this._nodeBase, props);
+    _.extend(this._nodeBase, props);
+  },
+
+  plugin: function plugin(pluginFn) {
+    var additions = pluginFn(this) || {};
+    this.registerGlobalProperties(additions.methods || {});
+    this.registerNodeProperties(additions.nodeMethods || {});
+
+    return this;
   }
-
-  _createClass(Unison, [{
-    key: 'grab',
-    value: function grab(path) {
-      var Node = this._makeNode;
-      return new Node(this, path);
-    }
-  }, {
-    key: 'listen',
-    value: function listen() {
-      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
-      }
-
-      return this._events.listen.apply(this._events, args);
-    }
-  }, {
-    key: 'unlisten',
-    value: function unlisten() {
-      for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-        args[_key2] = arguments[_key2];
-      }
-
-      return this._events.unlisten.apply(this._events, args);
-    }
-  }, {
-    key: 'collectEvents',
-    value: function collectEvents(path, directEvent, childEvent) {
-      var _this = this;
-
-      var acc = arguments.length <= 3 || arguments[3] === undefined ? [] : arguments[3];
-
-      var parent = parentPath(path),
-          id = idFromPath(path);
-      var object = _.get(this._state, path);
-
-      acc.push([parent, childEvent, id]);
-      acc.push([path, directEvent]);
-
-      _.each(object, function (subchild, id) {
-        if (typeof subchild === 'object' && !(subchild instanceof Array)) {
-          // that's a child, trigger childAdded and recurse into it
-          _this.collectEvents(childPath(path, id), directEvent, childEvent, acc);
-        }
-      });
-
-      return acc;
-    }
-  }, {
-    key: 'nextId',
-    value: function nextId() {
-      return (this._nextId++).toString();
-    }
-  }, {
-    key: 'plugin',
-    value: function plugin(pluginFn) {
-      var _this2 = this;
-
-      var additions = pluginFn(this.fn) || {};
-
-      _.each(additions.methods || {}, function (method, name) {
-        _this2.fn[name] = method;
-      });
-
-      _.each(additions.nodeMethods || {}, function (method, name) {
-        _this2._nodeBase[name] = method;
-      });
-
-      return this.fn;
-    }
-  }]);
-
-  return Unison;
-})();
-
-exports['default'] = Unison;
+};
 
 var UnisonEvents = (function () {
   function UnisonEvents() {
@@ -159,10 +150,10 @@ var UnisonEvents = (function () {
   }, {
     key: 'triggerAll',
     value: function triggerAll(events) {
-      var _this3 = this;
+      var _this2 = this;
 
       _.each(events, function (event) {
-        _this3.trigger.apply(_this3, event);
+        _this2.trigger.apply(_this2, event);
       });
     }
   }]);
@@ -345,12 +336,11 @@ window.Unison = require('./index');
 
 var _ = require('lodash');
 var BaseUnison = require('./base');
-var functionize = require('./util').functionize;
+var functionized = require('./util').functionized;
 
 // creates a new Unison function-object hybrid
 function unison(initialState, options) {
-  var base = new BaseUnison(initialState, options);
-  return functionize(base, 'grab', ['grab', 'plugin']);
+  return functionized(BaseUnison, [initialState, options], 'grab');
 }
 
 // bundle base and plugins together
@@ -834,32 +824,28 @@ module.exports = exports['default'];
 Object.defineProperty(exports, '__esModule', {
   value: true
 });
-exports.functionize = functionize;
+exports.functionized = functionized;
 exports.isObject = isObject;
+var _ = require('lodash');
 
-function functionize(object, defaultMethod, methods) {
-  // turn the object into a function that calls a chosen method by default
+function functionized(clazz, ctorArgs, defaultMethod) {
+
+  // create a function that calls a chosen method by default
   var fn = function fn() {
     for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
       args[_key] = arguments[_key];
     }
 
-    return object[defaultMethod].apply(object, args);
+    return fn[defaultMethod].apply(fn, args);
   };
-  // expose other methods on the function object
-  methods.map(function (methodName) {
-    fn[methodName] = function () {
-      for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-        args[_key2] = arguments[_key2];
-      }
 
-      return object[methodName].apply(object, args);
-    };
-  });
+  // simulate calling the class constructor on the fn object
+  clazz.apply(fn, ctorArgs);
 
-  // make sure we can reach both the base from the function and vice-versa
-  fn.base = object;
-  object.fn = fn;
+  // set up prototypes correctly
+  var generatedPrototype = Object.create(function () {});
+  _.extend(generatedPrototype, clazz.prototype);
+  fn.__proto__ = generatedPrototype;
 
   // return!
   return fn;
@@ -869,7 +855,7 @@ function isObject(thing) {
   return typeof thing == 'object' && !(thing instanceof Array);
 }
 
-},{}],9:[function(require,module,exports){
+},{"lodash":9}],9:[function(require,module,exports){
 (function (global){
 /**
  * @license

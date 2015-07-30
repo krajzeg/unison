@@ -1,62 +1,65 @@
-'use strict';Object.defineProperty(exports, '__esModule', { value: true });var _createClass = (function () {function defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ('value' in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);}}return function (Constructor, protoProps, staticProps) {if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;};})();function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _ = require('lodash');var 
-
-
-Unison = (function () {
-  function Unison() {var initialState = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];_classCallCheck(this, Unison);
-    this._state = initialState;
-    this._nextId = 1;
-
-    this._events = new UnisonEvents();
-
-    // each Unison object has its own pseudo-class for nodes that can be extended by plugins
-    this._nodeBase = Object.create(UnisonNode.prototype);
-    this._makeNode = function (unison, path) {
-      UnisonNode.apply(this, [unison, path]);};
-
-    this._makeNode.prototype = this._nodeBase;}_createClass(Unison, [{ key: 'grab', value: 
-
-
-    function grab(path) {
-      var Node = this._makeNode;
-      return new Node(this, path);} }, { key: 'listen', value: 
-
-
-    function listen() {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}return this._events.listen.apply(this._events, args);} }, { key: 'unlisten', value: 
-    function unlisten() {for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {args[_key2] = arguments[_key2];}return this._events.unlisten.apply(this._events, args);} }, { key: 'collectEvents', value: 
-
-    function collectEvents(path, directEvent, childEvent) {var _this = this;var acc = arguments.length <= 3 || arguments[3] === undefined ? [] : arguments[3];
-      var parent = parentPath(path), id = idFromPath(path);
-      var object = _.get(this._state, path);
-
-      acc.push([parent, childEvent, id]);
-      acc.push([path, directEvent]);
-
-      _.each(object, function (subchild, id) {
-        if (typeof subchild === 'object' && !(subchild instanceof Array)) {
-          // that's a child, trigger childAdded and recurse into it
-          _this.collectEvents(childPath(path, id), directEvent, childEvent, acc);}});
+'use strict';Object.defineProperty(exports, '__esModule', { value: true });var _createClass = (function () {function defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ('value' in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);}}return function (Constructor, protoProps, staticProps) {if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;};})();exports['default'] = 
 
 
 
-      return acc;} }, { key: 'nextId', value: 
+Unison;function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _ = require('lodash'); // Main Unison object.
+// Uses classical instead of ES6 classes to allow Unison.apply(...) down the road.
+function Unison() {var initialState = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];this._state = initialState;this._nextId = 1;
+
+  this._events = new UnisonEvents();
+
+  // each Unison object has its own pseudo-class for nodes that can be extended by plugins
+  this._nodeBase = Object.create(UnisonNode.prototype);
+  this._makeNode = function (unison, path) {
+    UnisonNode.apply(this, [unison, path]);};
+
+  this._makeNode.prototype = this._nodeBase;}
+
+Unison.prototype = { 
+  grab: function grab(path) {
+    var Node = this._makeNode;
+    return new Node(this, path);}, 
 
 
-    function nextId() {
-      return (this._nextId++).toString();} }, { key: 'plugin', value: 
+  listen: function listen() {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}return this._events.listen.apply(this._events, args);}, 
+  unlisten: function unlisten() {for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {args[_key2] = arguments[_key2];}return this._events.unlisten.apply(this._events, args);}, 
+
+  collectEvents: function collectEvents(path, directEvent, childEvent) {var _this = this;var acc = arguments.length <= 3 || arguments[3] === undefined ? [] : arguments[3];
+    var parent = parentPath(path), id = idFromPath(path);
+    var object = _.get(this._state, path);
+
+    acc.push([parent, childEvent, id]);
+    acc.push([path, directEvent]);
+
+    _.each(object, function (subchild, id) {
+      if (typeof subchild === 'object' && !(subchild instanceof Array)) {
+        // that's a child, trigger childAdded and recurse into it
+        _this.collectEvents(childPath(path, id), directEvent, childEvent, acc);}});
 
 
-    function plugin(pluginFn) {var _this2 = this;
-      var additions = pluginFn(this.fn) || {};
 
-      _.each(additions.methods || {}, function (method, name) {
-        _this2.fn[name] = method;});
+    return acc;}, 
 
 
-      _.each(additions.nodeMethods || {}, function (method, name) {
-        _this2._nodeBase[name] = method;});
+  nextId: function nextId() {
+    return (this._nextId++).toString();}, 
 
 
-      return this.fn;} }]);return Unison;})();exports['default'] = Unison;var 
+  registerGlobalProperties: function registerGlobalProperties(props) {
+    _.extend(this, props);}, 
+
+
+  registerNodeProperties: function registerNodeProperties(props) {
+    console.log(this._nodeBase, props);
+    _.extend(this._nodeBase, props);}, 
+
+
+  plugin: function plugin(pluginFn) {
+    var additions = pluginFn(this) || {};
+    this.registerGlobalProperties(additions.methods || {});
+    this.registerNodeProperties(additions.nodeMethods || {});
+
+    return this;} };var 
 
 
 
@@ -98,9 +101,9 @@ UnisonEvents = (function () {
 
 
 
-    function triggerAll(events) {var _this3 = this;
+    function triggerAll(events) {var _this2 = this;
       _.each(events, function (event) {
-        _this3.trigger.apply(_this3, event);});} }]);return UnisonEvents;})();var 
+        _this2.trigger.apply(_this2, event);});} }]);return UnisonEvents;})();var 
 
 
 

@@ -1,14 +1,10 @@
 'use strict';var _ = require('lodash');
 var BaseUnison = require('./base');
-var functionize = require('./util').functionize;
+var functionized = require('./util').functionized;
 
 // creates a new Unison function-object hybrid
 function unison(initialState, options) {
-  var base = new BaseUnison(initialState, options);
-  return functionize(
-  base, 'grab', 
-  ['grab', 'plugin']);}
-
+  return functionized(BaseUnison, [initialState, options], 'grab');}
 
 
 // bundle base and plugins together
