@@ -2,7 +2,7 @@
 
 
 
-client;function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}var _clientServerBase = require("./client-server-base");var _ = require('lodash');function client(options) {
+client;function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}var _clientServerBase = require("./client-server-base");var _ = require('lodash');function client(options) {
   var clientPlugin = new ClientPlugin(options);
   return function () {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}
     return clientPlugin.applyPlugin.apply(clientPlugin, args);};}var 
@@ -40,19 +40,38 @@ ClientPlugin = (function () {
     // This method is called (indirectly) by $$.plugin(client).
   }, { key: "applyPlugin", value: function applyPlugin($$) {
       this.$$ = $$;
+
+      this.addNodeMethods();
+
       return { 
-        nodeMethods: this.generateIntentSendingMethods() };}
+        methods: { 
+          addIntent: this.addIntent.bind(this), 
+          addCommand: this.addCommand.bind(this) } };}
+
 
 
 
     // Generates a map of methods that will send named intents when called.
-  }, { key: "generateIntentSendingMethods", value: function generateIntentSendingMethods() {var _this3 = this;
-      return _.object(_.map(this.intents, 
-      function (intentCode, intentName) {return [intentName, _this3.makeIntentMethod(intentName)];}));}
+  }, { key: "addNodeMethods", value: function addNodeMethods() {
+      _.each(this.intents, this.addIntent.bind(this));
+      _.each(this.commands, this.addCommand.bind(this));}
+
+
+    // Adds a new intent, including a method on nodes.
+  }, { key: "addIntent", value: function addIntent(_, intentName) {
+      this.$$.registerNodeProperties(_defineProperty({}, 
+      intentName, this.makeIntentMethod(intentName)));}
 
 
 
-    // Generates a single method that will send a named intent with the right parameters when called.
+    // Adds a new command, including a method on nodes.
+  }, { key: "addCommand", value: function addCommand(commandCode, commandName) {
+      this.$$.registerNodeProperties(_defineProperty({}, 
+      commandName, commandCode));}
+
+
+
+    // Generates a method that will send a named intent with the right parameters when called.
   }, { key: "makeIntentMethod", value: function makeIntentMethod(intentName) {
       var client = this;
       return function () {for (var _len2 = arguments.length, parameters = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {parameters[_key2] = arguments[_key2];}
