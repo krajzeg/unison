@@ -112,8 +112,8 @@ describe("Server plugin", function () {
     var $$ = unison({ bird: {} }).
     plugin(server({ communication: comm }));
 
-    $$.addIntent(function () {this.frob();}, "pleaseFrob");
-    $$.addCommand(function () {this.update({ frobbed: true });}, "frob");
+    $$.addIntent('pleaseFrob', function () {this.frob();});
+    $$.addCommand('frob', function () {this.update({ frobbed: true });});
 
     $$('bird').pleaseFrob();
 

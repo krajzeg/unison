@@ -112,10 +112,10 @@ describe("Client plugin", function () {
       intents: {} }));
 
 
-    $$.addCommand(function () {
-      this.update({ frobbed: true });}, 
-    'frob');
-    $$.addIntent(function () {}, 'pleaseFrob');
+    $$.addCommand('frob', function () {
+      this.update({ frobbed: true });});
+
+    $$.addIntent('pleaseFrob', function () {});
 
     $$('').frob();
     $$('').pleaseFrob();

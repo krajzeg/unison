@@ -523,21 +523,27 @@ var ClientPlugin = (function () {
   }, {
     key: "addNodeMethods",
     value: function addNodeMethods() {
-      _.each(this.intents, this.addIntent.bind(this));
-      _.each(this.commands, this.addCommand.bind(this));
+      var _this3 = this;
+
+      _.each(this.intents, function (i, name) {
+        _this3.addIntent(name, i);
+      });
+      _.each(this.commands, function (c, name) {
+        _this3.addCommand(name, c);
+      });
     }
 
     // Adds a new intent, including a method on nodes.
   }, {
     key: "addIntent",
-    value: function addIntent(_, intentName) {
+    value: function addIntent(intentName, _) {
       this.$$.registerNodeProperties(_defineProperty({}, intentName, this.makeIntentMethod(intentName)));
     }
 
     // Adds a new command, including a method on nodes.
   }, {
     key: "addCommand",
-    value: function addCommand(commandCode, commandName) {
+    value: function addCommand(commandName, commandCode) {
       this.$$.registerNodeProperties(_defineProperty({}, commandName, commandCode));
     }
 
@@ -765,17 +771,23 @@ var ServerPlugin = (function () {
   }, {
     key: 'addNodeMethods',
     value: function addNodeMethods() {
-      _.each(this.commands, this.addCommand.bind(this));
-      _.each(this.intents, this.addIntent.bind(this));
+      var _this4 = this;
+
+      _.each(this.commands, function (cmd, name) {
+        _this4.addCommand(name, cmd);
+      });
+      _.each(this.intents, function (i, name) {
+        _this4.addIntent(name, i);
+      });
     }
   }, {
     key: 'addCommand',
-    value: function addCommand(commandCode, commandName) {
+    value: function addCommand(commandName, commandCode) {
       this.$$.registerNodeProperties(_defineProperty({}, commandName, this.makeCommandMethod(commandName, commandCode)));
     }
   }, {
     key: 'addIntent',
-    value: function addIntent(intentCode, intentName) {
+    value: function addIntent(intentName, intentCode) {
       this.$$.registerNodeProperties(_defineProperty({}, intentName, intentCode));
     }
   }, {

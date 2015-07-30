@@ -78,18 +78,18 @@ ServerPlugin = (function () {
       return intentFn.apply(target, fullParameters);} }, { key: 'addNodeMethods', value: 
 
 
-    function addNodeMethods() {
-      _.each(this.commands, this.addCommand.bind(this));
-      _.each(this.intents, this.addIntent.bind(this));} }, { key: 'addCommand', value: 
+    function addNodeMethods() {var _this4 = this;
+      _.each(this.commands, function (cmd, name) {_this4.addCommand(name, cmd);});
+      _.each(this.intents, function (i, name) {_this4.addIntent(name, i);});} }, { key: 'addCommand', value: 
 
 
-    function addCommand(commandCode, commandName) {
+    function addCommand(commandName, commandCode) {
       this.$$.registerNodeProperties(_defineProperty({}, 
       commandName, this.makeCommandMethod(commandName, commandCode)));} }, { key: 'addIntent', value: 
 
 
 
-    function addIntent(intentCode, intentName) {
+    function addIntent(intentName, intentCode) {
       this.$$.registerNodeProperties(_defineProperty({}, 
       intentName, intentCode));} }, { key: 'makeCommandMethod', value: 
 

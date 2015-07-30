@@ -52,20 +52,20 @@ ClientPlugin = (function () {
 
 
     // Generates a map of methods that will send named intents when called.
-  }, { key: "addNodeMethods", value: function addNodeMethods() {
-      _.each(this.intents, this.addIntent.bind(this));
-      _.each(this.commands, this.addCommand.bind(this));}
+  }, { key: "addNodeMethods", value: function addNodeMethods() {var _this3 = this;
+      _.each(this.intents, function (i, name) {_this3.addIntent(name, i);});
+      _.each(this.commands, function (c, name) {_this3.addCommand(name, c);});}
 
 
     // Adds a new intent, including a method on nodes.
-  }, { key: "addIntent", value: function addIntent(_, intentName) {
+  }, { key: "addIntent", value: function addIntent(intentName, _) {
       this.$$.registerNodeProperties(_defineProperty({}, 
       intentName, this.makeIntentMethod(intentName)));}
 
 
 
     // Adds a new command, including a method on nodes.
-  }, { key: "addCommand", value: function addCommand(commandCode, commandName) {
+  }, { key: "addCommand", value: function addCommand(commandName, commandCode) {
       this.$$.registerNodeProperties(_defineProperty({}, 
       commandName, commandCode));}
 
