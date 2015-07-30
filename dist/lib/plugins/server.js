@@ -2,7 +2,7 @@
 
 
 
-server;function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _clientServerBase = require("./client-server-base");var _ = require('lodash');function server(options) {
+server;function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _clientServerBase = require("./client-server-base");var _ = require('lodash');function server(options) {
   var serverPlugin = new ServerPlugin(options);
   return function () {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}
     return serverPlugin.applyPlugin.apply(serverPlugin, args);};}var 
@@ -23,8 +23,13 @@ ServerPlugin = (function () {
 
     function applyPlugin($$) {
       this.$$ = $$;
+      this.addNodeMethods();
+
       return { 
-        nodeMethods: this.generateCommandMethods() };} }, { key: 'attach', value: 
+        methods: { 
+          addIntent: this.addIntent.bind(this), 
+          addCommand: this.addCommand.bind(this) } };} }, { key: 'attach', value: 
+
 
 
 
@@ -70,12 +75,23 @@ ServerPlugin = (function () {
       var $$ = this.$$, target = $$(objectPath);
 
       var fullParameters = parameters.concat(client);
-      return intentFn.apply(target, fullParameters);} }, { key: 'generateCommandMethods', value: 
+      return intentFn.apply(target, fullParameters);} }, { key: 'addNodeMethods', value: 
 
 
-    function generateCommandMethods() {var _this4 = this;
-      return _.object(_.map(this.commands, 
-      function (commandFn, commandName) {return [commandName, _this4.makeCommandMethod(commandName, commandFn)];}));} }, { key: 'makeCommandMethod', value: 
+    function addNodeMethods() {
+      _.each(this.commands, this.addCommand.bind(this));
+      _.each(this.intents, this.addIntent.bind(this));} }, { key: 'addCommand', value: 
+
+
+    function addCommand(commandCode, commandName) {
+      this.$$.registerNodeProperties(_defineProperty({}, 
+      commandName, this.makeCommandMethod(commandName, commandCode)));} }, { key: 'addIntent', value: 
+
+
+
+    function addIntent(intentCode, intentName) {
+      this.$$.registerNodeProperties(_defineProperty({}, 
+      intentName, intentCode));} }, { key: 'makeCommandMethod', value: 
 
 
 

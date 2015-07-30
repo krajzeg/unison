@@ -107,5 +107,15 @@ describe("Server plugin", function () {
 
 
 
-  it("should allow adding commands and intents after the fact");});
+  it("should allow adding commands and intents after the fact", function () {
+    var comm = new CommunicationMock();
+    var $$ = unison({ bird: {} }).
+    plugin(server({ communication: comm }));
+
+    $$.addIntent(function () {this.frob();}, "pleaseFrob");
+    $$.addCommand(function () {this.update({ frobbed: true });}, "frob");
+
+    $$('bird').pleaseFrob();
+
+    assert.ok($$('bird').state().frobbed);});});
 //# sourceMappingURL=server-test.js.map
