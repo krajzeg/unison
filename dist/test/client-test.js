@@ -4,7 +4,7 @@ var client = require('../lib').client;
 var sinon = require('sinon');
 var CommunicationMock = require('./mocks/client-comm');
 
-describe("Unison network client", function () {
+describe("Client plugin", function () {
   it("should translate intent methods into network messages properly", function () {
     var comm = new CommunicationMock();
 
@@ -29,6 +29,24 @@ describe("Unison network client", function () {
     ['i', 'frob', 'bird', ['very hard']], 
     ['i', 'ageBy', 'bird', [5, 'years']]]);});
 
+
+
+  it("should translate command methods into simple executions", function () {
+    var comm = new CommunicationMock();
+    var $$ = unison({}).
+    plugin(client({ 
+      communication: comm, 
+      commands: { 
+        frob: function frob() {
+          this.update({ frobbed: true });} }, 
+
+
+      intents: {} }));
+
+
+    $$('').frob();
+    assert.ok($$('').state().frobbed);
+    assert.deepEqual(comm.sentMessages, []);});
 
 
   it("should apply commands sent by the server", function () {
@@ -66,7 +84,7 @@ describe("Unison network client", function () {
     // if we reach the end of the test, we should be OK
   });
 
-  it("should handle _seed commands out of the box", function () {
+  it("should handle '_seed' commands out of the box", function () {
     var comm = new CommunicationMock();
     var $$ = unison({}).
     plugin(client({ 
@@ -82,5 +100,27 @@ describe("Unison network client", function () {
 
     assert.equal($$('seeded').state(), true);
     assert.equal($$('bird').state().wingspan, 6);
-    assert.ok(listener.calledOnce);});});
+    assert.ok(listener.calledOnce);});
+
+
+  it("should allow adding commands and intents after the fact", function () {
+    var comm = new CommunicationMock();
+    var $$ = unison({}).
+    plugin(client({ 
+      communication: comm, 
+      commands: {}, 
+      intents: {} }));
+
+
+    $$.addCommand(function () {
+      this.update({ frobbed: true });}, 
+    'frob');
+    $$.addIntent(function () {}, 'pleaseFrob');
+
+    $$('').frob();
+    $$('').pleaseFrob();
+
+    assert.ok($$('').state().frobbed);
+    assert.deepEqual(comm.sentMessages, [
+    ['i', 'pleaseFrob', '', []]]);});});
 //# sourceMappingURL=client-test.js.map

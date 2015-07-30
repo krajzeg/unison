@@ -4,7 +4,7 @@ var unison = require('../lib');
 var server = require('../lib').server;
 var CommunicationMock = require('./mocks/server-comm');
 
-describe("Unison network server", () => {
+describe("Server plugin", () => {
   it("should translate command methods into local changes and network messages to all clients", () => {
     let comm = new CommunicationMock();
 
@@ -86,7 +86,7 @@ describe("Unison network server", () => {
     assert.deepEqual(frobMessages[0], ['c', 'frob', 'bird', ['lightly']]);
   });
 
-  it("should send a 'seed' command with the current state to newly attached clients", () => {
+  it("should send a '_seed' command with the current state to newly attached clients", () => {
     let comm = new CommunicationMock();
 
     let $$ = unison({bird: {wingspan: 6}})
@@ -106,5 +106,8 @@ describe("Unison network server", () => {
       ['c', '_seed', '', [{bird: {wingspan: 6}}]]
     ]);
   });
+
+  it("should allow adding commands and intents after the fact");
+
 
 });
