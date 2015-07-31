@@ -2,7 +2,7 @@
 var sinon = require('sinon');
 var unison = require('../lib');
 
-describe('When objects are updated', function () {
+describe("When objects are updated", function () {
   var u = undefined;
   beforeEach(function () {
     u = unison({ 
@@ -10,7 +10,7 @@ describe('When objects are updated', function () {
 
 
 
-  it('events should be triggered once for each update', function () {
+  it("events should be triggered once for each update", function () {
     var callback = sinon.spy();
 
     u('bird').on('updated', callback);
@@ -21,8 +21,8 @@ describe('When objects are updated', function () {
 
 
 
-describe('Multiple listeners per event', function () {
-  it('should be supported', function () {
+describe("Multiple listeners per event", function () {
+  it("should be supported", function () {
     var u = unison({}), spy1 = sinon.spy(), spy2 = sinon.spy();
     u('').on('childAdded', spy1);
     u('').on('childAdded', spy2);
@@ -35,7 +35,7 @@ describe('Multiple listeners per event', function () {
 
 
 
-describe('When children are added', function () {
+describe("When children are added", function () {
   var u = undefined;
   beforeEach(function () {
     u = unison({ 
@@ -43,7 +43,7 @@ describe('When children are added', function () {
 
 
 
-  it('a correct \'childAdded\' event should trigger on its parent', function () {
+  it("a correct 'childAdded' event should trigger on its parent", function () {
     var spy = sinon.spy();
 
     u('food').on('childAdded', spy);
@@ -53,7 +53,7 @@ describe('When children are added', function () {
     assert.ok(spy.calledWith('cucumber'));});
 
 
-  it('a correct \'created\' event should trigger on the child', function () {
+  it("a correct 'created' event should trigger on the child", function () {
     var spy = sinon.spy();
 
     u('food.cucumber').on('created', spy);
@@ -62,7 +62,7 @@ describe('When children are added', function () {
     assert.ok(spy.calledOnce);});
 
 
-  it('\'childAdded\' and \'created\' events should trigger for nested objects', function () {
+  it("'childAdded' and 'created' events should trigger for nested objects", function () {
     var created = sinon.spy(), childAdded = sinon.spy(), 
     deepCreated = sinon.spy(), deepChildAdded = sinon.spy();
 
@@ -81,7 +81,7 @@ describe('When children are added', function () {
 
 
 
-describe('When children are removed', function () {
+describe("When children are removed", function () {
   var u = undefined;
   beforeEach(function () {
     u = unison({ 
@@ -91,7 +91,7 @@ describe('When children are removed', function () {
 
 
 
-  it('a correct \'childRemoved\' event should trigger on its parent', function () {
+  it("a correct 'childRemoved' event should trigger on its parent", function () {
     var spy = sinon.spy();
 
     u('food.apple.seed').on('childRemoved', spy);
@@ -101,7 +101,7 @@ describe('When children are removed', function () {
     assert.ok(spy.calledWith('inside'));});
 
 
-  it('a correct \'destroyed\' event should trigger on the child', function () {
+  it("a correct 'destroyed' event should trigger on the child", function () {
     var spy = sinon.spy();
 
     u('food.apple.seed.inside').on('destroyed', spy);
@@ -110,7 +110,7 @@ describe('When children are removed', function () {
     assert.ok(spy.calledOnce);});
 
 
-  it('\'childRemoved\' and \'destroyed\' events should trigger for nested objects', function () {
+  it("'childRemoved' and 'destroyed' events should trigger for nested objects", function () {
     var destroyed = sinon.spy(), childRemoved = sinon.spy(), deepDestroyed = sinon.spy();
 
     u('food.apple.seed.inside').on('destroyed', deepDestroyed);

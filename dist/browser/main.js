@@ -329,7 +329,7 @@ function childPath(path, id) {
 }
 module.exports = exports['default'];
 
-},{"lodash":9}],2:[function(require,module,exports){
+},{"lodash":10}],2:[function(require,module,exports){
 // Root file for the browser version of Unison.
 'use strict';
 
@@ -352,8 +352,9 @@ module.exports = unison;
 module.exports.server = require('./plugins/server');
 module.exports.client = require('./plugins/client');
 module.exports.views = require('./plugins/views');
+module.exports.relations = require('./plugins/relations');
 
-},{"./base":1,"./plugins/client":5,"./plugins/server":6,"./plugins/views":7,"./util":8,"lodash":9}],4:[function(require,module,exports){
+},{"./base":1,"./plugins/client":5,"./plugins/relations":6,"./plugins/server":7,"./plugins/views":8,"./util":9,"lodash":10}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -426,7 +427,7 @@ function messageValid(message) {
   return true;
 }
 
-},{"../util":8,"lodash":9}],5:[function(require,module,exports){
+},{"../util":9,"lodash":10}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -477,44 +478,6 @@ var ClientPlugin = (function () {
       return _this.receive(msg);
     });
   }
-
-  /*
-   intent:
-   function moveMagnet(clientId, umagnet, newPosition) {
-   umagnet.moveTo(newPosition);
-   }
-  
-   command:
-   function moveTo(umagnet, newPosition) {
-   umagnet.update({x: newPosition.x, y: newPosition.y});
-   }
-  
-   tryMovingMagnet(clientId, newPosition) {
-    this.command.moveTo(newPosition);
-   }
-   moveMagnetTo(newPosition) {
-    this.update({x: newPosition.x, y: newPosition.y})
-   }
-  
-  magnet.intent.move({x: 12, y: 44});
-   */
-
-  /*
-  
-   COMMUNICATION LOGIC:
-   client - intent method:   send [object, intent, parameters] to the server
-   client - command method:  < not present >
-   client - apply intent:    < not present >
-   client - apply command:   execute the code
-  
-   server - intent method:   virtual send [object, intent, parameters] to yourself
-   server - apply intent:    execute the code, calling one or more command method or rejecting the intent
-   server - command method:  execute the code, send [object, command, parameters] to all clients
-   server - apply command:   < not present >
-  
-   intent code - runs on the server, translates intent into commands
-   command code - runs on both, applies changes to state
-   */
 
   // Send a message over the provided 'communication' object.
 
@@ -629,11 +592,168 @@ var ClientPlugin = (function () {
   }]);
 
   return ClientPlugin;
-})();
+})()
+
+/*
+ intent:
+ function moveMagnet(clientId, umagnet, newPosition) {
+ umagnet.moveTo(newPosition);
+ }
+
+ command:
+ function moveTo(umagnet, newPosition) {
+ umagnet.update({x: newPosition.x, y: newPosition.y});
+ }
+
+ tryMovingMagnet(clientId, newPosition) {
+  this.command.moveTo(newPosition);
+ }
+ moveMagnetTo(newPosition) {
+  this.update({x: newPosition.x, y: newPosition.y})
+ }
+
+magnet.intent.move({x: 12, y: 44});
+ */
+
+/*
+
+ COMMUNICATION LOGIC:
+ client - intent method:   send [object, intent, parameters] to the server
+ client - command method:  < not present >
+ client - apply intent:    < not present >
+ client - apply command:   execute the code
+
+ server - intent method:   virtual send [object, intent, parameters] to yourself
+ server - apply intent:    execute the code, calling one or more command method or rejecting the intent
+ server - command method:  execute the code, send [object, command, parameters] to all clients
+ server - apply command:   < not present >
+
+ intent code - runs on the server, translates intent into commands
+ command code - runs on both, applies changes to state
+ */
+;
 
 module.exports = exports["default"];
 
-},{"./client-server-base":4,"lodash":9}],6:[function(require,module,exports){
+},{"./client-server-base":4,"lodash":10}],6:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+exports['default'] = relations;
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var _ = require('lodash');
+
+function relations(rels) {
+  var plugin = new Relations(rels);
+  return function (u) {
+    return plugin.applyPlugin(u);
+  };
+}
+
+var Relations = (function () {
+  function Relations(relations) {
+    var _this = this;
+
+    _classCallCheck(this, Relations);
+
+    this.relations = {};
+
+    _.each(relations, function (rel) {
+      _this.relations[rel.AtoB] = rel;
+      _this.relations[rel.BtoA] = rel;
+    });
+  }
+
+  _createClass(Relations, [{
+    key: 'find',
+    value: function find(name) {
+      return this.relations[name];
+    }
+  }, {
+    key: 'applyPlugin',
+    value: function applyPlugin(u) {
+      this.u = u;
+
+      // add the core 'relate' and 'cease' commands (or methods if not in a client/server environment)
+      var nodeMethods = {},
+          addCommand = undefined;
+
+      if (u.addCommand) {
+        addCommand = u.addCommand.bind(u);
+      } else {
+        addCommand = function (name, fn) {
+          nodeMethods[name] = fn;
+        };
+      }
+      addCommand('relate', makeRelateFn(this));
+      //addCommand('cease', makeCeaseFn(this));
+
+      // add all .contains(x)-type predicates and .now/noLonger.contains-type methods
+      var relationNames = _.keys(this.relations);
+      var checkMethods = _.object(_.map(relationNames, function (name) {
+        return [name, makeCheckFn(name)];
+      }));
+      var nowMethods = _.object(_.map(relationNames, function (name) {
+        return [name, makeNowFn(name)];
+      }));
+
+      // done!
+      return {
+        nodeMethods: _.extend(nodeMethods, checkMethods, { now: nowMethods })
+      };
+    }
+  }]);
+
+  return Relations;
+})();
+
+function makeRelateFn(relations) {
+  return function (name, otherSide) {
+    var relation = relations.find(name);
+    if (!relation) throw new Error('Unknown relation name: \'$relation\'');
+
+    var inverseName = relation.AtoB == name ? relation.BtoA : relation.AtoB;
+
+    addRelation(this, name, otherSide);
+    addRelation(otherSide, inverseName, this);
+  };
+}
+
+function makeNowFn(relationName) {
+  return function (other) {
+    return this.relate(relationName, other);
+  };
+}
+
+function makeCheckFn(relationName) {
+  return function (otherSide) {
+    var path = otherSide.path();
+    var rels = this.get[relationName] || [];
+    return rels.indexOf(path) >= 0;
+  };
+}
+
+function addRelation(fromObj, name, toObj) {
+  var toPath = toObj.path();
+
+  var currentRels = fromObj.get[name] || [];
+  if (currentRels.indexOf(toPath) >= 0) throw new Error(fromObj.path() + ' already ' + name + ' ' + toPath);
+
+  var updatedRels = currentRels.concat([toObj.path()]);
+  fromObj.update(_defineProperty({}, name, updatedRels));
+}
+module.exports = exports['default'];
+
+},{"lodash":10}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -815,7 +935,7 @@ var ServerPlugin = (function () {
 
 module.exports = exports['default'];
 
-},{"./client-server-base":4,"lodash":9}],7:[function(require,module,exports){
+},{"./client-server-base":4,"lodash":10}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -866,7 +986,7 @@ function watch(object) {
 }
 module.exports = exports['default'];
 
-},{"lodash":9}],8:[function(require,module,exports){
+},{"lodash":10}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -903,7 +1023,7 @@ function isObject(thing) {
   return typeof thing == 'object' && !(thing instanceof Array);
 }
 
-},{"lodash":9}],9:[function(require,module,exports){
+},{"lodash":10}],10:[function(require,module,exports){
 (function (global){
 /**
  * @license

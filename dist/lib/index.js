@@ -12,4 +12,5 @@ module.exports = unison;
 module.exports.server = require('./plugins/server');
 module.exports.client = require('./plugins/client');
 module.exports.views = require('./plugins/views');
+module.exports.relations = require('./plugins/relations');
 //# sourceMappingURL=index.js.map
