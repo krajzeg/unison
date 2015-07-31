@@ -137,6 +137,10 @@ UnisonNode = (function () {
 
 
 
+
+
+
+
     function update(props) {
       var state = this.state();
       if (state === undefined) return;
@@ -212,7 +216,7 @@ UnisonNode = (function () {
 
 
     function off(event, callback) {
-      this._unison._events.unlisten(this._path, event, callback);} }]);return UnisonNode;})();
+      this._unison._events.unlisten(this._path, event, callback);} }, { key: 'get', get: function get() {return this.state();} }]);return UnisonNode;})();
 
 
 

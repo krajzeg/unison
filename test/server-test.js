@@ -24,7 +24,7 @@ describe("Server plugin", () => {
 
     u('bird').frob('very hard');
 
-    assert.deepEqual(u('bird').state(), {frobbed: 'very hard'});
+    assert.deepEqual(u('bird').get, {frobbed: 'very hard'});
     assert.ok(comm.containsMessageFor('client1',
       ['c', 'frob', 'bird', ['very hard']]
     ));
@@ -54,7 +54,7 @@ describe("Server plugin", () => {
     comm.attach('client1');
     comm.pushClientMessage('client1', ['i', 'pleaseFrob', 'bird', ['lightly']]);
 
-    let bird = u('bird').state();
+    let bird = u('bird').get;
     assert.equal(bird.frobbed, 'lightly');
     assert.equal(bird.by, 'client1');
 
@@ -117,7 +117,7 @@ describe("Server plugin", () => {
 
     u('bird').pleaseFrob();
 
-    assert.ok(u('bird').state().frobbed);
+    assert.ok(u('bird').get.frobbed);
   });
 
 

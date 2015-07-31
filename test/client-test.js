@@ -45,7 +45,7 @@ describe("Client plugin", () => {
       }));
 
     u('').frob();
-    assert.ok(u('').state().frobbed);
+    assert.ok(u('').get.frobbed);
     assert.deepEqual(comm.sentMessages, []);
   });
 
@@ -64,7 +64,7 @@ describe("Client plugin", () => {
 
     comm.pushServerCommand('frob', 'bird', 'very hard');
 
-    assert.equal(u('bird').state().frobbed, 'very hard');
+    assert.equal(u('bird').get.frobbed, 'very hard');
   });
 
   it("should not break on receiving various broken messages", () => {
@@ -98,8 +98,8 @@ describe("Client plugin", () => {
 
     comm.pushServerCommand('_seed', '', {bird: {wingspan: 6}, seeded: true});
 
-    assert.equal(u('seeded').state(), true);
-    assert.equal(u('bird').state().wingspan, 6);
+    assert.equal(u('seeded').get, true);
+    assert.equal(u('bird').get.wingspan, 6);
     assert.ok(listener.calledOnce);
   });
 
@@ -120,7 +120,7 @@ describe("Client plugin", () => {
     u('').frob();
     u('').pleaseFrob();
 
-    assert.ok(u('').state().frobbed);
+    assert.ok(u('').get.frobbed);
     assert.deepEqual(comm.sentMessages, [
       ['i', 'pleaseFrob', '', []]
     ]);

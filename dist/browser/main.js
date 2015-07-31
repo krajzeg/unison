@@ -288,6 +288,11 @@ var UnisonNode = (function () {
     value: function off(event, callback) {
       this._unison._events.unlisten(this._path, event, callback);
     }
+  }, {
+    key: 'get',
+    get: function get() {
+      return this.state();
+    }
   }]);
 
   return UnisonNode;
