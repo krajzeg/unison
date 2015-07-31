@@ -16,7 +16,15 @@ Relations = (function () {
 
 
     function find(name) {
-      return this.relations[name];} }, { key: 'applyPlugin', value: 
+      var rel = this.relations[name];
+      if (!rel) 
+      throw new Error('Unknown relation name: \'$rel\'');
+      return rel;} }, { key: 'findInverse', value: 
+
+
+    function findInverse(name) {
+      var rel = this.find(name);
+      return rel.AtoB == name ? rel.BtoA : rel.AtoB;} }, { key: 'applyPlugin', value: 
 
 
     function applyPlugin(u) {
@@ -30,37 +38,31 @@ Relations = (function () {
       {
         addCommand = function (name, fn) {nodeMethods[name] = fn;};}
 
-      addCommand('relate', makeRelateFn(this));
-      //addCommand('cease', makeCeaseFn(this));
+      addCommand('now', makeRelateFn(this));
+      addCommand('noLonger', makeCeaseFn(this));
 
       // add all .contains(x)-type predicates and .now/noLonger.contains-type methods
       var relationNames = _.keys(this.relations);
       var checkMethods = _.object(_.map(relationNames, function (name) {return [name, makeCheckFn(name)];}));
-      var nowMethods = _.object(_.map(relationNames, function (name) {return [name, makeNowFn(name)];}));
 
       // done!
       return { 
-        nodeMethods: _.extend(nodeMethods, checkMethods, { now: nowMethods }) };} }]);return Relations;})();
+        nodeMethods: _.extend(nodeMethods, checkMethods) };} }]);return Relations;})();
 
 
 
 
 function makeRelateFn(relations) {
   return function (name, otherSide) {
-    var relation = relations.find(name);
-    if (!relation) 
-    throw new Error('Unknown relation name: \'$relation\'');
-
-    var inverseName = relation.AtoB == name ? relation.BtoA : relation.AtoB;
-
     addRelation(this, name, otherSide);
-    addRelation(otherSide, inverseName, this);};}
+    addRelation(otherSide, relations.findInverse(name), this);};}
 
 
 
-function makeNowFn(relationName) {
-  return function (other) {
-    return this.relate(relationName, other);};}
+function makeCeaseFn(relations) {
+  return function (name, otherSide) {
+    removeRelation(this, name, otherSide);
+    removeRelation(otherSide, relations.findInverse(name), this);};}
 
 
 
@@ -76,9 +78,19 @@ function addRelation(fromObj, name, toObj) {
   var toPath = toObj.path();
 
   var currentRels = fromObj.get[name] || [];
-  if (currentRels.indexOf(toPath) >= 0) 
-  throw new Error(fromObj.path() + ' already ' + name + ' ' + toPath);
+  if (_.contains(currentRels, toPath)) 
+  throw new Error('Relation \'' + fromObj.path() + ' ' + name + ' ' + toPath + '\' already exists.');
 
   var updatedRels = currentRels.concat([toObj.path()]);
-  fromObj.update(_defineProperty({}, name, updatedRels));}module.exports = exports['default'];
+  fromObj.update(_defineProperty({}, name, updatedRels));}
+
+
+function removeRelation(fromObj, name, toObj) {
+  var toPath = toObj.path();
+
+  var rels = fromObj.get[name] || [];
+  if (!_(rels).contains(toPath)) 
+  throw new Error('Relation \'' + fromObj.path() + ' ' + name + ' ' + toPath + '\' can\'t be removed, because it doesn\'t exist.');
+
+  fromObj.update(_defineProperty({}, name, _(rels).without(toPath)));}module.exports = exports['default'];
 //# sourceMappingURL=../plugins/relations.js.map

@@ -11,11 +11,10 @@ describe("Relations plugin", () => {
     let u = prepareUnisonInstance([
       {AtoB: 'fatherOf', BtoA: 'childOf', A: 'father', Bs: 'children'}
     ]);
-
     let tom = u('tom'), jerry = u('jerry'), alice = u('alice'), bob = u('bob');
 
-    tom.relate('fatherOf', jerry);
-    alice.relate('childOf', bob);
+    tom.now('fatherOf', jerry);
+    alice.now('childOf', bob);
 
     assert.ok(tom.fatherOf(jerry));
     assert.ok(jerry.childOf(tom));
@@ -23,7 +22,19 @@ describe("Relations plugin", () => {
     assert.ok(alice.childOf(bob));
   });
 
-  it("should allow severing relations between objects");
+  it("should allow severing relations between objects", () => {
+    let u = prepareUnisonInstance([
+      {AtoB: 'fatherOf', BtoA: 'childOf', A: 'father', Bs: 'children'}
+    ]);
+    let tom = u('tom'), jerry = u('jerry'), alice = u('alice'), bob = u('bob');
+
+    tom.now('fatherOf', jerry);
+    tom.noLonger('fatherOf', jerry);
+
+    assert.ok(!tom.fatherOf(jerry));
+    assert.ok(!jerry.childOf(tom));
+  });
+
   it("should allow getting one related object if there is one");
   it("should allow listing related objects if there are many");
   it("should throw when introducing a relation that's already there");
