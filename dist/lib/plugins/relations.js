@@ -31,23 +31,32 @@ Relations = (function () {
       this.u = u;
 
       // add the core 'relate' and 'cease' commands (or methods if not in a client/server environment)
-      var nodeMethods = {}, addCommand = undefined;
+      var commands = {}, addCommand = undefined;
 
       if (u.addCommand) {
         addCommand = u.addCommand.bind(u);} else 
       {
-        addCommand = function (name, fn) {nodeMethods[name] = fn;};}
+        addCommand = function (name, fn) {commands[name] = fn;};}
 
       addCommand('now', makeRelateFn(this));
       addCommand('noLonger', makeCeaseFn(this));
 
-      // add all .contains(x)-type predicates and .now/noLonger.contains-type methods
+      // add all relation predicates
       var relationNames = _.keys(this.relations);
-      var checkMethods = _.object(_.map(relationNames, function (name) {return [name, makeCheckFn(name)];}));
+      var predicates = _.object(_.map(relationNames, function (name) {return [name, makeCheckFn(name)];}));
+
+      // add all relation getter methods
+      var getters = {};
+      _.each(this.relations, function (rel) {
+        if (rel.A) getters[rel.A] = makeSingleGetter(rel.BtoA);
+        if (rel.B) getters[rel.B] = makeSingleGetter(rel.AtoB);
+        if (rel.As) getters[rel.As] = makeMultipleGetter(rel.BtoA);
+        if (rel.Bs) getters[rel.Bs] = makeMultipleGetter(rel.AtoB);});
+
 
       // done!
       return { 
-        nodeMethods: _.extend(nodeMethods, checkMethods) };} }]);return Relations;})();
+        nodeMethods: _.extend(commands, predicates, getters) };} }]);return Relations;})();
 
 
 
@@ -71,6 +80,23 @@ function makeCheckFn(relationName) {
     var path = otherSide.path();
     var rels = this.get[relationName] || [];
     return rels.indexOf(path) >= 0;};}
+
+
+
+function makeSingleGetter(relationName) {
+  return function () {
+    var rels = this.get[relationName];
+    if (rels && rels.length > 0) 
+    return this.u(_.first(rels));else 
+
+    return undefined;};}
+
+
+
+function makeMultipleGetter(relationName) {
+  return function () {
+    var rels = this.get[relationName] || [];
+    return _.map(rels, this.u);};}
 
 
 

@@ -35,8 +35,24 @@ describe("Relations plugin", () => {
     assert.ok(!jerry.childOf(tom));
   });
 
-  it("should allow getting one related object if there is one");
-  it("should allow listing related objects if there are many");
+  it("should support getting related objects through properly named methods", () => {
+    let u = prepareUnisonInstance([
+      {AtoB: 'fatherOf', BtoA: 'childOf', A: 'father', Bs: 'children'}
+    ]);
+    let tom = u('tom'), jerry = u('jerry'), alice = u('alice'), bob = u('bob');
+
+    tom.now('fatherOf', jerry);
+    tom.now('fatherOf', alice);
+
+    assert.equal(jerry.father().path(), 'tom');
+    assert.equal(alice.father().path(), 'tom');
+    assert.deepEqual(_.invoke(tom.children(), 'path'), ['jerry', 'alice']);
+
+    assert.equal(bob.father(), undefined);
+    assert.deepEqual(bob.children(), []);
+  });
+
+  it("should allow listing related objects if needed");
   it("should throw when introducing a relation that's already there");
   it("should throw when severing a relation that's not there");
   it("should trigger update events on both sides when relations change");

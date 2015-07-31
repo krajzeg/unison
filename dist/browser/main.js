@@ -164,7 +164,7 @@ var UnisonNode = (function () {
   function UnisonNode(unison, path) {
     _classCallCheck(this, UnisonNode);
 
-    this._unison = unison;
+    this.u = unison;
     this._path = path;
   }
 
@@ -181,20 +181,20 @@ var UnisonNode = (function () {
   }, {
     key: 'parent',
     value: function parent() {
-      return this._unison.grab(parentPath(this.path()));
+      return this.u.grab(parentPath(this.path()));
     }
   }, {
     key: 'child',
     value: function child(id) {
-      return this._unison.grab(childPath(this.path(), id));
+      return this.u.grab(childPath(this.path(), id));
     }
   }, {
     key: 'state',
     value: function state() {
       if (this._path === '') {
-        return this._unison._state;
+        return this.u._state;
       } else {
-        return _.get(this._unison._state, this._path);
+        return _.get(this.u._state, this._path);
       }
     }
   }, {
@@ -204,12 +204,12 @@ var UnisonNode = (function () {
       if (state === undefined) return;
 
       _.extend(state, props);
-      this._unison._events.trigger(this._path, 'updated');
+      this.u._events.trigger(this._path, 'updated');
     }
   }, {
     key: 'add',
     value: function add() {
-      var unison = this._unison;
+      var unison = this.u;
 
       // extract arguments (either (child) or (id, child))
       var id = undefined,
@@ -247,7 +247,7 @@ var UnisonNode = (function () {
   }, {
     key: 'remove',
     value: function remove(id) {
-      var unison = this._unison;
+      var unison = this.u;
       var state = this.state();
 
       // sanity checks
@@ -281,12 +281,12 @@ var UnisonNode = (function () {
   }, {
     key: 'on',
     value: function on(event, callback) {
-      this._unison._events.listen(this._path, event, callback);
+      this.u._events.listen(this._path, event, callback);
     }
   }, {
     key: 'off',
     value: function off(event, callback) {
-      this._unison._events.unlisten(this._path, event, callback);
+      this.u._events.unlisten(this._path, event, callback);
     }
   }, {
     key: 'get',
@@ -692,28 +692,37 @@ var Relations = (function () {
       this.u = u;
 
       // add the core 'relate' and 'cease' commands (or methods if not in a client/server environment)
-      var nodeMethods = {},
+      var commands = {},
           addCommand = undefined;
 
       if (u.addCommand) {
         addCommand = u.addCommand.bind(u);
       } else {
         addCommand = function (name, fn) {
-          nodeMethods[name] = fn;
+          commands[name] = fn;
         };
       }
       addCommand('now', makeRelateFn(this));
       addCommand('noLonger', makeCeaseFn(this));
 
-      // add all .contains(x)-type predicates and .now/noLonger.contains-type methods
+      // add all relation predicates
       var relationNames = _.keys(this.relations);
-      var checkMethods = _.object(_.map(relationNames, function (name) {
+      var predicates = _.object(_.map(relationNames, function (name) {
         return [name, makeCheckFn(name)];
       }));
 
+      // add all relation getter methods
+      var getters = {};
+      _.each(this.relations, function (rel) {
+        if (rel.A) getters[rel.A] = makeSingleGetter(rel.BtoA);
+        if (rel.B) getters[rel.B] = makeSingleGetter(rel.AtoB);
+        if (rel.As) getters[rel.As] = makeMultipleGetter(rel.BtoA);
+        if (rel.Bs) getters[rel.Bs] = makeMultipleGetter(rel.AtoB);
+      });
+
       // done!
       return {
-        nodeMethods: _.extend(nodeMethods, checkMethods)
+        nodeMethods: _.extend(commands, predicates, getters)
       };
     }
   }]);
@@ -740,6 +749,20 @@ function makeCheckFn(relationName) {
     var path = otherSide.path();
     var rels = this.get[relationName] || [];
     return rels.indexOf(path) >= 0;
+  };
+}
+
+function makeSingleGetter(relationName) {
+  return function () {
+    var rels = this.get[relationName];
+    if (rels && rels.length > 0) return this.u(_.first(rels));else return undefined;
+  };
+}
+
+function makeMultipleGetter(relationName) {
+  return function () {
+    var rels = this.get[relationName] || [];
+    return _.map(rels, this.u);
   };
 }
 

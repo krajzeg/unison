@@ -109,7 +109,7 @@ UnisonEvents = (function () {
 
 UnisonNode = (function () {
   function UnisonNode(unison, path) {_classCallCheck(this, UnisonNode);
-    this._unison = unison;
+    this.u = unison;
     this._path = path;}_createClass(UnisonNode, [{ key: 'path', value: 
 
 
@@ -122,18 +122,18 @@ UnisonNode = (function () {
 
 
     function parent() {
-      return this._unison.grab(parentPath(this.path()));} }, { key: 'child', value: 
+      return this.u.grab(parentPath(this.path()));} }, { key: 'child', value: 
 
 
     function child(id) {
-      return this._unison.grab(childPath(this.path(), id));} }, { key: 'state', value: 
+      return this.u.grab(childPath(this.path(), id));} }, { key: 'state', value: 
 
 
     function state() {
       if (this._path === '') {
-        return this._unison._state;} else 
+        return this.u._state;} else 
       {
-        return _.get(this._unison._state, this._path);}} }, { key: 'update', value: 
+        return _.get(this.u._state, this._path);}} }, { key: 'update', value: 
 
 
 
@@ -146,11 +146,11 @@ UnisonNode = (function () {
       if (state === undefined) return;
 
       _.extend(state, props);
-      this._unison._events.trigger(this._path, 'updated');} }, { key: 'add', value: 
+      this.u._events.trigger(this._path, 'updated');} }, { key: 'add', value: 
 
 
     function add() {
-      var unison = this._unison;
+      var unison = this.u;
 
       // extract arguments (either (child) or (id, child))
       var id = undefined, child = undefined;for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {args[_key4] = arguments[_key4];}
@@ -180,7 +180,7 @@ UnisonNode = (function () {
 
 
     function remove(id) {
-      var unison = this._unison;
+      var unison = this.u;
       var state = this.state();
 
       // sanity checks
@@ -212,11 +212,11 @@ UnisonNode = (function () {
 
 
     function on(event, callback) {
-      this._unison._events.listen(this._path, event, callback);} }, { key: 'off', value: 
+      this.u._events.listen(this._path, event, callback);} }, { key: 'off', value: 
 
 
     function off(event, callback) {
-      this._unison._events.unlisten(this._path, event, callback);} }, { key: 'get', get: function get() {return this.state();} }]);return UnisonNode;})();
+      this.u._events.unlisten(this._path, event, callback);} }, { key: 'get', get: function get() {return this.state();} }]);return UnisonNode;})();
 
 
 
