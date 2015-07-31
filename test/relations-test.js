@@ -52,10 +52,62 @@ describe("Relations plugin", () => {
     assert.deepEqual(bob.children(), []);
   });
 
-  it("should allow listing related objects if needed");
-  it("should throw when introducing a relation that's already there");
-  it("should throw when severing a relation that's not there");
-  it("should trigger update events on both sides when relations change");
+  it("should throw when introducing a relation that's already there", () => {
+    let u = prepareUnisonInstance([
+      {AtoB: 'fatherOf', BtoA: 'childOf', A: 'father', Bs: 'children'}
+    ]);
+    let tom = u('tom'), jerry = u('jerry');
+
+    tom.now('fatherOf', jerry);
+    assert.throws(() => {
+      tom.now('fatherOf', jerry);
+    });
+  });
+
+  it("should throw when severing a relation that's not there", () => {
+    let u = prepareUnisonInstance([
+      {AtoB: 'fatherOf', BtoA: 'childOf', A: 'father', Bs: 'children'}
+    ]);
+    let tom = u('tom'), bob = u('bob');
+
+    assert.throws(() => tom.noLonger('fatherOf', bob));
+  });
+
+  it("should trigger 'updated' events on both sides when relations change", () => {
+    let u = prepareUnisonInstance([
+      {AtoB: 'fatherOf', BtoA: 'childOf', A: 'father', Bs: 'children'}
+    ]);
+    let tom = u('tom'), jerry = u('jerry');
+    let tomSpy = sinon.spy(), jerrySpy = sinon.spy();
+
+    tom.on('updated', tomSpy); jerry.on('updated', jerrySpy);
+
+    tom.now('fatherOf', jerry);
+    jerry.noLonger('childOf', tom);
+
+    assert.ok(tomSpy.calledTwice);
+    assert.ok(jerrySpy.calledTwice);
+  });
+
+  it("should trigger 'now:X' and 'noLonger:x' events when relations change", () => {
+    let u = prepareUnisonInstance([
+      {AtoB: 'fatherOf', BtoA: 'childOf', A: 'father', Bs: 'children'}
+    ]);
+    let tom = u('tom'), jerry = u('jerry');
+    let nowSpy = sinon.spy(), noLongerSpy = sinon.spy();
+
+    tom.on('now:fatherOf', nowSpy);
+    jerry.on('noLonger:childOf', noLongerSpy);
+
+    tom.now('fatherOf', jerry);
+    tom.noLonger('fatherOf', jerry);
+
+    assert.ok(nowSpy.calledOnce);
+    assert.ok(noLongerSpy.calledOnce);
+    assert.equal(nowSpy.firstCall.args[0].path(), 'jerry');
+    assert.equal(noLongerSpy.firstCall.args[0].path(), 'tom');
+  });
+
   it("should send correct commands when relations are introduced and severed");
   it("should support 1:1 relations");
   it("should support 1:n relations");

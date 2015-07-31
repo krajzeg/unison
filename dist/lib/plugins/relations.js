@@ -108,7 +108,8 @@ function addRelation(fromObj, name, toObj) {
   throw new Error('Relation \'' + fromObj.path() + ' ' + name + ' ' + toPath + '\' already exists.');
 
   var updatedRels = currentRels.concat([toObj.path()]);
-  fromObj.update(_defineProperty({}, name, updatedRels));}
+  fromObj.update(_defineProperty({}, name, updatedRels));
+  fromObj.trigger('now:' + name, toObj);}
 
 
 function removeRelation(fromObj, name, toObj) {
@@ -118,5 +119,6 @@ function removeRelation(fromObj, name, toObj) {
   if (!_(rels).contains(toPath)) 
   throw new Error('Relation \'' + fromObj.path() + ' ' + name + ' ' + toPath + '\' can\'t be removed, because it doesn\'t exist.');
 
-  fromObj.update(_defineProperty({}, name, _(rels).without(toPath)));}module.exports = exports['default'];
+  fromObj.update(_defineProperty({}, name, _(rels).without(toPath)));
+  fromObj.trigger('noLonger:' + name, toObj);}module.exports = exports['default'];
 //# sourceMappingURL=../plugins/relations.js.map

@@ -289,6 +289,17 @@ var UnisonNode = (function () {
       this.u._events.unlisten(this._path, event, callback);
     }
   }, {
+    key: 'trigger',
+    value: function trigger(event) {
+      var _u$_events;
+
+      for (var _len5 = arguments.length, payload = Array(_len5 > 1 ? _len5 - 1 : 0), _key5 = 1; _key5 < _len5; _key5++) {
+        payload[_key5 - 1] = arguments[_key5];
+      }
+
+      (_u$_events = this.u._events).trigger.apply(_u$_events, [this._path, event].concat(payload));
+    }
+  }, {
     key: 'get',
     get: function get() {
       return this.state();
@@ -774,6 +785,7 @@ function addRelation(fromObj, name, toObj) {
 
   var updatedRels = currentRels.concat([toObj.path()]);
   fromObj.update(_defineProperty({}, name, updatedRels));
+  fromObj.trigger('now:' + name, toObj);
 }
 
 function removeRelation(fromObj, name, toObj) {
@@ -783,6 +795,7 @@ function removeRelation(fromObj, name, toObj) {
   if (!_(rels).contains(toPath)) throw new Error('Relation \'' + fromObj.path() + ' ' + name + ' ' + toPath + '\' can\'t be removed, because it doesn\'t exist.');
 
   fromObj.update(_defineProperty({}, name, _(rels).without(toPath)));
+  fromObj.trigger('noLonger:' + name, toObj);
 }
 module.exports = exports['default'];
 
