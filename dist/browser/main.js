@@ -473,6 +473,44 @@ var ClientPlugin = (function () {
     });
   }
 
+  /*
+   intent:
+   function moveMagnet(clientId, umagnet, newPosition) {
+   umagnet.moveTo(newPosition);
+   }
+  
+   command:
+   function moveTo(umagnet, newPosition) {
+   umagnet.update({x: newPosition.x, y: newPosition.y});
+   }
+  
+   tryMovingMagnet(clientId, newPosition) {
+    this.command.moveTo(newPosition);
+   }
+   moveMagnetTo(newPosition) {
+    this.update({x: newPosition.x, y: newPosition.y})
+   }
+  
+  magnet.intent.move({x: 12, y: 44});
+   */
+
+  /*
+  
+   COMMUNICATION LOGIC:
+   client - intent method:   send [object, intent, parameters] to the server
+   client - command method:  < not present >
+   client - apply intent:    < not present >
+   client - apply command:   execute the code
+  
+   server - intent method:   virtual send [object, intent, parameters] to yourself
+   server - apply intent:    execute the code, calling one or more command method or rejecting the intent
+   server - command method:  execute the code, send [object, command, parameters] to all clients
+   server - apply command:   < not present >
+  
+   intent code - runs on the server, translates intent into commands
+   command code - runs on both, applies changes to state
+   */
+
   // Send a message over the provided 'communication' object.
 
   _createClass(ClientPlugin, [{
@@ -503,11 +541,11 @@ var ClientPlugin = (function () {
       });
     }
 
-    // This method is called (indirectly) by $$.plugin(client).
+    // This method is called (indirectly) by u.plugin(client).
   }, {
     key: "applyPlugin",
-    value: function applyPlugin($$) {
-      this.$$ = $$;
+    value: function applyPlugin(u) {
+      this.u = u;
 
       this.addNodeMethods();
 
@@ -537,14 +575,14 @@ var ClientPlugin = (function () {
   }, {
     key: "addIntent",
     value: function addIntent(intentName, _) {
-      this.$$.registerNodeProperties(_defineProperty({}, intentName, this.makeIntentMethod(intentName)));
+      this.u.registerNodeProperties(_defineProperty({}, intentName, this.makeIntentMethod(intentName)));
     }
 
     // Adds a new command, including a method on nodes.
   }, {
     key: "addCommand",
     value: function addCommand(commandName, commandCode) {
-      this.$$.registerNodeProperties(_defineProperty({}, commandName, commandCode));
+      this.u.registerNodeProperties(_defineProperty({}, commandName, commandCode));
     }
 
     // Generates a method that will send a named intent with the right parameters when called.
@@ -578,54 +616,15 @@ var ClientPlugin = (function () {
       var command = this.commands[commandName];
       if (!command) throw new Error("Received unknown command: '" + commandName + "'.");
 
-      var $$ = this.$$;
-      var target = $$(objectPath);
+      var u = this.u;
+      var target = u(objectPath);
 
       return command.apply(target, parameters);
     }
   }]);
 
   return ClientPlugin;
-})()
-
-/*
- intent:
- function moveMagnet(clientId, $$magnet, newPosition) {
- $$magnet.moveTo(newPosition);
- }
-
- command:
- function moveTo($$magnet, newPosition) {
- $$magnet.update({x: newPosition.x, y: newPosition.y});
- }
-
- tryMovingMagnet(clientId, newPosition) {
-  this.command.moveTo(newPosition);
- }
- moveMagnetTo(newPosition) {
-  this.update({x: newPosition.x, y: newPosition.y})
- }
-
-magnet.intent.move({x: 12, y: 44});
- */
-
-/*
-
- COMMUNICATION LOGIC:
- client - intent method:   send [object, intent, parameters] to the server
- client - command method:  < not present >
- client - apply intent:    < not present >
- client - apply command:   execute the code
-
- server - intent method:   virtual send [object, intent, parameters] to yourself
- server - apply intent:    execute the code, calling one or more command method or rejecting the intent
- server - command method:  execute the code, send [object, command, parameters] to all clients
- server - apply command:   < not present >
-
- intent code - runs on the server, translates intent into commands
- command code - runs on both, applies changes to state
- */
-;
+})();
 
 module.exports = exports["default"];
 
@@ -691,8 +690,8 @@ var ServerPlugin = (function () {
 
   _createClass(ServerPlugin, [{
     key: 'applyPlugin',
-    value: function applyPlugin($$) {
-      this.$$ = $$;
+    value: function applyPlugin(u) {
+      this.u = u;
       this.addNodeMethods();
 
       return {
@@ -707,8 +706,8 @@ var ServerPlugin = (function () {
     value: function attach(client) {
       this.clients.push(client);
 
-      var $$ = this.$$,
-          rootState = $$('').state();
+      var u = this.u,
+          rootState = u('').state();
       this.sendTo(client, [_clientServerBase.COMMAND, '_seed', '', [rootState]]);
     }
   }, {
@@ -762,8 +761,8 @@ var ServerPlugin = (function () {
       var parameters = _ref22[3];
 
       var intentFn = this.intents[intentName];
-      var $$ = this.$$,
-          target = $$(objectPath);
+      var u = this.u,
+          target = u(objectPath);
 
       var fullParameters = parameters.concat(client);
       return intentFn.apply(target, fullParameters);
@@ -783,12 +782,12 @@ var ServerPlugin = (function () {
   }, {
     key: 'addCommand',
     value: function addCommand(commandName, commandCode) {
-      this.$$.registerNodeProperties(_defineProperty({}, commandName, this.makeCommandMethod(commandName, commandCode)));
+      this.u.registerNodeProperties(_defineProperty({}, commandName, this.makeCommandMethod(commandName, commandCode)));
     }
   }, {
     key: 'addIntent',
     value: function addIntent(intentName, intentCode) {
-      this.$$.registerNodeProperties(_defineProperty({}, intentName, intentCode));
+      this.u.registerNodeProperties(_defineProperty({}, intentName, intentCode));
     }
   }, {
     key: 'makeCommandMethod',
@@ -821,7 +820,7 @@ exports['default'] = views;
 var _ = require('lodash');
 
 function views(options) {
-  return function ($$) {
+  return function (u) {
     return {
       nodeMethods: {
         watch: watch

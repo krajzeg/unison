@@ -2,9 +2,9 @@ var assert = require('chai').assert;
 var unison = require('../lib');
 
 describe("update()", () => {
-  var $$;
+  var u;
   beforeEach(() => {
-    $$ = unison({
+    u = unison({
       bird: {
         name: 'eagle'
       }
@@ -12,36 +12,36 @@ describe("update()", () => {
   });
 
   it("should allow adding new properties", () => {
-    $$('bird').update({wingspan: 150});
-    assert.deepEqual($$('bird').state(), {
+    u('bird').update({wingspan: 150});
+    assert.deepEqual(u('bird').state(), {
       name: 'eagle', wingspan: 150
     });
   });
 
   it("should allow changing existing properties", () => {
-    $$('bird').update({name: 'sparrow'});
-    assert.deepEqual($$('bird').state(), {
+    u('bird').update({name: 'sparrow'});
+    assert.deepEqual(u('bird').state(), {
       name: 'sparrow'
     });
   });
 
   it("should allow changing multiple properties at a time", () => {
-    $$('bird').update({name: 'swallow', wingspan: 42});
-    assert.deepEqual($$('bird').state(), {
+    u('bird').update({name: 'swallow', wingspan: 42});
+    assert.deepEqual(u('bird').state(), {
       name: 'swallow', wingspan: 42
     });
   });
 
   it("should do nothing for non-existent nodes", () => {
-    $$('bogus').update({some: 'properties'});
-    assert.strictEqual($$('bogus').state(), undefined);
+    u('bogus').update({some: 'properties'});
+    assert.strictEqual(u('bogus').state(), undefined);
   });
 });
 
 describe("add()", () => {
-  var $$;
+  var u;
   beforeEach(() => {
-    $$ = unison({
+    u = unison({
       things: {
         screwdriver: {name: "screwdriver"}
       }
@@ -49,49 +49,49 @@ describe("add()", () => {
   });
 
   it("should automatically assign IDs to children and return their path", () => {
-    var hairdryerPath = $$('things').add({name: 'hairdryer'});
-    var lemonPath = $$('things').add({name: 'lemon'});
+    var hairdryerPath = u('things').add({name: 'hairdryer'});
+    var lemonPath = u('things').add({name: 'lemon'});
 
     assert.ok(hairdryerPath && lemonPath);
 
     assert.ok(/^things\./.test(hairdryerPath));
     assert.ok(/^things\./.test(lemonPath));
 
-    assert.equal($$(hairdryerPath).state().name, 'hairdryer');
-    assert.equal($$(lemonPath).state().name, 'lemon');
+    assert.equal(u(hairdryerPath).state().name, 'hairdryer');
+    assert.equal(u(lemonPath).state().name, 'lemon');
   });
 
   it("should respect manually chosen IDs if provided", () => {
-    var hairdryerPath = $$('things').add('hairdryer', {name: 'hairdryer'});
+    var hairdryerPath = u('things').add('hairdryer', {name: 'hairdryer'});
 
     assert.equal(hairdryerPath, 'things.hairdryer');
-    assert.equal($$(hairdryerPath).state().name, 'hairdryer');
+    assert.equal(u(hairdryerPath).state().name, 'hairdryer');
   });
 
   it("should throw and leave things unchanged if you add a child that exists already", () => {
     assert.throws(() => {
-      $$('things').add('screwdriver', {name: 'duplicate'});
+      u('things').add('screwdriver', {name: 'duplicate'});
     });
-    assert.deepEqual($$('things.screwdriver').state(), {name: 'screwdriver'});
+    assert.deepEqual(u('things.screwdriver').state(), {name: 'screwdriver'});
   });
 
   it("should throw on non-existent nodes", () => {
     assert.throws(() => {
-      $$('bogus').add({something: 'here'});
+      u('bogus').add({something: 'here'});
     });
   });
 
   it("should throw when adding to a non-object", () => {
     assert.throws(() => {
-      $$('things.screwdriver.name').add({something: 'here'});
+      u('things.screwdriver.name').add({something: 'here'});
     });
   });
 });
 
 describe("remove()", () => {
-  var $$;
+  var u;
   beforeEach(() => {
-    $$ = unison({
+    u = unison({
       things: {
         screwdriver: {name: "screwdriver"},
         lemon: {name: 'lemon'}
@@ -100,36 +100,36 @@ describe("remove()", () => {
   });
 
   it("should remove existing children and return true", () => {
-    let removed = $$('things').remove('screwdriver');
+    let removed = u('things').remove('screwdriver');
     assert.strictEqual(removed, true);
-    assert.strictEqual($$('things.screwdriver').state(), undefined);
-    assert.deepEqual($$('things').state(), {
+    assert.strictEqual(u('things.screwdriver').state(), undefined);
+    assert.deepEqual(u('things').state(), {
       lemon: {name: 'lemon'}
     });
   });
 
   it("should return false if we attempt to remove a non-existent child", () => {
-    let removed = $$('things').remove('leafblower');
+    let removed = u('things').remove('leafblower');
     assert.strictEqual(removed, false);
   });
 
   it("should throw on non-existent nodes", () => {
     assert.throws(() => {
-      $$('bogus').remove('makes-no-sense');
+      u('bogus').remove('makes-no-sense');
     });
   });
 
   it("should throw when removing from non-objects", () => {
     assert.throws(() => {
-      $$('things.screwdriver.name').remove('makes-no-sense');
+      u('things.screwdriver.name').remove('makes-no-sense');
     });
   });
 });
 
 describe("destroy()", () => {
-  var $$;
+  var u;
   beforeEach(() => {
-    $$ = unison({
+    u = unison({
       things: {
         screwdriver: {name: "screwdriver"},
         lemon: {name: 'lemon'}
@@ -138,17 +138,17 @@ describe("destroy()", () => {
   });
 
   it("should remove the object from its parent and return true", () => {
-    $$('things.screwdriver').destroy();
+    u('things.screwdriver').destroy();
 
-    assert.strictEqual($$('things.screwdriver').state(), undefined);
-    assert.deepEqual($$('things').state(), {
+    assert.strictEqual(u('things.screwdriver').state(), undefined);
+    assert.deepEqual(u('things').state(), {
       lemon: {name: 'lemon'}
     });
   });
 
   it("should throw for non-existent nodes", () => {
     assert.throws(() => {
-      $$('things.bogus').destroy();
+      u('things.bogus').destroy();
     });
   });
 });

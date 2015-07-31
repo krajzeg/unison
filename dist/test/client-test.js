@@ -4,26 +4,26 @@ var client = require('../lib').client;
 var sinon = require('sinon');
 var CommunicationMock = require('./mocks/client-comm');
 
-describe("Client plugin", function () {
-  it("should translate intent methods into network messages properly", function () {
+describe('Client plugin', function () {
+  it('should translate intent methods into network messages properly', function () {
     var comm = new CommunicationMock();
 
-    var $$ = unison({ bird: {} }).
+    var u = unison({ bird: {} }).
     plugin(client({ 
       communication: comm, 
       commands: {}, 
       intents: { 
-        frob: function frob(howHard) {
-          // body irrelevant on the client
-        }, 
-        ageBy: function ageBy(howMany, units) {
-          // body irrelevant on the client
-        } } }));
+        frob: function frob(howHard) {}, 
+
+
+        ageBy: function ageBy(howMany, units) {} } }));
 
 
 
-    $$('bird').frob('very hard');
-    $$('bird').ageBy(5, 'years');
+
+
+    u('bird').frob('very hard');
+    u('bird').ageBy(5, 'years');
 
     assert.deepEqual(comm.sentMessages, [
     ['i', 'frob', 'bird', ['very hard']], 
@@ -31,9 +31,9 @@ describe("Client plugin", function () {
 
 
 
-  it("should translate command methods into simple executions", function () {
+  it('should translate command methods into simple executions', function () {
     var comm = new CommunicationMock();
-    var $$ = unison({}).
+    var u = unison({}).
     plugin(client({ 
       communication: comm, 
       commands: { 
@@ -44,14 +44,14 @@ describe("Client plugin", function () {
       intents: {} }));
 
 
-    $$('').frob();
-    assert.ok($$('').state().frobbed);
+    u('').frob();
+    assert.ok(u('').state().frobbed);
     assert.deepEqual(comm.sentMessages, []);});
 
 
-  it("should apply commands sent by the server", function () {
+  it('should apply commands sent by the server', function () {
     var comm = new CommunicationMock();
-    var $$ = unison({ bird: {} }).
+    var u = unison({ bird: {} }).
     plugin(client({ 
       communication: comm, 
       commands: { 
@@ -64,29 +64,29 @@ describe("Client plugin", function () {
 
     comm.pushServerCommand('frob', 'bird', 'very hard');
 
-    assert.equal($$('bird').state().frobbed, 'very hard');});
+    assert.equal(u('bird').state().frobbed, 'very hard');});
 
 
-  it("should not break on receiving various broken messages", function () {
+  it('should not break on receiving various broken messages', function () {
     var comm = new CommunicationMock();
-    var $$ = unison({ bird: {} }).
+    var u = unison({ bird: {} }).
     plugin(client({ 
       communication: comm, 
       commands: {}, intents: {} }));
 
 
-    comm.pushServerString("["); // broken JSON
-    comm.pushServerString("fw0ur0q923"); // not JSON
-    comm.pushServerString("123"); // not a command or intent
-    comm.pushServerString("[1,2,3,4]"); // bad format
+    comm.pushServerString('['); // broken JSON
+    comm.pushServerString('fw0ur0q923'); // not JSON
+    comm.pushServerString('123'); // not a command or intent
+    comm.pushServerString('[1,2,3,4]'); // bad format
     comm.pushServerCommand('bogusCommand', 'bogusObject', 'bogus'); // non-existent command
 
     // if we reach the end of the test, we should be OK
   });
 
-  it("should handle '_seed' commands out of the box", function () {
+  it('should handle \'_seed\' commands out of the box', function () {
     var comm = new CommunicationMock();
-    var $$ = unison({}).
+    var u = unison({}).
     plugin(client({ 
       communication: comm, 
       commands: {}, 
@@ -94,33 +94,34 @@ describe("Client plugin", function () {
 
 
     var listener = sinon.spy();
-    $$('').on('childAdded', listener);
+    u('').on('childAdded', listener);
 
     comm.pushServerCommand('_seed', '', { bird: { wingspan: 6 }, seeded: true });
 
-    assert.equal($$('seeded').state(), true);
-    assert.equal($$('bird').state().wingspan, 6);
+    assert.equal(u('seeded').state(), true);
+    assert.equal(u('bird').state().wingspan, 6);
     assert.ok(listener.calledOnce);});
 
 
-  it("should allow adding commands and intents after the fact", function () {
+  it('should allow adding commands and intents after the fact', function () {
     var comm = new CommunicationMock();
-    var $$ = unison({}).
+    var u = unison({}).
     plugin(client({ 
       communication: comm, 
       commands: {}, 
       intents: {} }));
 
 
-    $$.addCommand('frob', function () {
+    u.addCommand('frob', function () {
       this.update({ frobbed: true });});
 
-    $$.addIntent('pleaseFrob', function () {});
+    u.addIntent('pleaseFrob', function () {});
 
-    $$('').frob();
-    $$('').pleaseFrob();
+    u('').frob();
+    u('').pleaseFrob();
 
-    assert.ok($$('').state().frobbed);
+    assert.ok(u('').state().frobbed);
     assert.deepEqual(comm.sentMessages, [
-    ['i', 'pleaseFrob', '', []]]);});});
+    ['i', 'pleaseFrob', '', []]]);});}); // body irrelevant on the client
+// body irrelevant on the client
 //# sourceMappingURL=client-test.js.map

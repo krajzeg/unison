@@ -8,7 +8,7 @@ describe("Client plugin", () => {
   it("should translate intent methods into network messages properly", () => {
     let comm = new CommunicationMock();
 
-    let $$ = unison({bird: {}})
+    let u = unison({bird: {}})
       .plugin(client({
         communication: comm,
         commands: {},
@@ -22,8 +22,8 @@ describe("Client plugin", () => {
         }
       }));
 
-    $$('bird').frob('very hard');
-    $$('bird').ageBy(5, 'years');
+    u('bird').frob('very hard');
+    u('bird').ageBy(5, 'years');
 
     assert.deepEqual(comm.sentMessages, [
      ['i', 'frob', 'bird', ['very hard']],
@@ -33,7 +33,7 @@ describe("Client plugin", () => {
 
   it("should translate command methods into simple executions", () => {
     let comm = new CommunicationMock();
-    let $$ = unison({})
+    let u = unison({})
       .plugin(client({
         communication: comm,
         commands: {
@@ -44,14 +44,14 @@ describe("Client plugin", () => {
         intents: {}
       }));
 
-    $$('').frob();
-    assert.ok($$('').state().frobbed);
+    u('').frob();
+    assert.ok(u('').state().frobbed);
     assert.deepEqual(comm.sentMessages, []);
   });
 
   it("should apply commands sent by the server", () => {
     let comm = new CommunicationMock();
-    let $$ = unison({bird: {}})
+    let u = unison({bird: {}})
       .plugin(client({
         communication: comm,
         commands: {
@@ -64,12 +64,12 @@ describe("Client plugin", () => {
 
     comm.pushServerCommand('frob', 'bird', 'very hard');
 
-    assert.equal($$('bird').state().frobbed, 'very hard');
+    assert.equal(u('bird').state().frobbed, 'very hard');
   });
 
   it("should not break on receiving various broken messages", () => {
     let comm = new CommunicationMock();
-    let $$ = unison({bird: {}})
+    let u = unison({bird: {}})
       .plugin(client({
         communication: comm,
         commands: {}, intents: {}
@@ -86,7 +86,7 @@ describe("Client plugin", () => {
 
   it("should handle '_seed' commands out of the box", () => {
     let comm = new CommunicationMock();
-    let $$ = unison({})
+    let u = unison({})
       .plugin(client({
         communication: comm,
         commands: {},
@@ -94,33 +94,33 @@ describe("Client plugin", () => {
       }));
 
     let listener = sinon.spy();
-    $$('').on('childAdded', listener);
+    u('').on('childAdded', listener);
 
     comm.pushServerCommand('_seed', '', {bird: {wingspan: 6}, seeded: true});
 
-    assert.equal($$('seeded').state(), true);
-    assert.equal($$('bird').state().wingspan, 6);
+    assert.equal(u('seeded').state(), true);
+    assert.equal(u('bird').state().wingspan, 6);
     assert.ok(listener.calledOnce);
   });
 
   it("should allow adding commands and intents after the fact", () => {
     let comm = new CommunicationMock();
-    let $$ = unison({})
+    let u = unison({})
       .plugin(client({
         communication: comm,
         commands: {},
         intents: {}
       }));
 
-    $$.addCommand('frob', function() {
+    u.addCommand('frob', function() {
       this.update({frobbed: true});
     });
-    $$.addIntent('pleaseFrob', () => {});
+    u.addIntent('pleaseFrob', () => {});
 
-    $$('').frob();
-    $$('').pleaseFrob();
+    u('').frob();
+    u('').pleaseFrob();
 
-    assert.ok($$('').state().frobbed);
+    assert.ok(u('').state().frobbed);
     assert.deepEqual(comm.sentMessages, [
       ['i', 'pleaseFrob', '', []]
     ]);

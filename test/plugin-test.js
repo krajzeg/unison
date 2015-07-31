@@ -3,9 +3,9 @@ let unison = require('../lib');
 
 describe("Plugins", () => {
   it("should be able to add methods to the core Unison object", () => {
-    let $$ = unison({});
+    let u = unison({});
 
-    $$.plugin(() => {
+    u.plugin(() => {
       return {
         methods: {
           greeting: () => "Hello!"
@@ -13,12 +13,12 @@ describe("Plugins", () => {
       };
     });
 
-    assert.equal($$.greeting(), "Hello!");
+    assert.equal(u.greeting(), "Hello!");
   });
 
   it("should be able to add methods to nodes", () => {
-    let $$ = unison({'apple': {}});
-    $$.plugin(() => {
+    let u = unison({'apple': {}});
+    u.plugin(() => {
       return {
         nodeMethods: {
           uppercasePath() { return this.path().toUpperCase(); }
@@ -26,16 +26,16 @@ describe("Plugins", () => {
       }
     });
 
-    assert.equal($$('apple').uppercasePath(), 'APPLE');
+    assert.equal(u('apple').uppercasePath(), 'APPLE');
   });
 
   it("should be able to affect the Unison object directly if really needed", () => {
-    let $$ = unison({});
+    let u = unison({});
 
-    $$.plugin((unison) => {
+    u.plugin((unison) => {
       unison.iWasThere = true;
     });
 
-    assert.equal($$.iWasThere, true);
+    assert.equal(u.iWasThere, true);
   });
 });

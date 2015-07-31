@@ -5,17 +5,17 @@ let views = require('../lib').views;
 let sinon = require('sinon');
 
 describe("Views plugin: watch()", () => {
-  let $$;
+  let u;
   beforeEach(() => {
-    $$ = unison({stuff: {}}).plugin(views());
+    u = unison({stuff: {}}).plugin(views());
   });
 
   it("should bind all methods matching event names as listeners", () => {
     let spies = {childAdded: sinon.spy(), destroyed: sinon.spy()};
-    $$('stuff').watch(spies);
+    u('stuff').watch(spies);
 
-    $$('stuff').add({name: "hammer"});
-    $$('stuff').destroy();
+    u('stuff').add({name: "hammer"});
+    u('stuff').destroy();
 
     assert.ok(spies.childAdded.calledOnce);
     assert.ok(spies.destroyed.calledOnce);
@@ -24,11 +24,11 @@ describe("Views plugin: watch()", () => {
   it("should automatically unbind all listeners when the node is destroyed", () => {
     let spies = {childAdded: sinon.spy()};
 
-    $$('stuff').watch(spies);
-    $$('stuff').destroy();
+    u('stuff').watch(spies);
+    u('stuff').destroy();
 
-    $$('').add('stuff', {});
-    $$('stuff').add('psych', {});
+    u('').add('stuff', {});
+    u('stuff').add('psych', {});
 
     assert.ok(!spies.childAdded.called);
   });

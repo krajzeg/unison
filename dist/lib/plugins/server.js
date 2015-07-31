@@ -2,7 +2,7 @@
 
 
 
-server;function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _clientServerBase = require("./client-server-base");var _ = require('lodash');function server(options) {
+server;function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _clientServerBase = require('./client-server-base');var _ = require('lodash');function server(options) {
   var serverPlugin = new ServerPlugin(options);
   return function () {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}
     return serverPlugin.applyPlugin.apply(serverPlugin, args);};}var 
@@ -21,8 +21,8 @@ ServerPlugin = (function () {
     this.communication.onReceive(function (client, msg) {return _this.receive(client, msg);});}_createClass(ServerPlugin, [{ key: 'applyPlugin', value: 
 
 
-    function applyPlugin($$) {
-      this.$$ = $$;
+    function applyPlugin(u) {
+      this.u = u;
       this.addNodeMethods();
 
       return { 
@@ -36,7 +36,7 @@ ServerPlugin = (function () {
     function attach(client) {
       this.clients.push(client);
 
-      var $$ = this.$$, rootState = $$('').state();
+      var u = this.u, rootState = u('').state();
       this.sendTo(client, [_clientServerBase.COMMAND, '_seed', '', [rootState]]);} }, { key: 'detach', value: 
 
 
@@ -53,7 +53,7 @@ ServerPlugin = (function () {
           case _clientServerBase.INTENT:
             return _this2.applyIntent(client, message);
           case _clientServerBase.COMMAND:
-            throw new Error("Servers do not obey commands.");}});} }, { key: 'sendToAll', value: 
+            throw new Error('Servers do not obey commands.');}});} }, { key: 'sendToAll', value: 
 
 
 
@@ -72,7 +72,7 @@ ServerPlugin = (function () {
 
     function applyIntent(client, _ref2) {var _ref22 = _slicedToArray(_ref2, 4);var code = _ref22[0];var intentName = _ref22[1];var objectPath = _ref22[2];var parameters = _ref22[3];
       var intentFn = this.intents[intentName];
-      var $$ = this.$$, target = $$(objectPath);
+      var u = this.u, target = u(objectPath);
 
       var fullParameters = parameters.concat(client);
       return intentFn.apply(target, fullParameters);} }, { key: 'addNodeMethods', value: 
@@ -84,13 +84,13 @@ ServerPlugin = (function () {
 
 
     function addCommand(commandName, commandCode) {
-      this.$$.registerNodeProperties(_defineProperty({}, 
+      this.u.registerNodeProperties(_defineProperty({}, 
       commandName, this.makeCommandMethod(commandName, commandCode)));} }, { key: 'addIntent', value: 
 
 
 
     function addIntent(intentName, intentCode) {
-      this.$$.registerNodeProperties(_defineProperty({}, 
+      this.u.registerNodeProperties(_defineProperty({}, 
       intentName, intentCode));} }, { key: 'makeCommandMethod', value: 
 
 

@@ -1,7 +1,7 @@
 'use strict';Object.defineProperty(exports, '__esModule', { value: true });exports['default'] = 
 
 views;var _ = require('lodash');function views(options) {
-  return function ($$) {return { 
+  return function (u) {return { 
       nodeMethods: { 
         watch: watch } };};}
 
