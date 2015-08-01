@@ -374,6 +374,8 @@ Object.defineProperty(exports, '__esModule', {
 
 var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
 
+exports.serializeArguments = serializeArguments;
+exports.deserializeArguments = deserializeArguments;
 exports.parseMessage = parseMessage;
 
 var _util = require('../util');
@@ -402,6 +404,26 @@ var BUILTIN_COMMANDS = {
 };
 
 exports.BUILTIN_COMMANDS = BUILTIN_COMMANDS;
+
+function serializeArguments(args) {
+  return _.map(args, function (arg) {
+    if (arg && arg.u && arg._path) {
+      return { _u: arg.path() };
+    } else {
+      return arg;
+    }
+  });
+}
+
+function deserializeArguments(u, args) {
+  return _.map(args, function (arg) {
+    if ((0, _util.isObject)(arg) && arg._u !== undefined) {
+      return u(arg._u);
+    } else {
+      return arg;
+    }
+  });
+}
 
 function parseMessage(msgString, callback) {
   // parse the message
@@ -570,12 +592,12 @@ var ClientPlugin = (function () {
     value: function makeIntentMethod(intentName) {
       var client = this;
       return function () {
-        for (var _len2 = arguments.length, parameters = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-          parameters[_key2] = arguments[_key2];
+        for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+          args[_key2] = arguments[_key2];
         }
 
         // this here will be the node we're called upon
-        var intent = [_clientServerBase.INTENT, intentName, this.path(), parameters];
+        var intent = [_clientServerBase.INTENT, intentName, this.path(), (0, _clientServerBase.serializeArguments)(args)];
         client.send(intent);
       };
     }
@@ -589,7 +611,7 @@ var ClientPlugin = (function () {
       var code = _ref22[0];
       var commandName = _ref22[1];
       var objectPath = _ref22[2];
-      var parameters = _ref22[3];
+      var args = _ref22[3];
 
       // find the right one
       var command = this.commands[commandName];
@@ -597,8 +619,9 @@ var ClientPlugin = (function () {
 
       var u = this.u;
       var target = u(objectPath);
+      args = (0, _clientServerBase.deserializeArguments)(u, args);
 
-      return command.apply(target, parameters);
+      return command.apply(target, args);
     }
   }]);
 
@@ -929,14 +952,15 @@ var ServerPlugin = (function () {
       var code = _ref22[0];
       var intentName = _ref22[1];
       var objectPath = _ref22[2];
-      var parameters = _ref22[3];
+      var args = _ref22[3];
 
       var intentFn = this.intents[intentName];
       var u = this.u,
           target = u(objectPath);
 
-      var fullParameters = parameters.concat(client);
-      return intentFn.apply(target, fullParameters);
+      args = (0, _clientServerBase.deserializeArguments)(u, args);
+      var fullArgs = args.concat(client);
+      return intentFn.apply(target, fullArgs);
     }
   }, {
     key: 'addNodeMethods',
@@ -965,13 +989,13 @@ var ServerPlugin = (function () {
     value: function makeCommandMethod(commandName, commandFn) {
       var server = this;
       return function () {
-        for (var _len2 = arguments.length, parameters = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-          parameters[_key2] = arguments[_key2];
+        for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+          args[_key2] = arguments[_key2];
         }
 
         // 'this' refers to the Node on which the method was called here
-        commandFn.apply(this, parameters); // apply the changes on the server
-        server.sendToAll([_clientServerBase.COMMAND, commandName, this.path(), parameters]); // send the changes to all the clients
+        commandFn.apply(this, args); // apply the changes on the server
+        server.sendToAll([_clientServerBase.COMMAND, commandName, this.path(), (0, _clientServerBase.serializeArguments)(args)]); // send the changes to all the clients
       };
     }
   }]);

@@ -108,7 +108,28 @@ describe("Relations plugin", function () {
     assert.equal(noLongerSpy.firstCall.args[0].path(), 'tom');});
 
 
-  it("should send correct commands when relations are introduced and severed");
+  it("should send correct commands when relations are introduced and severed", function () {
+    var server = require('../lib').server;
+    var comm = new (require('./mocks/server-comm'))();
+    var u = unison({ 
+      tom: {}, jerry: {} });
+
+    u.plugin(server({ communication: comm }));
+    u.plugin(relations([{ AtoB: 'likes', BtoA: 'likedBy', Bs: 'liked', As: 'likers' }]));
+
+    comm.attach('test');
+
+    u('tom').now('likes', u('jerry'));
+    u('jerry').noLonger('likedBy', u('tom'));
+
+    assert.deepEqual(comm.messagesSentTo('test')[1], 
+    ['c', 'now', 'tom', ['likes', { _u: 'jerry' }]]);
+
+    assert.deepEqual(comm.messagesSentTo('test')[2], 
+    ['c', 'noLonger', 'jerry', ['likedBy', { _u: 'tom' }]]);});
+
+
+
   it("should support 1:1 relations");
   it("should support 1:n relations");
   it("should support m:n relations");

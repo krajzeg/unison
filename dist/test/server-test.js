@@ -117,5 +117,9 @@ describe("Server plugin", function () {
 
     u('bird').pleaseFrob();
 
-    assert.ok(u('bird').get.frobbed);});});
+    assert.ok(u('bird').get.frobbed);});
+
+
+  it("should deserialize objects in received intents correctly");
+  it("should serialize objects in sent command arguments");});
 //# sourceMappingURL=server-test.js.map

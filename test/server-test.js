@@ -120,5 +120,6 @@ describe("Server plugin", () => {
     assert.ok(u('bird').get.frobbed);
   });
 
-
+  it("should deserialize objects in received intents correctly");
+  it("should serialize objects in sent command arguments");
 });

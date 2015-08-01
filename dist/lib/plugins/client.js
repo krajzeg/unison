@@ -74,15 +74,15 @@ ClientPlugin = (function () {
     // Generates a method that will send a named intent with the right parameters when called.
   }, { key: "makeIntentMethod", value: function makeIntentMethod(intentName) {
       var client = this;
-      return function () {for (var _len2 = arguments.length, parameters = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {parameters[_key2] = arguments[_key2];}
+      return function () {for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {args[_key2] = arguments[_key2];}
         // this here will be the node we're called upon
-        var intent = [_clientServerBase.INTENT, intentName, this.path(), parameters];
+        var intent = [_clientServerBase.INTENT, intentName, this.path(), (0, _clientServerBase.serializeArguments)(args)];
         client.send(intent);};}
 
 
 
     // Applies a command received from the server to the local state.
-  }, { key: "applyCommand", value: function applyCommand(_ref2) {var _ref22 = _slicedToArray(_ref2, 4);var code = _ref22[0];var commandName = _ref22[1];var objectPath = _ref22[2];var parameters = _ref22[3];
+  }, { key: "applyCommand", value: function applyCommand(_ref2) {var _ref22 = _slicedToArray(_ref2, 4);var code = _ref22[0];var commandName = _ref22[1];var objectPath = _ref22[2];var args = _ref22[3];
       // find the right one
       var command = this.commands[commandName];
       if (!command) 
@@ -90,8 +90,9 @@ ClientPlugin = (function () {
 
       var u = this.u;
       var target = u(objectPath);
+      args = (0, _clientServerBase.deserializeArguments)(u, args);
 
-      return command.apply(target, parameters);} }]);return ClientPlugin;})()
+      return command.apply(target, args);} }]);return ClientPlugin;})()
 
 
 

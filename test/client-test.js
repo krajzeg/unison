@@ -125,4 +125,7 @@ describe("Client plugin", () => {
       ['i', 'pleaseFrob', '', []]
     ]);
   });
+
+  it("should serialize objects in intent arguments correctly");
+  it("should deserialize objects in received command arguments");
 });

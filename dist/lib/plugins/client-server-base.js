@@ -18,10 +18,30 @@
 
 
 
+serializeArguments = serializeArguments;exports.
+
+
+
+
+
+
+
+
+
+deserializeArguments = deserializeArguments;exports.
+
+
+
+
+
+
+
+
+
 parseMessage = parseMessage;var _util = require('../util');var _ = require('lodash');var COMMAND = 'c', INTENT = 'i';exports.COMMAND = COMMAND;exports.INTENT = INTENT;var BUILTIN_COMMANDS = { _seed: function _seed(state) {var _this = this; // we have to do this through .update() and .add() to trigger events properly
     var children = _.pick(state, _util.isObject);var props = _.pick(state, _.negate(_util.isObject)); // set all properties
     this.update(props); // add all children
-    _.each(children, function (child, id) {_this.add(id, child);});} };exports.BUILTIN_COMMANDS = BUILTIN_COMMANDS;function parseMessage(msgString, callback) {// parse the message
+    _.each(children, function (child, id) {_this.add(id, child);});} };exports.BUILTIN_COMMANDS = BUILTIN_COMMANDS;function serializeArguments(args) {return _.map(args, function (arg) {if (arg && arg.u && arg._path) {return { _u: arg.path() };} else {return arg;}});}function deserializeArguments(u, args) {return _.map(args, function (arg) {if ((0, _util.isObject)(arg) && arg._u !== undefined) {return u(arg._u);} else {return arg;}});}function parseMessage(msgString, callback) {// parse the message
   var message = undefined;try {message = JSON.parse(msgString);
     var valid = messageValid(message);
     if (!valid) 

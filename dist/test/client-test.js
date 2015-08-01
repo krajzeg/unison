@@ -122,5 +122,10 @@ describe("Client plugin", function () {
 
     assert.ok(u('').get.frobbed);
     assert.deepEqual(comm.sentMessages, [
-    ['i', 'pleaseFrob', '', []]]);});});
+    ['i', 'pleaseFrob', '', []]]);});
+
+
+
+  it("should serialize objects in intent arguments correctly");
+  it("should deserialize objects in received command arguments");});
 //# sourceMappingURL=client-test.js.map

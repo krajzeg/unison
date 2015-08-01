@@ -70,12 +70,13 @@ ServerPlugin = (function () {
       this.communication.sendTo(client, msgString);} }, { key: 'applyIntent', value: 
 
 
-    function applyIntent(client, _ref2) {var _ref22 = _slicedToArray(_ref2, 4);var code = _ref22[0];var intentName = _ref22[1];var objectPath = _ref22[2];var parameters = _ref22[3];
+    function applyIntent(client, _ref2) {var _ref22 = _slicedToArray(_ref2, 4);var code = _ref22[0];var intentName = _ref22[1];var objectPath = _ref22[2];var args = _ref22[3];
       var intentFn = this.intents[intentName];
       var u = this.u, target = u(objectPath);
 
-      var fullParameters = parameters.concat(client);
-      return intentFn.apply(target, fullParameters);} }, { key: 'addNodeMethods', value: 
+      args = (0, _clientServerBase.deserializeArguments)(u, args);
+      var fullArgs = args.concat(client);
+      return intentFn.apply(target, fullArgs);} }, { key: 'addNodeMethods', value: 
 
 
     function addNodeMethods() {var _this4 = this;
@@ -97,9 +98,9 @@ ServerPlugin = (function () {
 
     function makeCommandMethod(commandName, commandFn) {
       var server = this;
-      return function () {for (var _len2 = arguments.length, parameters = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {parameters[_key2] = arguments[_key2];}
+      return function () {for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {args[_key2] = arguments[_key2];}
         // 'this' refers to the Node on which the method was called here
-        commandFn.apply(this, parameters); // apply the changes on the server
-        server.sendToAll([_clientServerBase.COMMAND, commandName, this.path(), parameters]); // send the changes to all the clients
+        commandFn.apply(this, args); // apply the changes on the server
+        server.sendToAll([_clientServerBase.COMMAND, commandName, this.path(), (0, _clientServerBase.serializeArguments)(args)]); // send the changes to all the clients
       };} }]);return ServerPlugin;})();module.exports = exports['default'];
 //# sourceMappingURL=../plugins/server.js.map
