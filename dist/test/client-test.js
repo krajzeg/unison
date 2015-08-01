@@ -126,6 +126,39 @@ describe("Client plugin", function () {
 
 
 
-  it("should serialize objects in intent arguments correctly");
-  it("should deserialize objects in received command arguments");});
+  it("should serialize objects in intent arguments correctly", function () {
+    var comm = new CommunicationMock();
+
+    var u = unison({ bird: {}, human: {} }).
+    plugin(client({ 
+      communication: comm, 
+      commands: {}, 
+      intents: { 
+        frob: function frob(somebodyElse) {} } }));
+
+
+
+    u('bird').frob(u('human'));
+
+    assert.deepEqual(comm.sentMessages, [
+    ['i', 'frob', 'bird', [{ _u: 'human' }]]]);});
+
+
+
+  it("should deserialize objects in received command arguments", function () {
+    var comm = new CommunicationMock();
+    var u = unison({ bird: {} }).
+    plugin(client({ 
+      communication: comm, 
+      commands: { 
+        frob: function frob(who) {
+          who.update({ frobbed: true });} }, 
+
+
+      intents: {} }));
+
+
+    comm.pushServerCommand('frob', '', { _u: 'bird' });
+
+    assert.equal(u('bird').get.frobbed, true);});});
 //# sourceMappingURL=client-test.js.map

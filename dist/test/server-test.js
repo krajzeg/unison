@@ -120,6 +120,26 @@ describe("Server plugin", function () {
     assert.ok(u('bird').get.frobbed);});
 
 
-  it("should deserialize objects in received intents correctly");
-  it("should serialize objects in sent command arguments");});
+  it("should serialize and deserialize objects over the network correctly", function () {
+    var comm = new CommunicationMock();
+
+    var u = unison({ bird: {}, human: {} }).
+    plugin(server({ 
+      communication: comm, 
+      commands: { 
+        frob: function frob(who) {who.update({ frobbedBy: this.path() });} }, 
+
+      intents: { 
+        pleaseFrob: function pleaseFrob(who) {
+          this.frob(who);} } }));
+
+
+
+
+    comm.attach('client1');
+    comm.pushClientMessage('client1', ['i', 'pleaseFrob', 'bird', [{ _u: 'human' }]]);
+
+    assert.equal(u('human').get.frobbedBy, 'bird');
+    assert.ok(comm.containsMessageFor('client1', 
+    ['c', 'frob', 'bird', [{ _u: 'human' }]]));});});
 //# sourceMappingURL=server-test.js.map

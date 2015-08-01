@@ -120,6 +120,28 @@ describe("Server plugin", () => {
     assert.ok(u('bird').get.frobbed);
   });
 
-  it("should deserialize objects in received intents correctly");
-  it("should serialize objects in sent command arguments");
+  it("should serialize and deserialize objects over the network correctly", () => {
+    let comm = new CommunicationMock();
+
+    let u = unison({bird: {}, human: {}})
+      .plugin(server({
+        communication: comm,
+        commands: {
+          frob(who) { who.update({frobbedBy: this.path()}); }
+        },
+        intents: {
+          pleaseFrob(who) {
+            this.frob(who);
+          }
+        }
+      }));
+
+    comm.attach('client1');
+    comm.pushClientMessage('client1', ['i', 'pleaseFrob', 'bird', [{_u: 'human'}]]);
+
+    assert.equal(u('human').get.frobbedBy, 'bird');
+    assert.ok(comm.containsMessageFor('client1',
+      ['c', 'frob', 'bird', [{_u: 'human'}]]
+    ));
+  });
 });
