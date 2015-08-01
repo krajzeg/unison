@@ -130,10 +130,43 @@ describe("Relations plugin", () => {
     );
   });
 
-  it("should support 1:1 relations");
-  it("should support 1:n relations");
-  it("should support m:n relations");
-  it("should automatically sever an old n:1 or 1:1 relation when a new '1' is introduced");
+  it("should automatically sever an old n:1 relation when the 1-side changes", () => {
+    let u = unison({
+      doctor: {}, london: {}, tardis: {}, bobby: {}
+    });
+    u.plugin(relations([
+      {AtoB: 'contains', BtoA: 'isIn', A: 'location', Bs: 'contents'}
+    ]));
+
+    let [doctor, london, tardis, bobby] = _.map(['doctor', 'london', 'tardis', 'bobby'], u);
+    london.now('contains', bobby);
+    london.now('contains', doctor);
+    doctor.now('isIn', tardis); // this should move him away from London too
+
+    assert.ok(doctor.isIn(tardis));
+    assert.ok(!doctor.isIn(london));
+    assert.deepEqual(_.invoke(london.contents(), 'path'), ['bobby']);
+    assert.equal(doctor.location().path(), 'tardis');
+  });
+
+  it("should automatically sever an old 1:1 relation when a new one is added", () => {
+    let u = unison({
+      door: {}, redKnob: {}, blueKnob: {}
+    });
+    u.plugin(relations([
+      {AtoB: 'opens', BtoA: 'openedBy', A: 'door', B: 'knob'}
+    ]));
+
+    let [door, redKnob, blueKnob] = _.map(['door', 'redKnob', 'blueKnob'], u);
+    door.now('openedBy', redKnob);
+    door.now('openedBy', blueKnob);
+
+    assert.ok(door.openedBy(blueKnob));
+    assert.ok(!door.openedBy(redKnob));
+    assert.ok(blueKnob.opens(door));
+    assert.ok(!redKnob.opens(door));
+    assert.equal(redKnob.door(), undefined);
+  });
 });
 
 function prepareUnisonInstance(rels) {

@@ -1,4 +1,4 @@
-'use strict';var _ = require('lodash');
+'use strict';var _slicedToArray = (function () {function sliceIterator(arr, i) {var _arr = [];var _n = true;var _d = false;var _e = undefined;try {for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {_arr.push(_s.value);if (i && _arr.length === i) break;}} catch (err) {_d = true;_e = err;} finally {try {if (!_n && _i['return']) _i['return']();} finally {if (_d) throw _e;}}return _arr;}return function (arr, i) {if (Array.isArray(arr)) {return arr;} else if (Symbol.iterator in Object(arr)) {return sliceIterator(arr, i);} else {throw new TypeError('Invalid attempt to destructure non-iterable instance');}};})();var _ = require('lodash');
 var assert = require('chai').assert;
 var unison = require('../lib');
 var client = require('../lib').client;
@@ -130,10 +130,43 @@ describe("Relations plugin", function () {
 
 
 
-  it("should support 1:1 relations");
-  it("should support 1:n relations");
-  it("should support m:n relations");
-  it("should automatically sever an old n:1 or 1:1 relation when a new '1' is introduced");});
+  it("should automatically sever an old n:1 relation when the 1-side changes", function () {
+    var u = unison({ 
+      doctor: {}, london: {}, tardis: {}, bobby: {} });
+
+    u.plugin(relations([
+    { AtoB: 'contains', BtoA: 'isIn', A: 'location', Bs: 'contents' }]));var _$map = 
+
+
+    _.map(['doctor', 'london', 'tardis', 'bobby'], u);var _$map2 = _slicedToArray(_$map, 4);var doctor = _$map2[0];var london = _$map2[1];var tardis = _$map2[2];var bobby = _$map2[3];
+    london.now('contains', bobby);
+    london.now('contains', doctor);
+    doctor.now('isIn', tardis); // this should move him away from London too
+
+    assert.ok(doctor.isIn(tardis));
+    assert.ok(!doctor.isIn(london));
+    assert.deepEqual(_.invoke(london.contents(), 'path'), ['bobby']);
+    assert.equal(doctor.location().path(), 'tardis');});
+
+
+  it("should automatically sever an old 1:1 relation when a new one is added", function () {
+    var u = unison({ 
+      door: {}, redKnob: {}, blueKnob: {} });
+
+    u.plugin(relations([
+    { AtoB: 'opens', BtoA: 'openedBy', A: 'door', B: 'knob' }]));var _$map3 = 
+
+
+    _.map(['door', 'redKnob', 'blueKnob'], u);var _$map32 = _slicedToArray(_$map3, 3);var door = _$map32[0];var redKnob = _$map32[1];var blueKnob = _$map32[2];
+    door.now('openedBy', redKnob);
+    door.now('openedBy', blueKnob);
+
+    assert.ok(door.openedBy(blueKnob));
+    assert.ok(!door.openedBy(redKnob));
+    assert.ok(blueKnob.opens(door));
+    assert.ok(!redKnob.opens(door));
+    assert.equal(redKnob.door(), undefined);});});
+
 
 
 function prepareUnisonInstance(rels) {

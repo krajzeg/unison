@@ -720,6 +720,14 @@ var Relations = (function () {
       var rel = this.find(name);
       return rel.AtoB == name ? rel.BtoA : rel.AtoB;
     }
+
+    // Returns 'true' if the object can only be in this relation with one other object (e.g. "is located in")
+  }, {
+    key: 'isSingular',
+    value: function isSingular(name) {
+      var rel = this.find(name);
+      return !!(rel.AtoB == name && rel.B || rel.BtoA == name && rel.A);
+    }
   }, {
     key: 'applyPlugin',
     value: function applyPlugin(u) {
@@ -766,15 +774,17 @@ var Relations = (function () {
 
 function makeRelateFn(relations) {
   return function (name, otherSide) {
-    addRelation(this, name, otherSide);
-    addRelation(otherSide, relations.findInverse(name), this);
+    addRelation(relations, this, name, otherSide, relations.isSingular(name));
+
+    var inverse = relations.findInverse(name);
+    addRelation(relations, otherSide, inverse, this, relations.isSingular(inverse));
   };
 }
 
 function makeCeaseFn(relations) {
   return function (name, otherSide) {
-    removeRelation(this, name, otherSide);
-    removeRelation(otherSide, relations.findInverse(name), this);
+    removeRelation(relations, this, name, otherSide);
+    removeRelation(relations, otherSide, relations.findInverse(name), this);
   };
 }
 
@@ -800,24 +810,38 @@ function makeMultipleGetter(relationName) {
   };
 }
 
-function addRelation(fromObj, name, toObj) {
-  var toPath = toObj.path();
+function addRelation(relations, fromObj, name, toObj) {
+  var removePreviousRelations = arguments.length <= 4 || arguments[4] === undefined ? false : arguments[4];
+
+  var u = fromObj.u,
+      toPath = toObj.path();
 
   var currentRels = fromObj.get[name] || [];
   if (_.contains(currentRels, toPath)) throw new Error('Relation \'' + fromObj.path() + ' ' + name + ' ' + toPath + '\' already exists.');
 
+  if (removePreviousRelations && currentRels.length) {
+    (function () {
+      var inverse = relations.findInverse(name);
+      _.each(currentRels, function (path) {
+        removeRelation(relations, u(path), inverse, fromObj);
+      });
+      currentRels = [];
+    })();
+  }
+
   var updatedRels = currentRels.concat([toObj.path()]);
+
   fromObj.update(_defineProperty({}, name, updatedRels));
   fromObj.trigger('now:' + name, toObj);
 }
 
-function removeRelation(fromObj, name, toObj) {
+function removeRelation(relations, fromObj, name, toObj) {
   var toPath = toObj.path();
 
   var rels = fromObj.get[name] || [];
-  if (!_(rels).contains(toPath)) throw new Error('Relation \'' + fromObj.path() + ' ' + name + ' ' + toPath + '\' can\'t be removed, because it doesn\'t exist.');
+  if (!_.contains(rels, toPath)) throw new Error('Relation \'' + fromObj.path() + ' ' + name + ' ' + toPath + '\' can\'t be removed, because it doesn\'t exist.');
 
-  fromObj.update(_defineProperty({}, name, _(rels).without(toPath)));
+  fromObj.update(_defineProperty({}, name, _.without(rels, toPath)));
   fromObj.trigger('noLonger:' + name, toObj);
 }
 module.exports = exports['default'];
