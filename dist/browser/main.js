@@ -233,6 +233,7 @@ var UnisonNode = (function () {
       if (state[id] !== undefined) {
         throw new Error('Can\'t add child \'' + id + '\' at ' + this._path + ' - it already exists.');
       }
+      validateId(id);
 
       // add it
       state[id] = child;
@@ -337,6 +338,11 @@ function parentPath(path) {
 
 function childPath(path, id) {
   if (path == '') return id;else return [path, id].join('.');
+}
+
+function validateId(id) {
+  if (id == '') throw new Error('IDs have to be non-empty.');
+  if (id.indexOf(".") >= 0) throw new Error('IDs cannot contain dots.');
 }
 module.exports = exports['default'];
 

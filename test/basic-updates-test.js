@@ -86,6 +86,15 @@ describe("add()", () => {
       u('things.screwdriver.name').add({something: 'here'});
     });
   });
+
+  it("should throw on adding things under an empty ID", () => {
+    assert.throws(() => { u('').add('', {}); });
+  });
+
+  it("should throw on adding things under an ID with a dot", () => {
+    assert.throws(() => { u('').add('dotted.id', {}); });
+  });
+
 });
 
 describe("remove()", () => {

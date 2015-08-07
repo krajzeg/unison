@@ -83,7 +83,16 @@ describe("add()", function () {
 
   it("should throw when adding to a non-object", function () {
     assert.throws(function () {
-      u('things.screwdriver.name').add({ something: 'here' });});});});
+      u('things.screwdriver.name').add({ something: 'here' });});});
+
+
+
+  it("should throw on adding things under an empty ID", function () {
+    assert.throws(function () {u('').add('', {});});});
+
+
+  it("should throw on adding things under an ID with a dot", function () {
+    assert.throws(function () {u('').add('dotted.id', {});});});});
 
 
 
