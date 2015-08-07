@@ -2,6 +2,8 @@ var _ = require('lodash');
 var assert = require('chai').assert;
 var unison = require('../lib');
 var server = require('../lib').server;
+var sinon = require('sinon');
+var Promise = require('bluebird');
 var CommunicationMock = require('./mocks/server-comm');
 
 describe("Server plugin", () => {
@@ -144,4 +146,123 @@ describe("Server plugin", () => {
       ['c', 'frob', 'bird', [{_u: 'human'}]]
     ));
   });
+
+  it("should send correct responses when an intent function returns a value", (done) => {
+    let comm = new CommunicationMock();
+
+    let srv = server({
+      communication: comm,
+      intents: {
+        pleaseFrob() {
+          return "Frobbed!";
+        }
+      }
+    });
+    let u = unison({}).plugin(srv);
+    comm.attach('client1');
+
+    srv.plugin.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(() => {
+      assert.ok(comm.containsMessageFor('client1',
+        ['r', 'ok', 1, "Frobbed!"]
+      ));
+    }).then(done).catch(done);
+  });
+
+  it("should act correctly when an intent function returns a promise", (done) => {
+    let comm = new CommunicationMock();
+
+    let srv = server({
+      communication: comm,
+      intents: {
+        pleaseFrob() {
+          return wait(10).then(() => "Frobbed!");
+        }
+      }
+    });
+    let u = unison({}).plugin(srv);
+    comm.attach('client1');
+
+    srv.plugin.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(() => {
+      assert.ok(comm.containsMessageFor('client1',
+        ['r', 'ok', 1, "Frobbed!"]
+      ));
+    }).then(done).catch(done);
+  });
+
+  it("should send correct responses when an intent function unexpectedly fails", (done) => {
+    let comm = new CommunicationMock(), errorSpy = sinon.spy();
+
+    let srv = server({
+      communication: comm,
+      intents: {
+        pleaseFrob() {
+          throw new Error("It hurts a lot.")
+        }
+      },
+      unexpectedErrorMessage: 'Argh!',
+      errorHandler: errorSpy
+    });
+
+    let u = unison({}).plugin(srv);
+    comm.attach('client1');
+
+    srv.plugin.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(() => {
+      assert.ok(comm.containsMessageFor('client1',
+        ['r', 'err', 1, "Argh!"]
+      ));
+      assert.ok(errorSpy.calledOnce);
+    }).then(done).catch(done);
+
+  });
+
+  it("should send correct responses when an intent function throws a UserError", (done) => {
+    let comm = new CommunicationMock(), errorSpy = sinon.spy();
+    let srv = server({
+      communication: comm,
+      intents: {
+        pleaseFrob() {
+          throw new unison.UserError("Not frobbable.")
+        }
+      },
+      errorHandler: errorSpy
+    });
+
+    let u = unison({}).plugin(srv);
+    comm.attach('client1');
+
+    srv.plugin.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(() => {
+      assert.ok(comm.containsMessageFor('client1',
+        ['r', 'err', 1, "Not frobbable."]
+      ));
+      assert.ok(!errorSpy.called);
+    }).then(done).catch(done);
+  });
+
+  it("should serialize objects returned from intents", (done) => {
+    let comm = new CommunicationMock();
+
+    let srv = server({
+      communication: comm,
+      intents: {
+        pleaseFrob() {
+          return this;
+        }
+      }
+    });
+    let u = unison({cockatoo: {}}).plugin(srv);
+    comm.attach('client1');
+
+    srv.plugin.applyIntent('client1', ['i', 'pleaseFrob', 'cockatoo', [], 1]).then(() => {
+      assert.ok(comm.containsMessageFor('client1',
+        ['r', 'ok', 1, {_u: 'cockatoo'}]
+      ));
+    }).then(done).catch(done);
+  });
+
 });
+
+function wait(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}

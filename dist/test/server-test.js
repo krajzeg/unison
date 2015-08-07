@@ -2,6 +2,8 @@
 var assert = require('chai').assert;
 var unison = require('../lib');
 var server = require('../lib').server;
+var sinon = require('sinon');
+var Promise = require('bluebird');
 var CommunicationMock = require('./mocks/server-comm');
 
 describe("Server plugin", function () {
@@ -141,5 +143,125 @@ describe("Server plugin", function () {
 
     assert.equal(u('human').get.frobbedBy, 'bird');
     assert.ok(comm.containsMessageFor('client1', 
-    ['c', 'frob', 'bird', [{ _u: 'human' }]]));});});
+    ['c', 'frob', 'bird', [{ _u: 'human' }]]));});
+
+
+
+  it("should send correct responses when an intent function returns a value", function (done) {
+    var comm = new CommunicationMock();
+
+    var srv = server({ 
+      communication: comm, 
+      intents: { 
+        pleaseFrob: function pleaseFrob() {
+          return "Frobbed!";} } });
+
+
+
+    var u = unison({}).plugin(srv);
+    comm.attach('client1');
+
+    srv.plugin.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(function () {
+      assert.ok(comm.containsMessageFor('client1', 
+      ['r', 'ok', 1, "Frobbed!"]));}).
+
+    then(done)['catch'](done);});
+
+
+  it("should act correctly when an intent function returns a promise", function (done) {
+    var comm = new CommunicationMock();
+
+    var srv = server({ 
+      communication: comm, 
+      intents: { 
+        pleaseFrob: function pleaseFrob() {
+          return wait(10).then(function () {return "Frobbed!";});} } });
+
+
+
+    var u = unison({}).plugin(srv);
+    comm.attach('client1');
+
+    srv.plugin.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(function () {
+      assert.ok(comm.containsMessageFor('client1', 
+      ['r', 'ok', 1, "Frobbed!"]));}).
+
+    then(done)['catch'](done);});
+
+
+  it("should send correct responses when an intent function unexpectedly fails", function (done) {
+    var comm = new CommunicationMock(), errorSpy = sinon.spy();
+
+    var srv = server({ 
+      communication: comm, 
+      intents: { 
+        pleaseFrob: function pleaseFrob() {
+          throw new Error("It hurts a lot.");} }, 
+
+
+      unexpectedErrorMessage: 'Argh!', 
+      errorHandler: errorSpy });
+
+
+    var u = unison({}).plugin(srv);
+    comm.attach('client1');
+
+    srv.plugin.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(function () {
+      assert.ok(comm.containsMessageFor('client1', 
+      ['r', 'err', 1, "Argh!"]));
+
+      assert.ok(errorSpy.calledOnce);}).
+    then(done)['catch'](done);});
+
+
+
+  it("should send correct responses when an intent function throws a UserError", function (done) {
+    var comm = new CommunicationMock(), errorSpy = sinon.spy();
+    var srv = server({ 
+      communication: comm, 
+      intents: { 
+        pleaseFrob: function pleaseFrob() {
+          throw new unison.UserError("Not frobbable.");} }, 
+
+
+      errorHandler: errorSpy });
+
+
+    var u = unison({}).plugin(srv);
+    comm.attach('client1');
+
+    srv.plugin.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(function () {
+      assert.ok(comm.containsMessageFor('client1', 
+      ['r', 'err', 1, "Not frobbable."]));
+
+      assert.ok(!errorSpy.called);}).
+    then(done)['catch'](done);});
+
+
+  it("should serialize objects returned from intents", function (done) {
+    var comm = new CommunicationMock();
+
+    var srv = server({ 
+      communication: comm, 
+      intents: { 
+        pleaseFrob: function pleaseFrob() {
+          return this;} } });
+
+
+
+    var u = unison({ cockatoo: {} }).plugin(srv);
+    comm.attach('client1');
+
+    srv.plugin.applyIntent('client1', ['i', 'pleaseFrob', 'cockatoo', [], 1]).then(function () {
+      assert.ok(comm.containsMessageFor('client1', 
+      ['r', 'ok', 1, { _u: 'cockatoo' }]));}).
+
+    then(done)['catch'](done);});});
+
+
+
+
+function wait(ms) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, ms);});}
 //# sourceMappingURL=server-test.js.map
