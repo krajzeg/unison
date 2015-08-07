@@ -70,7 +70,7 @@ ServerPlugin = (function () {
       this.communication.sendTo(client, msgString);} }, { key: 'applyIntent', value: 
 
 
-    function applyIntent(client, _ref2) {var _ref22 = _slicedToArray(_ref2, 4);var code = _ref22[0];var intentName = _ref22[1];var objectPath = _ref22[2];var args = _ref22[3];
+    function applyIntent(client, _ref2) {var _ref22 = _slicedToArray(_ref2, 5);var code = _ref22[0];var intentName = _ref22[1];var objectPath = _ref22[2];var args = _ref22[3];var intentId = _ref22[4];
       var intentFn = this.intents[intentName];
       var u = this.u, target = u(objectPath);
 

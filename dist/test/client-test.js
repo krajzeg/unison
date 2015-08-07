@@ -26,8 +26,8 @@ describe("Client plugin", function () {
     u('bird').ageBy(5, 'years');
 
     assert.deepEqual(comm.sentMessages, [
-    ['i', 'frob', 'bird', ['very hard']], 
-    ['i', 'ageBy', 'bird', [5, 'years']]]);});
+    ['i', 'frob', 'bird', ['very hard'], 1], 
+    ['i', 'ageBy', 'bird', [5, 'years'], 2]]);});
 
 
 
@@ -122,7 +122,7 @@ describe("Client plugin", function () {
 
     assert.ok(u('').get.frobbed);
     assert.deepEqual(comm.sentMessages, [
-    ['i', 'pleaseFrob', '', []]]);});
+    ['i', 'pleaseFrob', '', [], 1]]);});
 
 
 
@@ -141,7 +141,7 @@ describe("Client plugin", function () {
     u('bird').frob(u('human'));
 
     assert.deepEqual(comm.sentMessages, [
-    ['i', 'frob', 'bird', [{ _u: 'human' }]]]);});
+    ['i', 'frob', 'bird', [{ _u: 'human' }], 1]]);});
 
 
 

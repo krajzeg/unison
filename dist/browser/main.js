@@ -378,19 +378,31 @@ Object.defineProperty(exports, '__esModule', {
   value: true
 });
 
-var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
+var _ACCEPTABLE_MESSAGE_LENGTHS;
 
 exports.serializeArguments = serializeArguments;
 exports.deserializeArguments = deserializeArguments;
 exports.parseMessage = parseMessage;
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 var _util = require('../util');
 
 var _ = require('lodash');
 var COMMAND = 'c',
-    INTENT = 'i';
+    INTENT = 'i',
+    RESPONSE = 'r';
 exports.COMMAND = COMMAND;
 exports.INTENT = INTENT;
+exports.RESPONSE = RESPONSE;
+var RESPONSE_OK = 'ok',
+    RESPONSE_ERROR = 'err';
+
+exports.RESPONSE_OK = RESPONSE_OK;
+exports.RESPONSE_ERROR = RESPONSE_ERROR;
+var ACCEPTABLE_MESSAGE_TYPES = [COMMAND, INTENT, RESPONSE];
+var ACCEPTABLE_MESSAGE_LENGTHS = (_ACCEPTABLE_MESSAGE_LENGTHS = {}, _defineProperty(_ACCEPTABLE_MESSAGE_LENGTHS, COMMAND, 4), _defineProperty(_ACCEPTABLE_MESSAGE_LENGTHS, INTENT, 5), _defineProperty(_ACCEPTABLE_MESSAGE_LENGTHS, RESPONSE, 4), _ACCEPTABLE_MESSAGE_LENGTHS);
+
 var BUILTIN_COMMANDS = {
   _seed: function _seed(state) {
     var _this = this;
@@ -455,13 +467,10 @@ function parseMessage(msgString, callback) {
 
 function messageValid(message) {
   if (!(message instanceof Array)) return false;
-  if (message.length != 4) return false;
 
-  var _message = _slicedToArray(message, 1);
-
-  var code = _message[0];
-
-  if (code != COMMAND && code != INTENT) return false;
+  var type = message[0];
+  if (ACCEPTABLE_MESSAGE_TYPES.indexOf(type) < 0) return false;
+  if (message.length != ACCEPTABLE_MESSAGE_LENGTHS[type]) return false;
 
   return true;
 }
@@ -510,9 +519,12 @@ var ClientPlugin = (function () {
 
     _classCallCheck(this, ClientPlugin);
 
-    _.extend(this, { communication: communication, intents: intents, commands: commands });
-
+    _.extend(this, {
+      communication: communication, intents: intents, commands: commands,
+      _nextIntentId: 1
+    });
     _.extend(this.commands, _clientServerBase.BUILTIN_COMMANDS);
+
     this.communication.onReceive(function (msg) {
       return _this.receive(msg);
     });
@@ -603,7 +615,7 @@ var ClientPlugin = (function () {
         }
 
         // this here will be the node we're called upon
-        var intent = [_clientServerBase.INTENT, intentName, this.path(), (0, _clientServerBase.serializeArguments)(args)];
+        var intent = [_clientServerBase.INTENT, intentName, this.path(), (0, _clientServerBase.serializeArguments)(args), client._nextIntentId++];
         client.send(intent);
       };
     }
@@ -977,12 +989,13 @@ var ServerPlugin = (function () {
   }, {
     key: 'applyIntent',
     value: function applyIntent(client, _ref2) {
-      var _ref22 = _slicedToArray(_ref2, 4);
+      var _ref22 = _slicedToArray(_ref2, 5);
 
       var code = _ref22[0];
       var intentName = _ref22[1];
       var objectPath = _ref22[2];
       var args = _ref22[3];
+      var intentId = _ref22[4];
 
       var intentFn = this.intents[intentName];
       var u = this.u,

@@ -52,7 +52,7 @@ describe("Server plugin", () => {
       }));
 
     comm.attach('client1');
-    comm.pushClientMessage('client1', ['i', 'pleaseFrob', 'bird', ['lightly']]);
+    comm.pushClientMessage('client1', ['i', 'pleaseFrob', 'bird', ['lightly'], 1]);
 
     let bird = u('bird').get;
     assert.equal(bird.frobbed, 'lightly');
@@ -137,7 +137,7 @@ describe("Server plugin", () => {
       }));
 
     comm.attach('client1');
-    comm.pushClientMessage('client1', ['i', 'pleaseFrob', 'bird', [{_u: 'human'}]]);
+    comm.pushClientMessage('client1', ['i', 'pleaseFrob', 'bird', [{_u: 'human'}], 1]);
 
     assert.equal(u('human').get.frobbedBy, 'bird');
     assert.ok(comm.containsMessageFor('client1',

@@ -11,9 +11,12 @@ client;function _defineProperty(obj, key, value) {if (key in obj) {Object.define
 
 ClientPlugin = (function () {
   function ClientPlugin(_ref) {var _this = this;var communication = _ref.communication;var _ref$intents = _ref.intents;var intents = _ref$intents === undefined ? {} : _ref$intents;var _ref$commands = _ref.commands;var commands = _ref$commands === undefined ? {} : _ref$commands;_classCallCheck(this, ClientPlugin);
-    _.extend(this, { communication: communication, intents: intents, commands: commands });
+    _.extend(this, { 
+      communication: communication, intents: intents, commands: commands, 
+      _nextIntentId: 1 });
 
     _.extend(this.commands, _clientServerBase.BUILTIN_COMMANDS);
+
     this.communication.onReceive(function (msg) {return _this.receive(msg);});}
 
 
@@ -76,7 +79,7 @@ ClientPlugin = (function () {
       var client = this;
       return function () {for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {args[_key2] = arguments[_key2];}
         // this here will be the node we're called upon
-        var intent = [_clientServerBase.INTENT, intentName, this.path(), (0, _clientServerBase.serializeArguments)(args)];
+        var intent = [_clientServerBase.INTENT, intentName, this.path(), (0, _clientServerBase.serializeArguments)(args), client._nextIntentId++];
         client.send(intent);};}
 
 
