@@ -41,6 +41,17 @@ describe("X.Y.* (single star) wildcard listeners", () => {
 
     assert.ok(listenSpy.called);
   });
+
+  it("should not trigger if bubbling was stopped", () => {
+    let childSpy = sinon.spy();
+    u.listen('bird.wings.*', 'updated', childSpy);
+    u.listen('bird.wings.left', 'updated', (evt) => evt.stopBubbling());
+
+    u('bird.wings.left').update({lefter: true});
+    u('bird.wings.right').update({righter: true});
+
+    assert.ok(childSpy.calledOnce);
+  });
 });
 
 describe("X.Y.** (double star) wildcard listeners", () => {
@@ -94,6 +105,17 @@ describe("X.Y.** (double star) wildcard listeners", () => {
 
     assert.ok(listenSpy.called);
     assert.ok(onAnySpy.called);
+  });
+
+  it("should not trigger if bubbling was stopped", () => {
+    let childSpy = sinon.spy();
+    u.listen('bird.**', 'updated', childSpy);
+    u.listen('bird.wings.left', 'updated', (evt) => evt.stopBubbling());
+
+    u('bird.wings.left').update({lefter: true});
+    u('bird.wings.right').update({righter: true});
+
+    assert.ok(childSpy.calledOnce);
   });
 });
 

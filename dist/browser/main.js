@@ -30,7 +30,7 @@ function Unison() {
   this._state = initialState;
   this._nextId = 1;
 
-  this._events = new _events2['default']();
+  this._events = new _events2['default'](this);
 
   // each Unison object has its own pseudo-class for nodes that can be extended by plugins
   this._nodeBase = Object.create(UnisonNode.prototype);
@@ -331,9 +331,10 @@ var _util = require('./util');
 var _ = require('lodash');
 
 var UnisonEvents = (function () {
-  function UnisonEvents() {
+  function UnisonEvents(unison) {
     _classCallCheck(this, UnisonEvents);
 
+    this.u = unison;
     this._listeners = {};
   }
 
@@ -364,13 +365,13 @@ var UnisonEvents = (function () {
     }
   }, {
     key: 'handle',
-    value: function handle(path, event, payload) {
-      var key = this.key(path, event);
+    value: function handle(path, eventObj) {
+      var key = this.key(path, eventObj.name);
       var listeners = this._listeners[key];
       if (listeners) {
         listeners.map(function (l) {
           try {
-            l(payload);
+            l(eventObj);
           } catch (e) {
             console.error('Error in listener in response to ' + path + '|' + event);
             console.error(e.stack || e);
@@ -380,8 +381,13 @@ var UnisonEvents = (function () {
     }
   }, {
     key: 'trigger',
-    value: function trigger(path, event, payload) {
+    value: function trigger(path, event) {
       var _this = this;
+
+      var payload = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+      var source = this.u(path);
+      var eventObj = new UnisonEvent(event, source, payload);
 
       var paths = undefined;
       if (path != '') {
@@ -398,7 +404,7 @@ var UnisonEvents = (function () {
       }
 
       paths.forEach(function (path) {
-        _this.handle(path, event, payload);
+        if (!eventObj._handled) _this.handle(path, eventObj);
       });
     }
   }, {
@@ -413,9 +419,36 @@ var UnisonEvents = (function () {
   }]);
 
   return UnisonEvents;
-})();
+})()
+
+// Represents all events triggered from Unison and their common properties.
+;
 
 exports['default'] = UnisonEvents;
+
+var UnisonEvent = (function () {
+  function UnisonEvent(name, source) {
+    var additionalProps = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+    _classCallCheck(this, UnisonEvent);
+
+    this.name = name;
+    this.source = source;
+    this._handled = false;
+
+    _.extend(this, additionalProps);
+  }
+
+  _createClass(UnisonEvent, [{
+    key: 'stopBubbling',
+    value: function stopBubbling() {
+      this._handled = true;
+    }
+  }]);
+
+  return UnisonEvent;
+})();
+
 module.exports = exports['default'];
 
 },{"./util":11,"lodash":14}],5:[function(require,module,exports){
@@ -927,7 +960,7 @@ function addRelation(relations, fromObj, name, toObj) {
   var updatedRels = currentRels.concat([toObj.path()]);
 
   fromObj.update(_defineProperty({}, name, updatedRels));
-  fromObj.trigger('now:' + name, toObj);
+  fromObj.trigger('now:' + name, { target: toObj });
 }
 
 function removeRelation(relations, fromObj, name, toObj) {
@@ -937,7 +970,7 @@ function removeRelation(relations, fromObj, name, toObj) {
   if (!_.contains(rels, toPath)) throw new Error('Relation \'' + fromObj.path() + ' ' + name + ' ' + toPath + '\' can\'t be removed, because it doesn\'t exist.');
 
   fromObj.update(_defineProperty({}, name, _.without(rels, toPath)));
-  fromObj.trigger('noLonger:' + name, toObj);
+  fromObj.trigger('noLonger:' + name, { target: toObj });
 }
 module.exports = exports['default'];
 

@@ -3,7 +3,8 @@
 './util');var _ = require('lodash');var 
 
 UnisonEvents = (function () {
-  function UnisonEvents() {_classCallCheck(this, UnisonEvents);
+  function UnisonEvents(unison) {_classCallCheck(this, UnisonEvents);
+    this.u = unison;
     this._listeners = {};}_createClass(UnisonEvents, [{ key: 'key', value: 
 
 
@@ -27,13 +28,13 @@ UnisonEvents = (function () {
 
 
 
-    function handle(path, event, payload) {
-      var key = this.key(path, event);
+    function handle(path, eventObj) {
+      var key = this.key(path, eventObj.name);
       var listeners = this._listeners[key];
       if (listeners) {
         listeners.map(function (l) {
           try {
-            l(payload);} 
+            l(eventObj);} 
           catch (e) {
             console.error('Error in listener in response to ' + path + '|' + event);
             console.error(e.stack || e);}});}} }, { key: 'trigger', value: 
@@ -42,7 +43,10 @@ UnisonEvents = (function () {
 
 
 
-    function trigger(path, event, payload) {var _this = this;
+    function trigger(path, event) {var _this = this;var payload = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+      var source = this.u(path);
+      var eventObj = new UnisonEvent(event, source, payload);
+
       var paths = undefined;
       if (path != '') {
         paths = [path, (0, _util.childPath)((0, _util.parentPath)(path), '*')]; // X.Y.Z, X.Y.*
@@ -58,11 +62,28 @@ UnisonEvents = (function () {
 
 
       paths.forEach(function (path) {
-        _this.handle(path, event, payload);});} }, { key: 'triggerAll', value: 
+        if (!eventObj._handled) 
+        _this.handle(path, eventObj);});} }, { key: 'triggerAll', value: 
 
 
 
     function triggerAll(events) {var _this2 = this;
       _.each(events, function (event) {
-        _this2.trigger.apply(_this2, event);});} }]);return UnisonEvents;})();exports['default'] = UnisonEvents;module.exports = exports['default'];
+        _this2.trigger.apply(_this2, event);});} }]);return UnisonEvents;})()
+
+
+
+
+// Represents all events triggered from Unison and their common properties.
+;exports['default'] = UnisonEvents;var UnisonEvent = (function () {
+  function UnisonEvent(name, source) {var additionalProps = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];_classCallCheck(this, UnisonEvent);
+    this.name = name;
+    this.source = source;
+    this._handled = false;
+
+    _.extend(this, additionalProps);}_createClass(UnisonEvent, [{ key: 'stopBubbling', value: 
+
+
+    function stopBubbling() {
+      this._handled = true;} }]);return UnisonEvent;})();module.exports = exports['default'];
 //# sourceMappingURL=events.js.map

@@ -39,7 +39,18 @@ describe("X.Y.* (single star) wildcard listeners", function () {
 
     u('bird').update({ soaring: true });
 
-    assert.ok(listenSpy.called);});});
+    assert.ok(listenSpy.called);});
+
+
+  it("should not trigger if bubbling was stopped", function () {
+    var childSpy = sinon.spy();
+    u.listen('bird.wings.*', 'updated', childSpy);
+    u.listen('bird.wings.left', 'updated', function (evt) {return evt.stopBubbling();});
+
+    u('bird.wings.left').update({ lefter: true });
+    u('bird.wings.right').update({ righter: true });
+
+    assert.ok(childSpy.calledOnce);});});
 
 
 
@@ -93,5 +104,16 @@ describe("X.Y.** (double star) wildcard listeners", function () {
     u('bird.wings.left').update({ length: 30 });
 
     assert.ok(listenSpy.called);
-    assert.ok(onAnySpy.called);});});
+    assert.ok(onAnySpy.called);});
+
+
+  it("should not trigger if bubbling was stopped", function () {
+    var childSpy = sinon.spy();
+    u.listen('bird.**', 'updated', childSpy);
+    u.listen('bird.wings.left', 'updated', function (evt) {return evt.stopBubbling();});
+
+    u('bird.wings.left').update({ lefter: true });
+    u('bird.wings.right').update({ righter: true });
+
+    assert.ok(childSpy.calledOnce);});});
 //# sourceMappingURL=bubbling-events-test.js.map

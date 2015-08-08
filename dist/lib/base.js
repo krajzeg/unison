@@ -9,7 +9,7 @@ Unison;function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj 
 // Uses classical instead of ES6 classes to allow Unison.apply(...) down the road.
 var _events2 = _interopRequireDefault(_events);var _ = require('lodash');function Unison() {var initialState = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];this._state = initialState;this._nextId = 1;
 
-  this._events = new _events2['default']();
+  this._events = new _events2['default'](this);
 
   // each Unison object has its own pseudo-class for nodes that can be extended by plugins
   this._nodeBase = Object.create(UnisonNode.prototype);

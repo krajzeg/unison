@@ -104,8 +104,8 @@ describe("Relations plugin", () => {
 
     assert.ok(nowSpy.calledOnce);
     assert.ok(noLongerSpy.calledOnce);
-    assert.equal(nowSpy.firstCall.args[0].path(), 'jerry');
-    assert.equal(noLongerSpy.firstCall.args[0].path(), 'tom');
+    assert.equal(nowSpy.firstCall.args[0].target.path(), 'jerry');
+    assert.equal(noLongerSpy.firstCall.args[0].target.path(), 'tom');
   });
 
   it("should send correct commands when relations are introduced and severed", () => {

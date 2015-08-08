@@ -35,6 +35,20 @@ describe("Multiple listeners per event", function () {
 
 
 
+describe("Event objects passed to listeners", function () {
+  it("should have a correct 'name' and 'source' property", function () {
+    var u = unison({ bird: {} }), callback = sinon.spy();
+    u('bird').on('updated', callback);
+
+    u('bird').update({ flying: true });
+
+    assert.ok(callback.called);
+    var event = callback.firstCall.args[0];
+    assert.equal(event.name, 'updated');
+    assert.equal(event.source.path(), 'bird');});});
+
+
+
 describe("When children are added", function () {
   var u = undefined;
   beforeEach(function () {
