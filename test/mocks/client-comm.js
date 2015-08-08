@@ -19,11 +19,13 @@ export default class ClientCommMock {
 
   pushServerCommand(commandName, objectPath, ...parameters) {
     this.pushServerString(JSON.stringify(
-      ['c',
-        commandName,
-        objectPath,
-        parameters
-      ]
+      ['c', commandName, objectPath, parameters]
+    ));
+  }
+
+  pushServerResponse(status, intentId, resultOrMessage) {
+    this.pushServerString(JSON.stringify(
+      ['r', status, intentId, resultOrMessage]
     ));
   }
 

@@ -19,11 +19,13 @@ ClientCommMock = (function () {
 
     function pushServerCommand(commandName, objectPath) {for (var _len = arguments.length, parameters = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {parameters[_key - 2] = arguments[_key];}
       this.pushServerString(JSON.stringify(
-      ['c', 
-      commandName, 
-      objectPath, 
-      parameters]));} }, { key: 'pushServerString', value: 
+      ['c', commandName, objectPath, parameters]));} }, { key: 'pushServerResponse', value: 
 
+
+
+    function pushServerResponse(status, intentId, resultOrMessage) {
+      this.pushServerString(JSON.stringify(
+      ['r', status, intentId, resultOrMessage]));} }, { key: 'pushServerString', value: 
 
 
 

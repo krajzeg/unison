@@ -36,6 +36,7 @@
     "vinyl-source-stream": "^1.1.0"
   },
   "dependencies": {
+    "bluebird": "^2.9.34",
     "lodash": "^3.10.0"
   }
 }

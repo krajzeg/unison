@@ -26,8 +26,8 @@ describe("Client plugin", function () {
     u('bird').ageBy(5, 'years');
 
     assert.deepEqual(comm.sentMessages, [
-    ['i', 'frob', 'bird', ['very hard']], 
-    ['i', 'ageBy', 'bird', [5, 'years']]]);});
+    ['i', 'frob', 'bird', ['very hard'], 1], 
+    ['i', 'ageBy', 'bird', [5, 'years'], 2]]);});
 
 
 
@@ -122,7 +122,7 @@ describe("Client plugin", function () {
 
     assert.ok(u('').get.frobbed);
     assert.deepEqual(comm.sentMessages, [
-    ['i', 'pleaseFrob', '', []]]);});
+    ['i', 'pleaseFrob', '', [], 1]]);});
 
 
 
@@ -141,7 +141,7 @@ describe("Client plugin", function () {
     u('bird').frob(u('human'));
 
     assert.deepEqual(comm.sentMessages, [
-    ['i', 'frob', 'bird', [{ _u: 'human' }]]]);});
+    ['i', 'frob', 'bird', [{ _u: 'human' }], 1]]);});
 
 
 
@@ -160,5 +160,65 @@ describe("Client plugin", function () {
 
     comm.pushServerCommand('frob', '', { _u: 'bird' });
 
-    assert.equal(u('bird').get.frobbed, true);});});
+    assert.equal(u('bird').get.frobbed, true);});
+
+
+  it("should resolve intent promises with return values from the server", function (done) {
+    var comm = new CommunicationMock(), resolvedSpy = sinon.spy();
+    var u = unison({ bird: {} }).
+    plugin(client({ 
+      communication: comm, 
+      intents: { frob: function frob() {} } }));
+
+
+    u('bird').frob().
+    then(function (result) {
+      assert.equal(result.path(), 'bird');}).
+
+    then(resolvedSpy).
+    then(done)['catch'](done);
+
+    assert.ok(!resolvedSpy.called);
+    comm.pushServerResponse('ok', 1, { _u: 'bird' });});
+
+
+  it("should reject intent promises with errors from the server", function (done) {
+    var comm = new CommunicationMock();
+    var u = unison({ bird: {} }).
+    plugin(client({ 
+      communication: comm, 
+      intents: { frob: function frob() {} } }));
+
+
+    expectRejection(u('bird').frob()).
+    then(function (err) {
+      assert.equal(err.intent, 'frob');
+      assert.equal(err.target.path(), 'bird');
+      assert.equal(err.message, "Oops.");}).
+    then(done)['catch'](done);
+
+    comm.pushServerResponse('err', 1, "Oops.");});
+
+
+  it("should trigger 'error' events when an intent fails", function () {
+    var comm = new CommunicationMock(), errorSpy = sinon.spy();
+    var u = unison({ bird: {} }).
+    plugin(client({ 
+      communication: comm, 
+      intents: { frob: function frob() {} } }));
+
+
+    u('bird').on('error', errorSpy);
+    u('bird').frob()['catch'](function () {});
+    comm.pushServerResponse('err', 1, "Oops.");
+
+    assert.ok(errorSpy.calledOnce);});});
+
+
+
+function expectRejection(promise) {
+  return new Promise(function (resolve, reject) {
+    promise.then(function (result) {
+      reject('The promise wasn\'t rejected, but resolved with value ' + result + '.');})['catch'](
+    resolve);});}
 //# sourceMappingURL=client-test.js.map
