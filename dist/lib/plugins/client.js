@@ -89,7 +89,7 @@ ClientPlugin = (function () {
         client.send(intent);
 
         return new Promise(function (resolve, reject) {
-          client._pendingIntents[intentId] = { name: intent, target: _this4, resolve: resolve, reject: reject };});};}
+          client._pendingIntents[intentId] = { name: intentName, target: _this4, resolve: resolve, reject: reject };});};}
 
 
 
@@ -101,9 +101,9 @@ ClientPlugin = (function () {
       throw new Error('Received response to an unknown or expired intent: ' + intentId + '.');
 
       if (status == _clientServerBase.RESPONSE_OK) {
-        intent.resolve(deserialize(this.u, resultOrMessage));} else 
-      if (status == RESPONSE_ERR) {
-        intent.reject(resultOrMessage);
+        intent.resolve((0, _clientServerBase.deserialize)(this.u, resultOrMessage));} else 
+      if (status == _clientServerBase.RESPONSE_ERROR) {
+        intent.reject({ intent: intent.name, target: intent.target, message: resultOrMessage });
         intent.target.trigger('error', { intent: intent.name, message: resultOrMessage });} else 
       {
         throw new Error('Unrecognized intent response status: ' + status + '.');}
@@ -123,46 +123,5 @@ ClientPlugin = (function () {
       var target = u(objectPath);
       args = (0, _clientServerBase.deserializeArguments)(u, args);
 
-      return command.apply(target, args);} }]);return ClientPlugin;})()
-
-
-
-/*
- intent:
- function moveMagnet(clientId, umagnet, newPosition) {
- umagnet.moveTo(newPosition);
- }
-
- command:
- function moveTo(umagnet, newPosition) {
- umagnet.update({x: newPosition.x, y: newPosition.y});
- }
-
- tryMovingMagnet(clientId, newPosition) {
-  this.command.moveTo(newPosition);
- }
- moveMagnetTo(newPosition) {
-  this.update({x: newPosition.x, y: newPosition.y})
- }
-
-magnet.intent.move({x: 12, y: 44});
- */
-
-
-/*
-
- COMMUNICATION LOGIC:
- client - intent method:   send [object, intent, parameters] to the server
- client - command method:  < not present >
- client - apply intent:    < not present >
- client - apply command:   execute the code
-
- server - intent method:   virtual send [object, intent, parameters] to yourself
- server - apply intent:    execute the code, calling one or more command method or rejecting the intent
- server - command method:  execute the code, send [object, command, parameters] to all clients
- server - apply command:   < not present >
-
- intent code - runs on the server, translates intent into commands
- command code - runs on both, applies changes to state
- */;module.exports = exports['default'];
+      return command.apply(target, args);} }]);return ClientPlugin;})();module.exports = exports['default'];
 //# sourceMappingURL=../plugins/client.js.map
