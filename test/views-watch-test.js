@@ -11,25 +11,25 @@ describe("Views plugin: watch()", () => {
   });
 
   it("should bind all methods matching event names as listeners", () => {
-    let spies = {childAdded: sinon.spy(), destroyed: sinon.spy()};
+    let spies = {updated: sinon.spy(), destroyed: sinon.spy()};
     u('stuff').watch(spies);
 
-    u('stuff').add({name: "hammer"});
+    u('stuff').update({heavy: true});
     u('stuff').destroy();
 
-    assert.ok(spies.childAdded.calledOnce);
+    assert.ok(spies.updated.calledOnce);
     assert.ok(spies.destroyed.calledOnce);
   });
 
   it("should automatically unbind all listeners when the node is destroyed", () => {
-    let spies = {childAdded: sinon.spy()};
+    let spies = {updated: sinon.spy()};
 
     u('stuff').watch(spies);
     u('stuff').destroy();
 
     u('').add('stuff', {});
-    u('stuff').add('psych', {});
+    u('stuff').update({ignored: "very much"});
 
-    assert.ok(!spies.childAdded.called);
+    assert.ok(!spies.updated.called);
   });
 });

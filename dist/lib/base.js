@@ -27,17 +27,14 @@ Unison.prototype = {
   listen: function listen() {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}return this._events.listen.apply(this._events, args);}, 
   unlisten: function unlisten() {for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {args[_key2] = arguments[_key2];}return this._events.unlisten.apply(this._events, args);}, 
 
-  collectEvents: function collectEvents(path, directEvent, childEvent) {var _this = this;var acc = arguments.length <= 3 || arguments[3] === undefined ? [] : arguments[3];
-    var parent = (0, _util.parentPath)(path), id = idFromPath(path);
+  collectEvents: function collectEvents(path, directEvent) {var _this = this;var acc = arguments.length <= 2 || arguments[2] === undefined ? [] : arguments[2];
     var object = _.get(this._state, path);
 
-    acc.push([parent, childEvent, id]);
     acc.push([path, directEvent]);
-
-    _.each(object, function (subchild, id) {
-      if (typeof subchild === 'object' && !(subchild instanceof Array)) {
+    _.each(object, function (child, id) {
+      if (typeof child === 'object' && !(child instanceof Array)) {
         // that's a child, trigger childAdded and recurse into it
-        _this.collectEvents((0, _util.childPath)(path, id), directEvent, childEvent, acc);}});
+        _this.collectEvents((0, _util.childPath)(path, id), directEvent, acc);}});
 
 
 
@@ -76,7 +73,7 @@ UnisonNode = (function () {
 
 
     function id() {
-      return idFromPath(this.path());} }, { key: 'parent', value: 
+      return (0, _util.idFromPath)(this.path());} }, { key: 'parent', value: 
 
 
     function parent() {
@@ -132,7 +129,7 @@ UnisonNode = (function () {
 
       // trigger events
       var pathToChild = (0, _util.childPath)(this.path(), id);
-      unison._events.triggerAll(unison.collectEvents(pathToChild, 'created', 'childAdded'));
+      unison._events.triggerAll(unison.collectEvents(pathToChild, 'created'));
 
       // return the path to the newly created child
       return pathToChild;} }, { key: 'remove', value: 
@@ -152,7 +149,7 @@ UnisonNode = (function () {
 
       // store events for later, as the object themselves will disappear
       var pathToChild = (0, _util.childPath)(this._path, id);
-      var events = unison.collectEvents(pathToChild, "destroyed", "childRemoved");
+      var events = unison.collectEvents(pathToChild, 'destroyed');
 
       // remove the object
       delete state[id];
@@ -189,14 +186,6 @@ function expectObject(state, msg) {
 
   if (typeof state != 'object') {
     throw new Error(msg + ' - \'' + state + '\' is not an object.');}}
-
-
-
-function idFromPath(path) {
-  if (path === '') {
-    throw new Error('The root object has no id.');} else 
-  {
-    return _.last(path.split("."));}}
 
 
 

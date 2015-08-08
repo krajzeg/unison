@@ -94,7 +94,7 @@ describe("Client plugin", () => {
       }));
 
     let listener = sinon.spy();
-    u('').on('childAdded', listener);
+    u.listen('*', 'created', listener);
 
     comm.pushServerCommand('_seed', '', {bird: {wingspan: 6}, seeded: true});
 
