@@ -56,13 +56,22 @@ describe("X.Y.** (double star) wildcard listeners", function () {
 
 
   it("should trigger for further descendants of X.Y", function () {
-    var childUpdated = sinon.spy();
-    u.listen('bird.**', 'updated', childUpdated);
+    var descendantUpdated = sinon.spy();
+    u.listen('bird.**', 'updated', descendantUpdated);
 
     u('bird.wings.left').update({ clipped: true });
     u('bird.wings.right').update({ clipped: true });
 
-    assert.ok(childUpdated.calledTwice);});
+    assert.ok(descendantUpdated.calledTwice);});
+
+
+  it("should trigger when X.Y itself has an event", function () {
+    var updated = sinon.spy();
+    u.listen('bird.**', 'updated', updated);
+
+    u('bird').update({ clipped: true });
+
+    assert.ok(updated.calledOnce);});
 
 
   it("should work correctly for the root object", function () {

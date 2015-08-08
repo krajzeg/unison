@@ -47,7 +47,7 @@ UnisonEvents = (function () {
       if (path != '') {
         paths = [path, (0, _util.childPath)((0, _util.parentPath)(path), '*')]; // X.Y.Z, X.Y.*
 
-        path = (0, _util.childPath)((0, _util.parentPath)(path), '**'); // X.Y.Z -> X.Y.**
+        path = (0, _util.childPath)(path, '**'); // X.Y.Z -> X.Y.Z.**
         paths.push(path);
         while (path.indexOf('.') >= 0) {
           path = (0, _util.childPath)((0, _util.parentPath)((0, _util.parentPath)(path)), '**'); // X.Y.** -> X.**
