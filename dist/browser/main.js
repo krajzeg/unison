@@ -9,12 +9,20 @@ var _createClass = (function () { function defineProperties(target, props) { for
 
 exports['default'] = Unison;
 
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-var _ = require('lodash');
+var _util = require('./util');
+
+var _events = require('./events');
 
 // Main Unison object.
 // Uses classical instead of ES6 classes to allow Unison.apply(...) down the road.
+
+var _events2 = _interopRequireDefault(_events);
+
+var _ = require('lodash');
 
 function Unison() {
   var initialState = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
@@ -22,7 +30,7 @@ function Unison() {
   this._state = initialState;
   this._nextId = 1;
 
-  this._events = new UnisonEvents();
+  this._events = new _events2['default']();
 
   // each Unison object has its own pseudo-class for nodes that can be extended by plugins
   this._nodeBase = Object.create(UnisonNode.prototype);
@@ -58,7 +66,7 @@ Unison.prototype = {
 
     var acc = arguments.length <= 3 || arguments[3] === undefined ? [] : arguments[3];
 
-    var parent = parentPath(path),
+    var parent = (0, _util.parentPath)(path),
         id = idFromPath(path);
     var object = _.get(this._state, path);
 
@@ -68,7 +76,7 @@ Unison.prototype = {
     _.each(object, function (subchild, id) {
       if (typeof subchild === 'object' && !(subchild instanceof Array)) {
         // that's a child, trigger childAdded and recurse into it
-        _this.collectEvents(childPath(path, id), directEvent, childEvent, acc);
+        _this.collectEvents((0, _util.childPath)(path, id), directEvent, childEvent, acc);
       }
     });
 
@@ -95,6 +103,224 @@ Unison.prototype = {
     return this;
   }
 };
+
+var UnisonNode = (function () {
+  function UnisonNode(unison, path) {
+    _classCallCheck(this, UnisonNode);
+
+    this.u = unison;
+    this._path = path;
+  }
+
+  _createClass(UnisonNode, [{
+    key: 'path',
+    value: function path() {
+      return this._path;
+    }
+  }, {
+    key: 'id',
+    value: function id() {
+      return idFromPath(this.path());
+    }
+  }, {
+    key: 'parent',
+    value: function parent() {
+      return this.u.grab((0, _util.parentPath)(this.path()));
+    }
+  }, {
+    key: 'child',
+    value: function child(id) {
+      return this.u.grab((0, _util.childPath)(this.path(), id));
+    }
+  }, {
+    key: 'state',
+    value: function state() {
+      if (this._path === '') {
+        return this.u._state;
+      } else {
+        return _.get(this.u._state, this._path);
+      }
+    }
+  }, {
+    key: 'update',
+    value: function update(props) {
+      var state = this.state();
+      if (state === undefined) return;
+
+      _.extend(state, props);
+      this.u._events.trigger(this._path, 'updated');
+    }
+  }, {
+    key: 'add',
+    value: function add() {
+      var unison = this.u;
+
+      // extract arguments (either (child) or (id, child))
+      var id = undefined,
+          child = undefined;
+
+      for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+        args[_key3] = arguments[_key3];
+      }
+
+      if (args.length == 2) {
+        id = args[0];
+        child = args[1];
+      } else {
+        child = args[0];
+        id = unison.nextId();
+      }
+
+      // sanity checks
+      var state = this.state();
+      expectObject(state, 'Can\'t add child at ' + this._path);
+      if (state[id] !== undefined) {
+        throw new Error('Can\'t add child \'' + id + '\' at ' + this._path + ' - it already exists.');
+      }
+      validateId(id);
+
+      // add it
+      state[id] = child;
+
+      // trigger events
+      var pathToChild = (0, _util.childPath)(this.path(), id);
+      unison._events.triggerAll(unison.collectEvents(pathToChild, 'created', 'childAdded'));
+
+      // return the path to the newly created child
+      return pathToChild;
+    }
+  }, {
+    key: 'remove',
+    value: function remove(id) {
+      var unison = this.u;
+      var state = this.state();
+
+      // sanity checks
+      expectObject(state, 'Can\'t remove child at ' + this._path);
+
+      // does it even exist?
+      if (state[id] === undefined) {
+        return false;
+      }
+
+      // store events for later, as the object themselves will disappear
+      var pathToChild = (0, _util.childPath)(this._path, id);
+      var events = unison.collectEvents(pathToChild, "destroyed", "childRemoved");
+
+      // remove the object
+      delete state[id];
+
+      // trigger the events
+      unison._events.triggerAll(events);
+
+      // done
+      return true;
+    }
+  }, {
+    key: 'destroy',
+    value: function destroy() {
+      // straightforward translation
+      expectObject(this.state(), "Can't destroy ${this._path}");
+      return this.parent().remove(this.id());
+    }
+  }, {
+    key: 'on',
+    value: function on(event, callback) {
+      this.u._events.listen(this._path, event, callback);
+    }
+  }, {
+    key: 'off',
+    value: function off(event, callback) {
+      this.u._events.unlisten(this._path, event, callback);
+    }
+  }, {
+    key: 'trigger',
+    value: function trigger(event, payload) {
+      this.u._events.trigger(this._path, event, payload);
+    }
+  }, {
+    key: 'get',
+    get: function get() {
+      return this.state();
+    }
+  }]);
+
+  return UnisonNode;
+})();
+
+function expectObject(state, msg) {
+  if (state === undefined) {
+    throw new Error(msg + ' - node does not exist.');
+  }
+  if (typeof state != 'object') {
+    throw new Error(msg + ' - \'' + state + '\' is not an object.');
+  }
+}
+
+function idFromPath(path) {
+  if (path === '') {
+    throw new Error('The root object has no id.');
+  } else {
+    return _.last(path.split("."));
+  }
+}
+
+function validateId(id) {
+  if (id == '') throw new Error('IDs have to be non-empty.');
+  if (id.indexOf(".") >= 0) throw new Error('IDs cannot contain dots.');
+}
+module.exports = exports['default'];
+
+},{"./events":4,"./util":11,"lodash":14}],2:[function(require,module,exports){
+// Root file for the browser version of Unison.
+'use strict';
+
+window.Unison = require('./index');
+
+},{"./index":5}],3:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+
+var UserError = (function (_Error) {
+  _inherits(UserError, _Error);
+
+  function UserError(message) {
+    _classCallCheck(this, UserError);
+
+    _get(Object.getPrototypeOf(UserError.prototype), "constructor", this).call(this, message);
+    this.message = message;
+    this.reportToUser = true;
+  }
+
+  return UserError;
+})(Error);
+
+exports["default"] = UserError;
+module.exports = exports["default"];
+
+},{}],4:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var _util = require('./util');
+
+var _ = require('lodash');
 
 var UnisonEvents = (function () {
   function UnisonEvents() {
@@ -129,21 +355,42 @@ var UnisonEvents = (function () {
       }
     }
   }, {
+    key: 'handle',
+    value: function handle(path, event, payload) {
+      var key = this.key(path, event);
+      var listeners = this._listeners[key];
+      if (listeners) {
+        listeners.map(function (l) {
+          try {
+            l(payload);
+          } catch (e) {
+            console.error('Error in listener in response to ' + path + '|' + event);
+            console.error(e.stack || e);
+          }
+        });
+      }
+    }
+  }, {
     key: 'trigger',
-    value: function trigger(path, event) {
-      for (var _len3 = arguments.length, payload = Array(_len3 > 2 ? _len3 - 2 : 0), _key3 = 2; _key3 < _len3; _key3++) {
-        payload[_key3 - 2] = arguments[_key3];
+    value: function trigger(path, event, payload) {
+      var _this = this;
+
+      var paths = undefined;
+      if (path != '') {
+        paths = [path, (0, _util.childPath)((0, _util.parentPath)(path), '*')]; // X.Y.Z, X.Y.*
+
+        path = (0, _util.childPath)((0, _util.parentPath)(path), '**'); // X.Y.Z -> X.Y.**
+        paths.push(path);
+        while (path.indexOf('.') >= 0) {
+          path = (0, _util.childPath)((0, _util.parentPath)((0, _util.parentPath)(path)), '**'); // X.Y.** -> X.**
+          paths.push(path);
+        }
+      } else {
+        paths = ['', '**'];
       }
 
-      var key = this.key(path, event);
-      var listeners = this._listeners[key] || [];
-      listeners.map(function (listener) {
-        try {
-          listener.apply(null, payload);
-        } catch (e) {
-          console.error('Error in listener in response to ' + path + '|' + event);
-          console.error(e.stack || e);
-        }
+      paths.forEach(function (path) {
+        _this.handle(path, event, payload);
       });
     }
   }, {
@@ -160,229 +407,10 @@ var UnisonEvents = (function () {
   return UnisonEvents;
 })();
 
-var UnisonNode = (function () {
-  function UnisonNode(unison, path) {
-    _classCallCheck(this, UnisonNode);
-
-    this.u = unison;
-    this._path = path;
-  }
-
-  _createClass(UnisonNode, [{
-    key: 'path',
-    value: function path() {
-      return this._path;
-    }
-  }, {
-    key: 'id',
-    value: function id() {
-      return idFromPath(this.path());
-    }
-  }, {
-    key: 'parent',
-    value: function parent() {
-      return this.u.grab(parentPath(this.path()));
-    }
-  }, {
-    key: 'child',
-    value: function child(id) {
-      return this.u.grab(childPath(this.path(), id));
-    }
-  }, {
-    key: 'state',
-    value: function state() {
-      if (this._path === '') {
-        return this.u._state;
-      } else {
-        return _.get(this.u._state, this._path);
-      }
-    }
-  }, {
-    key: 'update',
-    value: function update(props) {
-      var state = this.state();
-      if (state === undefined) return;
-
-      _.extend(state, props);
-      this.u._events.trigger(this._path, 'updated');
-    }
-  }, {
-    key: 'add',
-    value: function add() {
-      var unison = this.u;
-
-      // extract arguments (either (child) or (id, child))
-      var id = undefined,
-          child = undefined;
-
-      for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-        args[_key4] = arguments[_key4];
-      }
-
-      if (args.length == 2) {
-        id = args[0];
-        child = args[1];
-      } else {
-        child = args[0];
-        id = unison.nextId();
-      }
-
-      // sanity checks
-      var state = this.state();
-      expectObject(state, 'Can\'t add child at ' + this._path);
-      if (state[id] !== undefined) {
-        throw new Error('Can\'t add child \'' + id + '\' at ' + this._path + ' - it already exists.');
-      }
-      validateId(id);
-
-      // add it
-      state[id] = child;
-
-      // trigger events
-      var pathToChild = childPath(this.path(), id);
-      unison._events.triggerAll(unison.collectEvents(pathToChild, 'created', 'childAdded'));
-
-      // return the path to the newly created child
-      return pathToChild;
-    }
-  }, {
-    key: 'remove',
-    value: function remove(id) {
-      var unison = this.u;
-      var state = this.state();
-
-      // sanity checks
-      expectObject(state, 'Can\'t remove child at ' + this._path);
-
-      // does it even exist?
-      if (state[id] === undefined) {
-        return false;
-      }
-
-      // store events for later, as the object themselves will disappear
-      var pathToChild = childPath(this._path, id);
-      var events = unison.collectEvents(pathToChild, "destroyed", "childRemoved");
-
-      // remove the object
-      delete state[id];
-
-      // trigger the events
-      unison._events.triggerAll(events);
-
-      // done
-      return true;
-    }
-  }, {
-    key: 'destroy',
-    value: function destroy() {
-      // straightforward translation
-      expectObject(this.state(), "Can't destroy ${this._path}");
-      return this.parent().remove(this.id());
-    }
-  }, {
-    key: 'on',
-    value: function on(event, callback) {
-      this.u._events.listen(this._path, event, callback);
-    }
-  }, {
-    key: 'off',
-    value: function off(event, callback) {
-      this.u._events.unlisten(this._path, event, callback);
-    }
-  }, {
-    key: 'trigger',
-    value: function trigger(event) {
-      var _u$_events;
-
-      for (var _len5 = arguments.length, payload = Array(_len5 > 1 ? _len5 - 1 : 0), _key5 = 1; _key5 < _len5; _key5++) {
-        payload[_key5 - 1] = arguments[_key5];
-      }
-
-      (_u$_events = this.u._events).trigger.apply(_u$_events, [this._path, event].concat(payload));
-    }
-  }, {
-    key: 'get',
-    get: function get() {
-      return this.state();
-    }
-  }]);
-
-  return UnisonNode;
-})();
-
-function expectObject(state, msg) {
-  if (state === undefined) {
-    throw new Error(msg + ' - node does not exist.');
-  }
-  if (typeof state != 'object') {
-    throw new Error(msg + ' - \'' + state + '\' is not an object.');
-  }
-}
-
-function idFromPath(path) {
-  if (path === '') {
-    throw new Error('The root object has no id.');
-  } else {
-    return _.last(path.split("."));
-  }
-}
-
-function parentPath(path) {
-  if (path === '') {
-    throw new Error('The root object has no parent.');
-  } else {
-    var pathElements = path.split(".");
-    return pathElements.slice(0, pathElements.length - 1).join(".");
-  }
-}
-
-function childPath(path, id) {
-  if (path == '') return id;else return [path, id].join('.');
-}
-
-function validateId(id) {
-  if (id == '') throw new Error('IDs have to be non-empty.');
-  if (id.indexOf(".") >= 0) throw new Error('IDs cannot contain dots.');
-}
+exports['default'] = UnisonEvents;
 module.exports = exports['default'];
 
-},{"lodash":13}],2:[function(require,module,exports){
-// Root file for the browser version of Unison.
-'use strict';
-
-window.Unison = require('./index');
-
-},{"./index":4}],3:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
-
-var UserError = (function (_Error) {
-  _inherits(UserError, _Error);
-
-  function UserError(message) {
-    _classCallCheck(this, UserError);
-
-    _get(Object.getPrototypeOf(UserError.prototype), "constructor", this).call(this, message);
-    this.message = message;
-    this.reportToUser = true;
-  }
-
-  return UserError;
-})(Error);
-
-exports["default"] = UserError;
-module.exports = exports["default"];
-
-},{}],4:[function(require,module,exports){
+},{"./util":11,"lodash":14}],5:[function(require,module,exports){
 'use strict';
 
 var _ = require('lodash');
@@ -402,7 +430,7 @@ module.exports.views = require('./plugins/views');
 module.exports.relations = require('./plugins/relations');
 module.exports.UserError = require('./errors/user-error.js');
 
-},{"./base":1,"./errors/user-error.js":3,"./plugins/client":6,"./plugins/relations":7,"./plugins/server":8,"./plugins/views":9,"./util":10,"lodash":13}],5:[function(require,module,exports){
+},{"./base":1,"./errors/user-error.js":3,"./plugins/client":7,"./plugins/relations":8,"./plugins/server":9,"./plugins/views":10,"./util":11,"lodash":14}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -516,7 +544,7 @@ function messageValid(message) {
   return true;
 }
 
-},{"../util":10,"lodash":13}],6:[function(require,module,exports){
+},{"../util":11,"lodash":14}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -728,7 +756,7 @@ var ClientPlugin = (function () {
 
 module.exports = exports['default'];
 
-},{"./client-server-base":5,"bluebird":11,"lodash":13}],7:[function(require,module,exports){
+},{"./client-server-base":6,"bluebird":12,"lodash":14}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -905,7 +933,7 @@ function removeRelation(relations, fromObj, name, toObj) {
 }
 module.exports = exports['default'];
 
-},{"lodash":13}],8:[function(require,module,exports){
+},{"lodash":14}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1135,7 +1163,7 @@ function defaultErrorHandler(err) {
 }
 module.exports = exports['default'];
 
-},{"./client-server-base":5,"bluebird":11,"lodash":13}],9:[function(require,module,exports){
+},{"./client-server-base":6,"bluebird":12,"lodash":14}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1186,7 +1214,7 @@ function watch(object) {
 }
 module.exports = exports['default'];
 
-},{"lodash":13}],10:[function(require,module,exports){
+},{"lodash":14}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1194,6 +1222,8 @@ Object.defineProperty(exports, '__esModule', {
 });
 exports.functionized = functionized;
 exports.isObject = isObject;
+exports.parentPath = parentPath;
+exports.childPath = childPath;
 var _ = require('lodash');
 
 function functionized(clazz, ctorArgs, defaultMethod) {
@@ -1223,7 +1253,20 @@ function isObject(thing) {
   return typeof thing == 'object' && !(thing instanceof Array);
 }
 
-},{"lodash":13}],11:[function(require,module,exports){
+function parentPath(path) {
+  if (path === '') {
+    throw new Error('The root object has no parent.');
+  } else {
+    var pathElements = path.split(".");
+    return pathElements.slice(0, pathElements.length - 1).join(".");
+  }
+}
+
+function childPath(path, id) {
+  if (path == '') return id;else return [path, id].join('.');
+}
+
+},{"lodash":14}],12:[function(require,module,exports){
 (function (process,global){
 /* @preserve
  * The MIT License (MIT)
@@ -6083,7 +6126,7 @@ module.exports = ret;
 },{"./es5.js":14}]},{},[4])(4)
 });                    ;if (typeof window !== 'undefined' && window !== null) {                               window.P = window.Promise;                                                     } else if (typeof self !== 'undefined' && self !== null) {                             self.P = self.Promise;                                                         }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":12}],12:[function(require,module,exports){
+},{"_process":13}],13:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -6175,7 +6218,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 (function (global){
 /**
  * @license
