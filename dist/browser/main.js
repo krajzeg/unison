@@ -477,7 +477,7 @@ function serialize(obj) {
 }
 
 function deserialize(u, obj) {
-  if ((0, _util.isObject)(obj) && obj._u !== undefined) {
+  if (obj && (0, _util.isObject)(obj) && obj._u !== undefined) {
     return u(obj._u);
   } else {
     return obj;
