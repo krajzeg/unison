@@ -411,8 +411,8 @@ Object.defineProperty(exports, '__esModule', {
 
 var _ACCEPTABLE_MESSAGE_LENGTHS;
 
-exports.serializeArguments = serializeArguments;
-exports.deserializeArguments = deserializeArguments;
+exports.serializeAll = serializeAll;
+exports.deserializeAll = deserializeAll;
 exports.serialize = serialize;
 exports.deserialize = deserialize;
 exports.parseMessage = parseMessage;
@@ -456,13 +456,13 @@ var BUILTIN_COMMANDS = {
 
 exports.BUILTIN_COMMANDS = BUILTIN_COMMANDS;
 
-function serializeArguments(args) {
+function serializeAll(args) {
   return args.map(function (arg) {
     return serialize(arg);
   });
 }
 
-function deserializeArguments(u, args) {
+function deserializeAll(u, args) {
   return args.map(function (arg) {
     return deserialize(u, arg);
   });
@@ -529,11 +529,15 @@ var _createClass = (function () { function defineProperties(target, props) { for
 
 exports['default'] = client;
 
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
+
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var _clientServerBase = require("./client-server-base");
+
+var cs = _interopRequireWildcard(_clientServerBase);
 
 var _ = require('lodash');
 var Promise = require('bluebird');
@@ -567,7 +571,7 @@ var ClientPlugin = (function () {
       _nextIntentId: 1,
       _pendingIntents: {}
     });
-    _.extend(this.commands, _clientServerBase.BUILTIN_COMMANDS);
+    _.extend(this.commands, cs.BUILTIN_COMMANDS);
 
     this.communication.onReceive(function (msg) {
       return _this.receive(msg);
@@ -590,17 +594,17 @@ var ClientPlugin = (function () {
     value: function receive(msgString) {
       var _this2 = this;
 
-      (0, _clientServerBase.parseMessage)(msgString, function (message) {
+      cs.parseMessage(msgString, function (message) {
         var _message = _slicedToArray(message, 1);
 
         var messageType = _message[0];
 
         switch (messageType) {
-          case _clientServerBase.COMMAND:
+          case cs.COMMAND:
             return _this2.applyCommand(message);
-          case _clientServerBase.INTENT:
+          case cs.INTENT:
             throw new Error("Intents should not be sent to clients.");
-          case _clientServerBase.RESPONSE:
+          case cs.RESPONSE:
             return _this2.applyIntentResponse(message);
         }
       });
@@ -665,7 +669,7 @@ var ClientPlugin = (function () {
           args[_key2] = arguments[_key2];
         }
 
-        var intent = [_clientServerBase.INTENT, intentName, this.path(), (0, _clientServerBase.serializeArguments)(args), intentId];
+        var intent = [cs.INTENT, intentName, this.path(), cs.serializeAll(args), intentId];
         client.send(intent);
 
         return new Promise(function (resolve, reject) {
@@ -688,9 +692,9 @@ var ClientPlugin = (function () {
       var intent = this._pendingIntents[intentId];
       if (!intent) throw new Error('Received response to an unknown or expired intent: ' + intentId + '.');
 
-      if (status == _clientServerBase.RESPONSE_OK) {
-        intent.resolve((0, _clientServerBase.deserialize)(this.u, resultOrMessage));
-      } else if (status == _clientServerBase.RESPONSE_ERROR) {
+      if (status == cs.RESPONSE_OK) {
+        intent.resolve(cs.deserialize(this.u, resultOrMessage));
+      } else if (status == cs.RESPONSE_ERROR) {
         intent.reject({ intent: intent.name, target: intent.target, message: resultOrMessage });
         intent.target.trigger('error', { intent: intent.name, message: resultOrMessage });
       } else {
@@ -717,7 +721,7 @@ var ClientPlugin = (function () {
 
       var u = this.u;
       var target = u(objectPath);
-      args = (0, _clientServerBase.deserializeArguments)(u, args);
+      args = cs.deserializeAll(u, args);
 
       return command.apply(target, args);
     }
@@ -918,11 +922,15 @@ var _createClass = (function () { function defineProperties(target, props) { for
 
 exports['default'] = server;
 
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
+
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var _clientServerBase = require("./client-server-base");
+
+var cs = _interopRequireWildcard(_clientServerBase);
 
 var _ = require('lodash');
 var Promise = require('bluebird');
@@ -958,7 +966,7 @@ var ServerPlugin = (function () {
     _classCallCheck(this, ServerPlugin);
 
     _.extend(this, { communication: communication, intents: intents, commands: commands });
-    _.extend(this.commands, _clientServerBase.BUILTIN_COMMANDS);
+    _.extend(this.commands, cs.BUILTIN_COMMANDS);
     this.config = {
       errorHandler: errorHandler,
       unexpectedErrorMessage: unexpectedErrorMessage
@@ -997,7 +1005,7 @@ var ServerPlugin = (function () {
 
       var u = this.u,
           rootState = u('').state();
-      this.sendTo(client, [_clientServerBase.COMMAND, '_seed', '', [rootState]]);
+      this.sendTo(client, [cs.COMMAND, '_seed', '', [rootState]]);
     }
   }, {
     key: 'detach',
@@ -1010,15 +1018,15 @@ var ServerPlugin = (function () {
     value: function receive(client, msgString) {
       var _this2 = this;
 
-      (0, _clientServerBase.parseMessage)(msgString, function (message) {
+      cs.parseMessage(msgString, function (message) {
         var _message = _slicedToArray(message, 1);
 
         var messageType = _message[0];
 
         switch (messageType) {
-          case _clientServerBase.INTENT:
+          case cs.INTENT:
             return _this2.applyIntent(client, message);
-          case _clientServerBase.COMMAND:
+          case cs.COMMAND:
             throw new Error("Servers do not obey commands from clients.");
         }
       });
@@ -1042,12 +1050,12 @@ var ServerPlugin = (function () {
   }, {
     key: 'sendErrorResponse',
     value: function sendErrorResponse(client, intentId, message) {
-      this.sendTo(client, [_clientServerBase.RESPONSE, _clientServerBase.RESPONSE_ERROR, intentId, message]);
+      this.sendTo(client, [cs.RESPONSE, cs.RESPONSE_ERROR, intentId, message]);
     }
   }, {
     key: 'sendOkResponse',
     value: function sendOkResponse(client, intentId, result) {
-      this.sendTo(client, [_clientServerBase.RESPONSE, _clientServerBase.RESPONSE_OK, intentId, (0, _clientServerBase.serialize)(result)]);
+      this.sendTo(client, [cs.RESPONSE, cs.RESPONSE_OK, intentId, cs.serialize(result)]);
     }
   }, {
     key: 'applyIntent',
@@ -1066,7 +1074,7 @@ var ServerPlugin = (function () {
       var u = this.u,
           target = u(objectPath);
 
-      args = (0, _clientServerBase.deserializeArguments)(u, args);
+      args = cs.deserializeAll(u, args);
       var fullArgs = args.concat(client);
 
       var runIntent = new Promise(function (resolve, reject) {
@@ -1122,7 +1130,7 @@ var ServerPlugin = (function () {
 
         // 'this' refers to the Node on which the method was called here
         commandFn.apply(this, args); // apply the changes on the server
-        server.sendToAll([_clientServerBase.COMMAND, commandName, this.path(), (0, _clientServerBase.serializeArguments)(args)]); // send the changes to all the clients
+        server.sendToAll([cs.COMMAND, commandName, this.path(), cs.serializeAll(args)]); // send the changes to all the clients
       };
     }
   }]);

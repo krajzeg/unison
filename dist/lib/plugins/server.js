@@ -3,7 +3,7 @@
 
 
 
-server;function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _clientServerBase = require("./client-server-base");var _ = require('lodash');var Promise = require('bluebird');function server(options) {
+server;function _interopRequireWildcard(obj) {if (obj && obj.__esModule) {return obj;} else {var newObj = {};if (obj != null) {for (var key in obj) {if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key];}}newObj['default'] = obj;return newObj;}}function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _clientServerBase = require("./client-server-base");var cs = _interopRequireWildcard(_clientServerBase);var _ = require('lodash');var Promise = require('bluebird');function server(options) {
   var serverPlugin = new ServerPlugin(options);
   var fn = function fn() {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}
     return serverPlugin.applyPlugin.apply(serverPlugin, args);};
@@ -21,7 +21,7 @@ ServerPlugin = (function () {
 
   {var _this = this;var communication = _ref.communication;var _ref$intents = _ref.intents;var intents = _ref$intents === undefined ? {} : _ref$intents;var _ref$commands = _ref.commands;var commands = _ref$commands === undefined ? {} : _ref$commands;var _ref$errorHandler = _ref.errorHandler;var errorHandler = _ref$errorHandler === undefined ? defaultErrorHandler : _ref$errorHandler;var _ref$unexpectedErrorMessage = _ref.unexpectedErrorMessage;var unexpectedErrorMessage = _ref$unexpectedErrorMessage === undefined ? 'Oops! Something went very wrong on the server.' : _ref$unexpectedErrorMessage;_classCallCheck(this, ServerPlugin);
     _.extend(this, { communication: communication, intents: intents, commands: commands });
-    _.extend(this.commands, _clientServerBase.BUILTIN_COMMANDS);
+    _.extend(this.commands, cs.BUILTIN_COMMANDS);
     this.config = { 
       errorHandler: errorHandler, 
       unexpectedErrorMessage: unexpectedErrorMessage };
@@ -50,7 +50,7 @@ ServerPlugin = (function () {
       this.clients.push(client);
 
       var u = this.u, rootState = u('').state();
-      this.sendTo(client, [_clientServerBase.COMMAND, '_seed', '', [rootState]]);} }, { key: 'detach', value: 
+      this.sendTo(client, [cs.COMMAND, '_seed', '', [rootState]]);} }, { key: 'detach', value: 
 
 
     function detach(client) {
@@ -60,12 +60,12 @@ ServerPlugin = (function () {
 
 
     function receive(client, msgString) {var _this2 = this;
-      (0, _clientServerBase.parseMessage)(msgString, function (message) {var _message = _slicedToArray(
+      cs.parseMessage(msgString, function (message) {var _message = _slicedToArray(
         message, 1);var messageType = _message[0];
         switch (messageType) {
-          case _clientServerBase.INTENT:
+          case cs.INTENT:
             return _this2.applyIntent(client, message);
-          case _clientServerBase.COMMAND:
+          case cs.COMMAND:
             throw new Error("Servers do not obey commands from clients.");}});} }, { key: 'sendToAll', value: 
 
 
@@ -84,18 +84,18 @@ ServerPlugin = (function () {
 
 
     function sendErrorResponse(client, intentId, message) {
-      this.sendTo(client, [_clientServerBase.RESPONSE, _clientServerBase.RESPONSE_ERROR, intentId, message]);} }, { key: 'sendOkResponse', value: 
+      this.sendTo(client, [cs.RESPONSE, cs.RESPONSE_ERROR, intentId, message]);} }, { key: 'sendOkResponse', value: 
 
 
     function sendOkResponse(client, intentId, result) {
-      this.sendTo(client, [_clientServerBase.RESPONSE, _clientServerBase.RESPONSE_OK, intentId, (0, _clientServerBase.serialize)(result)]);} }, { key: 'applyIntent', value: 
+      this.sendTo(client, [cs.RESPONSE, cs.RESPONSE_OK, intentId, cs.serialize(result)]);} }, { key: 'applyIntent', value: 
 
 
     function applyIntent(client, _ref2) {var _this4 = this;var _ref22 = _slicedToArray(_ref2, 5);var code = _ref22[0];var intentName = _ref22[1];var objectPath = _ref22[2];var args = _ref22[3];var intentId = _ref22[4];
       var intentFn = this.intents[intentName];
       var u = this.u, target = u(objectPath);
 
-      args = (0, _clientServerBase.deserializeArguments)(u, args);
+      args = cs.deserializeAll(u, args);
       var fullArgs = args.concat(client);
 
       var runIntent = new Promise(function (resolve, reject) {
@@ -141,7 +141,7 @@ ServerPlugin = (function () {
       return function () {for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {args[_key2] = arguments[_key2];}
         // 'this' refers to the Node on which the method was called here
         commandFn.apply(this, args); // apply the changes on the server
-        server.sendToAll([_clientServerBase.COMMAND, commandName, this.path(), (0, _clientServerBase.serializeArguments)(args)]); // send the changes to all the clients
+        server.sendToAll([cs.COMMAND, commandName, this.path(), cs.serializeAll(args)]); // send the changes to all the clients
       };} }]);return ServerPlugin;})();
 
 
