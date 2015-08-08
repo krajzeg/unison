@@ -529,18 +529,14 @@ var _createClass = (function () { function defineProperties(target, props) { for
 
 exports['default'] = client;
 
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
-
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-var _clientServerBase = require("./client-server-base");
-
-var cs = _interopRequireWildcard(_clientServerBase);
-
 var _ = require('lodash');
 var Promise = require('bluebird');
+
+var cs = require("./client-server-base");
 
 function client(options) {
   var clientPlugin = new ClientPlugin(options);
@@ -922,18 +918,14 @@ var _createClass = (function () { function defineProperties(target, props) { for
 
 exports['default'] = server;
 
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
-
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-var _clientServerBase = require("./client-server-base");
-
-var cs = _interopRequireWildcard(_clientServerBase);
-
 var _ = require('lodash');
 var Promise = require('bluebird');
+
+var cs = require("./client-server-base");
 
 function server(options) {
   var serverPlugin = new ServerPlugin(options);
