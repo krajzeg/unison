@@ -230,6 +230,26 @@ var UnisonNode = (function () {
       this.u._events.unlisten(this._path, event, callback);
     }
   }, {
+    key: 'onAny',
+    value: function onAny(event, callback) {
+      this.u._events.listen((0, _util.childPath)(this._path, '**'), event, callback);
+    }
+  }, {
+    key: 'offAny',
+    value: function offAny(event, callback) {
+      this.u._events.unlisten((0, _util.childPath)(this._path, '**'), event, callback);
+    }
+  }, {
+    key: 'onChild',
+    value: function onChild(event, callback) {
+      this.u._events.listen((0, _util.childPath)(this._path, '*'), event, callback);
+    }
+  }, {
+    key: 'offChild',
+    value: function offChild(event, callback) {
+      this.u._events.unlisten((0, _util.childPath)(this._path, '*'), event, callback);
+    }
+  }, {
     key: 'trigger',
     value: function trigger(event, payload) {
       this.u._events.trigger(this._path, event, payload);
