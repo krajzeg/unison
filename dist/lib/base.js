@@ -7,9 +7,10 @@
 
 Unison;function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { 'default': obj };}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _util = require('./util');var _events = require('./events'); // Main Unison object.
 // Uses classical instead of ES6 classes to allow Unison.apply(...) down the road.
-var _events2 = _interopRequireDefault(_events);var _ = require('lodash');function Unison() {var initialState = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];this._state = initialState;this._nextId = 1;
-
-  this._events = new _events2['default'](this);
+var _events2 = _interopRequireDefault(_events);var _ = require('lodash');function Unison() {var initialState = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];this._events = new _events2['default'](this);
+  this._states = [initialState];
+  this._current = 0;
+  this._nextId = 1;
 
   // each Unison object has its own pseudo-class for nodes that can be extended by plugins
   this._nodeBase = Object.create(UnisonNode.prototype);
@@ -19,16 +20,24 @@ var _events2 = _interopRequireDefault(_events);var _ = require('lodash');functio
   this._makeNode.prototype = this._nodeBase;}
 
 Unison.prototype = { 
-  grab: function grab(path) {
+  grab: function grab(path, time) {
     var Node = this._makeNode;
-    return new Node(this, path);}, 
+    return new Node(this, path, time);}, 
+
+
+  currentState: function currentState() {
+    return this._states[this._current];}, 
+
+
+  stateAt: function stateAt(time) {
+    return time !== undefined ? this._states[time] : this._states[this._current];}, 
 
 
   listen: function listen() {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}return this._events.listen.apply(this._events, args);}, 
   unlisten: function unlisten() {for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {args[_key2] = arguments[_key2];}return this._events.unlisten.apply(this._events, args);}, 
 
   collectEvents: function collectEvents(path, directEvent) {var _this = this;var acc = arguments.length <= 2 || arguments[2] === undefined ? [] : arguments[2];
-    var object = _.get(this._state, path);
+    var object = _.get(this.currentState(), path);
 
     acc.push([path, directEvent]);
     _.each(object, function (child, id) {
@@ -63,10 +72,11 @@ Unison.prototype = {
 
 
 UnisonNode = (function () {
-  function UnisonNode(unison, path) {_classCallCheck(this, UnisonNode);
+  function UnisonNode(unison, path) {var time = arguments.length <= 2 || arguments[2] === undefined ? undefined : arguments[2];_classCallCheck(this, UnisonNode);
     this.u = unison;
-    this._path = path;}_createClass(UnisonNode, [{ key: 'path', value: 
-
+    this._path = path;
+    this._time = time; // undefined means 'always use current state'
+  }_createClass(UnisonNode, [{ key: 'path', value: 
 
     function path() {
       return this._path;} }, { key: 'id', value: 
@@ -81,14 +91,18 @@ UnisonNode = (function () {
 
 
     function child(id) {
-      return this.u.grab((0, _util.childPath)(this.path(), id));} }, { key: 'state', value: 
+      return this.u.grab((0, _util.childPath)(this.path(), id));} }, { key: 'at', value: 
+
+
+    function at(time) {
+      return this.u.grab(this._path, time);} }, { key: 'state', value: 
 
 
     function state() {
       if (this._path === '') {
-        return this.u._state;} else 
+        return this.u.stateAt(this._time);} else 
       {
-        return _.get(this.u._state, this._path);}} }, { key: 'update', value: 
+        return _.get(this.u.stateAt(this._time), this._path);}} }, { key: 'update', value: 
 
 
 

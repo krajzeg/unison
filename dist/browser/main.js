@@ -27,10 +27,11 @@ var _ = require('lodash');
 function Unison() {
   var initialState = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
-  this._state = initialState;
-  this._nextId = 1;
-
   this._events = new _events2['default'](this);
+
+  this._states = [initialState];
+  this._current = 0;
+  this._nextId = 1;
 
   // each Unison object has its own pseudo-class for nodes that can be extended by plugins
   this._nodeBase = Object.create(UnisonNode.prototype);
@@ -41,9 +42,17 @@ function Unison() {
 }
 
 Unison.prototype = {
-  grab: function grab(path) {
+  grab: function grab(path, time) {
     var Node = this._makeNode;
-    return new Node(this, path);
+    return new Node(this, path, time);
+  },
+
+  currentState: function currentState() {
+    return this._states[this._current];
+  },
+
+  stateAt: function stateAt(time) {
+    return time !== undefined ? this._states[time] : this._states[this._current];
   },
 
   listen: function listen() {
@@ -66,7 +75,7 @@ Unison.prototype = {
 
     var acc = arguments.length <= 2 || arguments[2] === undefined ? [] : arguments[2];
 
-    var object = _.get(this._state, path);
+    var object = _.get(this.currentState(), path);
 
     acc.push([path, directEvent]);
     _.each(object, function (child, id) {
@@ -102,10 +111,13 @@ Unison.prototype = {
 
 var UnisonNode = (function () {
   function UnisonNode(unison, path) {
+    var time = arguments.length <= 2 || arguments[2] === undefined ? undefined : arguments[2];
+
     _classCallCheck(this, UnisonNode);
 
     this.u = unison;
     this._path = path;
+    this._time = time; // undefined means 'always use current state'
   }
 
   _createClass(UnisonNode, [{
@@ -129,12 +141,17 @@ var UnisonNode = (function () {
       return this.u.grab((0, _util.childPath)(this.path(), id));
     }
   }, {
+    key: 'at',
+    value: function at(time) {
+      return this.u.grab(this._path, time);
+    }
+  }, {
     key: 'state',
     value: function state() {
       if (this._path === '') {
-        return this.u._state;
+        return this.u.stateAt(this._time);
       } else {
-        return _.get(this.u._state, this._path);
+        return _.get(this.u.stateAt(this._time), this._path);
       }
     }
   }, {
