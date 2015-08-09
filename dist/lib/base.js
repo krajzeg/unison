@@ -13,6 +13,10 @@ var _events2 = _interopRequireDefault(_events);var _ = require('lodash');functio
   this._current = 0;
   this._nextId = 1;
 
+  this.config = _.defaults(options, { 
+    backlogSize: 1000 });
+
+
   // each Unison object has its own pseudo-class for nodes that can be extended by plugins
   this._nodeBase = Object.create(UnisonNode.prototype);
   this._makeNode = function () {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}
@@ -38,7 +42,11 @@ Unison.prototype = {
 
   applyChange: function applyChange(path, changedProperties) {var deletedProperties = arguments.length <= 2 || arguments[2] === undefined ? undefined : arguments[2];
     var changedState = (0, _immutableStates.stateWithUpdate)(this.currentState(), path, changedProperties, deletedProperties);
-    this._states[++this._current] = changedState;}, 
+    this._states[++this._current] = changedState;
+
+    var backlogSize = this.config.backlogSize;
+    if (backlogSize && this._current >= backlogSize) 
+    delete this._states[this._current - backlogSize];}, 
 
 
   listen: function listen() {for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {args[_key2] = arguments[_key2];}return this._events.listen.apply(this._events, args);}, 

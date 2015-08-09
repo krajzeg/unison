@@ -38,6 +38,10 @@ function Unison() {
   this._current = 0;
   this._nextId = 1;
 
+  this.config = _.defaults(options, {
+    backlogSize: 1000
+  });
+
   // each Unison object has its own pseudo-class for nodes that can be extended by plugins
   this._nodeBase = Object.create(UnisonNode.prototype);
   this._makeNode = function () {
@@ -72,6 +76,9 @@ Unison.prototype = {
 
     var changedState = (0, _immutableStates.stateWithUpdate)(this.currentState(), path, changedProperties, deletedProperties);
     this._states[++this._current] = changedState;
+
+    var backlogSize = this.config.backlogSize;
+    if (backlogSize && this._current >= backlogSize) delete this._states[this._current - backlogSize];
   },
 
   listen: function listen() {

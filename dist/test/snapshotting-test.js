@@ -32,5 +32,18 @@ describe("Snapshot nodes", function () {
       u('paladin').at(0).add('sword', {});});
 
     assert.throws(function () {
-      u('paladin').at(0).remove('shield');});});});
+      u('paladin').at(0).remove('shield');});});
+
+
+
+  it("should support only a limited number of steps in the past to keep memory usage down", function () {
+    var u = unison({ paladin: { life: 15, shield: {} } }, { backlogSize: 10 });
+
+    var paladin = u('paladin');
+    _.range(0, 15).forEach(function () {
+      paladin.update({ life: paladin.get.life - 1 });});
+
+
+    assert.equal(u('paladin').at(6).get.life, 9);
+    assert.throws(function () {return u('paladin').at(5);});});});
 //# sourceMappingURL=snapshotting-test.js.map

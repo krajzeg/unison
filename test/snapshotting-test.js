@@ -36,4 +36,15 @@ describe("Snapshot nodes", () => {
     });
   });
 
+  it("should support only a limited number of steps in the past to keep memory usage down", () => {
+    let u = unison({ paladin: {life: 15, shield: {}} }, {backlogSize: 10});
+
+    let paladin = u('paladin');
+    _.range(0,15).forEach(() => {
+      paladin.update({life: paladin.get.life - 1});
+    });
+
+    assert.equal(u('paladin').at(6).get.life, 9);
+    assert.throws(() => u('paladin').at(5));
+  });
 });
