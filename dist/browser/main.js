@@ -152,6 +152,11 @@ var UnisonNode = (function () {
       return this._path;
     }
   }, {
+    key: 'timestamp',
+    value: function timestamp() {
+      return this._time;
+    }
+  }, {
     key: 'id',
     value: function id() {
       return (0, _util.idFromPath)(this.path());
@@ -159,12 +164,12 @@ var UnisonNode = (function () {
   }, {
     key: 'parent',
     value: function parent() {
-      return this.u.grab((0, _util.parentPath)(this.path()));
+      return this.u.grab((0, _util.parentPath)(this.path()), this._time);
     }
   }, {
     key: 'child',
     value: function child(id) {
-      return this.u.grab((0, _util.childPath)(this.path(), id));
+      return this.u.grab((0, _util.childPath)(this.path(), id), this._time);
     }
   }, {
     key: 'at',

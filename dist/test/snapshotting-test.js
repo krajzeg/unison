@@ -17,6 +17,18 @@ describe("Snapshot nodes", function () {
 
 
 
+  it("should return similarly snapshotted nodes from child() and parent()", function () {
+    var u = unison({ paladin: { life: 5 }, goblin: { life: 12 }, battle: 'raging' });
+
+    u('paladin').update({ life: 666 });
+    u('goblin').update({ life: 0 });
+    u('').update({ battle: 'won' });
+
+    var paladinSnapshot = u('paladin').at(0);
+    assert.equal(paladinSnapshot.parent().get.battle, 'raging');
+    assert.equal(paladinSnapshot.parent().child('goblin').get.life, 12);});
+
+
   it("should throw if an invalid timestamp is requested", function () {
     var u = unison({ paladin: { life: 5 } });
     assert.throws(function () {return u('paladin').at(1);});});

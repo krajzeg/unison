@@ -95,7 +95,11 @@ UnisonNode = (function () {
   }_createClass(UnisonNode, [{ key: 'path', value: 
 
     function path() {
-      return this._path;} }, { key: 'id', value: 
+      return this._path;} }, { key: 'timestamp', value: 
+
+
+    function timestamp() {
+      return this._time;} }, { key: 'id', value: 
 
 
     function id() {
@@ -103,11 +107,11 @@ UnisonNode = (function () {
 
 
     function parent() {
-      return this.u.grab((0, _util.parentPath)(this.path()));} }, { key: 'child', value: 
+      return this.u.grab((0, _util.parentPath)(this.path()), this._time);} }, { key: 'child', value: 
 
 
     function child(id) {
-      return this.u.grab((0, _util.childPath)(this.path(), id));} }, { key: 'at', value: 
+      return this.u.grab((0, _util.childPath)(this.path(), id), this._time);} }, { key: 'at', value: 
 
 
     function at(time) {
