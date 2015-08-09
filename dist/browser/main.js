@@ -1325,21 +1325,32 @@ Object.defineProperty(exports, '__esModule', {
   value: true
 });
 exports['default'] = views;
+
+var _util = require('../util');
+
 var _ = require('lodash');
 
 function views(options) {
-  return function (u) {
+  return (0, _util.functionized)(ViewsPlugin, [options], 'applyPlugin');
+}
+
+function ViewsPlugin() {}
+ViewsPlugin.prototype = {
+  applyPlugin: function applyPlugin(u) {
+    this.u = u;
     return {
       nodeMethods: {
         watch: watch
       }
     };
-  };
-}
+  }
+};
 
-var EVENTS = ['updated', 'destroyed', 'childAdded', 'childRemoved'];
+var EVENTS = ['updated', 'destroyed', 'created'];
 
 function watch(object) {
+  // 'this' here will refer to the node .watch() was called on
+
   var boundListeners = [];
   var node = this;
 
@@ -1369,7 +1380,7 @@ function watch(object) {
 }
 module.exports = exports['default'];
 
-},{"lodash":15}],12:[function(require,module,exports){
+},{"../util":12,"lodash":15}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
