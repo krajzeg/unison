@@ -168,7 +168,28 @@ describe("Relations plugin", () => {
     assert.equal(redKnob.door(), undefined);
   });
 
-  it("should reflect the state at snapshot time when used with a snapshot node");
+  it("should reflect the state at snapshot time when used with a snapshot node", () => {
+    let u = prepareUnisonInstance([
+      {AtoB: 'fatherOf', BtoA: 'childOf', A: 'father', Bs: 'children'}
+    ]);
+    let tom = u('tom'), jerry = u('jerry'), alice = u('alice'), bob = u('bob');
+
+    // each "now" and "noLonger" operation costs two updates (to both objects), so timestamps increment by 2
+    tom.now('fatherOf', jerry); // timestamp 2: tom.children = [jerry]
+    tom.now('fatherOf', alice); // timestamp 4: tom.children = [jerry, alice]
+
+    let oldTom = u('tom').at(2), oldJerry = u('jerry').at(2), oldAlice = u('alice').at(2);
+
+    // check state at timestamp 1
+    assert.deepEqual(_.invoke(oldTom.children(), 'path'), ['jerry']);
+    assert.equal(oldJerry.father().path(), 'tom');
+    assert.equal(oldAlice.father(), undefined);
+
+    assert.ok(oldTom.fatherOf(oldJerry));
+    assert.ok(!oldTom.fatherOf(oldAlice));
+    assert.ok(oldJerry.childOf(oldTom));
+    assert.ok(!oldAlice.childOf(oldTom));
+  });
 });
 
 function prepareUnisonInstance(rels) {

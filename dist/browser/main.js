@@ -1029,14 +1029,20 @@ function makeCheckFn(relationName) {
 function makeSingleGetter(relationName) {
   return function () {
     var rels = this.get[relationName];
-    if (rels && rels.length > 0) return this.u(_.first(rels));else return undefined;
+    var time = this.timestamp();
+    if (rels && rels.length > 0) return this.u(_.first(rels), time);else return undefined;
   };
 }
 
 function makeMultipleGetter(relationName) {
   return function () {
+    var _this2 = this;
+
     var rels = this.get[relationName] || [];
-    return _.map(rels, this.u);
+    var time = this.timestamp();
+    return _.map(rels, function (path) {
+      return _this2.u(path, time);
+    });
   };
 }
 
