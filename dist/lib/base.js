@@ -8,20 +8,22 @@
 
 Unison;function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { 'default': obj };}function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _util = require('./util');var _immutableStates = require('./immutable-states');var _events = require('./events'); // Main Unison object.
 // Uses classical instead of ES6 classes to allow Unison.apply(...) down the road.
-var _events2 = _interopRequireDefault(_events);var _ = require('lodash');function Unison() {var initialState = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];this._events = new _events2['default'](this);
-  this._states = [initialState];
+var _events2 = _interopRequireDefault(_events);var _ = require('lodash');function Unison() {var initialState = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];this._events = new _events2['default'](this);
+  this._states = { 0: initialState };
   this._current = 0;
   this._nextId = 1;
 
   // each Unison object has its own pseudo-class for nodes that can be extended by plugins
   this._nodeBase = Object.create(UnisonNode.prototype);
-  this._makeNode = function (unison, path) {
-    UnisonNode.apply(this, [unison, path]);};
+  this._makeNode = function () {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}
+    UnisonNode.apply(this, args);};
 
   this._makeNode.prototype = this._nodeBase;}
 
 Unison.prototype = { 
-  grab: function grab(path, time) {
+  grab: function grab(path) {var time = arguments.length <= 1 || arguments[1] === undefined ? undefined : arguments[1];
+    if (time !== undefined && !this._states[time]) 
+    throw 'Can\'t create a snapshot at time ' + time + ' - no state recorded for that timestamp.';
     var Node = this._makeNode;
     return new Node(this, path, time);}, 
 
@@ -39,8 +41,8 @@ Unison.prototype = {
     this._states[++this._current] = changedState;}, 
 
 
-  listen: function listen() {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}return this._events.listen.apply(this._events, args);}, 
-  unlisten: function unlisten() {for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {args[_key2] = arguments[_key2];}return this._events.unlisten.apply(this._events, args);}, 
+  listen: function listen() {for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {args[_key2] = arguments[_key2];}return this._events.listen.apply(this._events, args);}, 
+  unlisten: function unlisten() {for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {args[_key3] = arguments[_key3];}return this._events.unlisten.apply(this._events, args);}, 
 
   collectEvents: function collectEvents(path, directEvent) {var _this = this;var acc = arguments.length <= 2 || arguments[2] === undefined ? [] : arguments[2];
     var object = _.get(this.currentState(), path);
@@ -126,7 +128,7 @@ UnisonNode = (function () {
       var unison = this.u;
 
       // extract arguments (either (child) or (id, child))
-      var id = undefined, child = undefined;for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {args[_key3] = arguments[_key3];}
+      var id = undefined, child = undefined;for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {args[_key4] = arguments[_key4];}
       if (args.length == 2) {
         id = args[0];child = args[1];} else 
       {

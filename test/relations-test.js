@@ -138,7 +138,7 @@ describe("Relations plugin", () => {
       {AtoB: 'contains', BtoA: 'isIn', A: 'location', Bs: 'contents'}
     ]));
 
-    let [doctor, london, tardis, bobby] = _.map(['doctor', 'london', 'tardis', 'bobby'], u);
+    let [doctor, london, tardis, bobby] = _.map(['doctor', 'london', 'tardis', 'bobby'], (path) => u(path));
     london.now('contains', bobby);
     london.now('contains', doctor);
     doctor.now('isIn', tardis); // this should move him away from London too
@@ -157,7 +157,7 @@ describe("Relations plugin", () => {
       {AtoB: 'opens', BtoA: 'openedBy', A: 'door', B: 'knob'}
     ]));
 
-    let [door, redKnob, blueKnob] = _.map(['door', 'redKnob', 'blueKnob'], u);
+    let [door, redKnob, blueKnob] = _.map(['door', 'redKnob', 'blueKnob'], (path) => u(path));
     door.now('openedBy', redKnob);
     door.now('openedBy', blueKnob);
 
@@ -167,6 +167,8 @@ describe("Relations plugin", () => {
     assert.ok(!redKnob.opens(door));
     assert.equal(redKnob.door(), undefined);
   });
+
+  it("should reflect the state at snapshot time when used with a snapshot node");
 });
 
 function prepareUnisonInstance(rels) {
