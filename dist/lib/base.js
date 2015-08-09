@@ -5,7 +5,8 @@
 
 
 
-Unison;function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { 'default': obj };}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _util = require('./util');var _events = require('./events'); // Main Unison object.
+
+Unison;function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { 'default': obj };}function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _util = require('./util');var _immutableStates = require('./immutable-states');var _events = require('./events'); // Main Unison object.
 // Uses classical instead of ES6 classes to allow Unison.apply(...) down the road.
 var _events2 = _interopRequireDefault(_events);var _ = require('lodash');function Unison() {var initialState = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];this._events = new _events2['default'](this);
   this._states = [initialState];
@@ -31,6 +32,11 @@ Unison.prototype = {
 
   stateAt: function stateAt(time) {
     return time !== undefined ? this._states[time] : this._states[this._current];}, 
+
+
+  applyChange: function applyChange(path, changedProperties) {var deletedProperties = arguments.length <= 2 || arguments[2] === undefined ? undefined : arguments[2];
+    var changedState = (0, _immutableStates.stateWithUpdate)(this.currentState(), path, changedProperties, deletedProperties);
+    this._states[++this._current] = changedState;}, 
 
 
   listen: function listen() {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}return this._events.listen.apply(this._events, args);}, 
@@ -111,11 +117,9 @@ UnisonNode = (function () {
 
 
     function update(props) {
-      var state = this.state();
-      if (state === undefined) return;
-
-      _.extend(state, props);
-      this.u._events.trigger(this._path, 'updated');} }, { key: 'add', value: 
+      this.ensureCurrent();
+      this.u.applyChange(this._path, props);
+      this.trigger('updated');} }, { key: 'add', value: 
 
 
     function add() {
@@ -131,6 +135,7 @@ UnisonNode = (function () {
 
 
       // sanity checks
+      this.ensureCurrent();
       var state = this.state();
       expectObject(state, 'Can\'t add child at ' + this._path);
       if (state[id] !== undefined) {
@@ -139,7 +144,7 @@ UnisonNode = (function () {
       validateId(id);
 
       // add it
-      state[id] = child;
+      this.u.applyChange(this._path, _defineProperty({}, id, child));
 
       // trigger events
       var pathToChild = (0, _util.childPath)(this.path(), id);
@@ -150,26 +155,23 @@ UnisonNode = (function () {
 
 
     function remove(id) {
-      var unison = this.u;
-      var state = this.state();
-
       // sanity checks
+      this.ensureCurrent();
+      var state = this.state();
       expectObject(state, 'Can\'t remove child at ' + this._path);
-
-      // does it even exist?
       if (state[id] === undefined) {
-        return false;}
+        throw new Error('Can\'t remove child \'' + id + '\' at ' + this._path + ' - no such object exists.');}
 
 
       // store events for later, as the object themselves will disappear
       var pathToChild = (0, _util.childPath)(this._path, id);
-      var events = unison.collectEvents(pathToChild, 'destroyed');
+      var events = this.u.collectEvents(pathToChild, 'destroyed');
 
       // remove the object
-      delete state[id];
+      this.u.applyChange(this._path, {}, [id]);
 
       // trigger the events
-      unison._events.triggerAll(events);
+      this.u._events.triggerAll(events);
 
       // done
       return true;} }, { key: 'destroy', value: 
@@ -206,7 +208,12 @@ UnisonNode = (function () {
 
 
     function trigger(event, payload) {
-      this.u._events.trigger(this._path, event, payload);} }, { key: 'get', get: function get() {return this.state();} }]);return UnisonNode;})();
+      this.u._events.trigger(this._path, event, payload);} }, { key: 'ensureCurrent', value: 
+
+
+    function ensureCurrent() {
+      if (this._time !== undefined) 
+      throw new Error("Destructive operations are only allowed on nodes representing the current state, not a snapshot.");} }, { key: 'get', get: function get() {return this.state();} }]);return UnisonNode;})();
 
 
 

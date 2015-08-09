@@ -11,9 +11,13 @@ exports['default'] = Unison;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var _util = require('./util');
+
+var _immutableStates = require('./immutable-states');
 
 var _events = require('./events');
 
@@ -53,6 +57,13 @@ Unison.prototype = {
 
   stateAt: function stateAt(time) {
     return time !== undefined ? this._states[time] : this._states[this._current];
+  },
+
+  applyChange: function applyChange(path, changedProperties) {
+    var deletedProperties = arguments.length <= 2 || arguments[2] === undefined ? undefined : arguments[2];
+
+    var changedState = (0, _immutableStates.stateWithUpdate)(this.currentState(), path, changedProperties, deletedProperties);
+    this._states[++this._current] = changedState;
   },
 
   listen: function listen() {
@@ -157,11 +168,9 @@ var UnisonNode = (function () {
   }, {
     key: 'update',
     value: function update(props) {
-      var state = this.state();
-      if (state === undefined) return;
-
-      _.extend(state, props);
-      this.u._events.trigger(this._path, 'updated');
+      this.ensureCurrent();
+      this.u.applyChange(this._path, props);
+      this.trigger('updated');
     }
   }, {
     key: 'add',
@@ -185,6 +194,7 @@ var UnisonNode = (function () {
       }
 
       // sanity checks
+      this.ensureCurrent();
       var state = this.state();
       expectObject(state, 'Can\'t add child at ' + this._path);
       if (state[id] !== undefined) {
@@ -193,7 +203,7 @@ var UnisonNode = (function () {
       validateId(id);
 
       // add it
-      state[id] = child;
+      this.u.applyChange(this._path, _defineProperty({}, id, child));
 
       // trigger events
       var pathToChild = (0, _util.childPath)(this.path(), id);
@@ -205,26 +215,23 @@ var UnisonNode = (function () {
   }, {
     key: 'remove',
     value: function remove(id) {
-      var unison = this.u;
-      var state = this.state();
-
       // sanity checks
+      this.ensureCurrent();
+      var state = this.state();
       expectObject(state, 'Can\'t remove child at ' + this._path);
-
-      // does it even exist?
       if (state[id] === undefined) {
-        return false;
+        throw new Error('Can\'t remove child \'' + id + '\' at ' + this._path + ' - no such object exists.');
       }
 
       // store events for later, as the object themselves will disappear
       var pathToChild = (0, _util.childPath)(this._path, id);
-      var events = unison.collectEvents(pathToChild, 'destroyed');
+      var events = this.u.collectEvents(pathToChild, 'destroyed');
 
       // remove the object
-      delete state[id];
+      this.u.applyChange(this._path, {}, [id]);
 
       // trigger the events
-      unison._events.triggerAll(events);
+      this.u._events.triggerAll(events);
 
       // done
       return true;
@@ -272,6 +279,11 @@ var UnisonNode = (function () {
       this.u._events.trigger(this._path, event, payload);
     }
   }, {
+    key: 'ensureCurrent',
+    value: function ensureCurrent() {
+      if (this._time !== undefined) throw new Error("Destructive operations are only allowed on nodes representing the current state, not a snapshot.");
+    }
+  }, {
     key: 'get',
     get: function get() {
       return this.state();
@@ -296,13 +308,13 @@ function validateId(id) {
 }
 module.exports = exports['default'];
 
-},{"./events":4,"./util":11,"lodash":14}],2:[function(require,module,exports){
+},{"./events":4,"./immutable-states":5,"./util":12,"lodash":15}],2:[function(require,module,exports){
 // Root file for the browser version of Unison.
 'use strict';
 
 window.Unison = require('./index');
 
-},{"./index":5}],3:[function(require,module,exports){
+},{"./index":6}],3:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -468,7 +480,60 @@ var UnisonEvent = (function () {
 
 module.exports = exports['default'];
 
-},{"./util":11,"lodash":14}],5:[function(require,module,exports){
+},{"./util":12,"lodash":15}],5:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+exports.stateWithUpdate = stateWithUpdate;
+exports.stateWithDelete = stateWithDelete;
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var _util = require('./util');
+
+var _ = require('lodash');
+
+function stateWithUpdate(_x2, _x3, _x4) {
+  var _arguments = arguments;
+  var _again = true;
+
+  _function: while (_again) {
+    var state = _x2,
+        path = _x3,
+        changedProperties = _x4;
+    deletedProperties = currentObject = changedObject = changedObjectId = _parent = undefined;
+    _again = false;
+    var deletedProperties = _arguments.length <= 3 || _arguments[3] === undefined ? undefined : _arguments[3];
+
+    var currentObject = path ? _.get(state, path) : state;
+    if (!(0, _util.isObject)(currentObject)) throw new Error('Cannot apply update at \'' + path + '\': the thing under this path is not an object.');
+
+    var changedObject = _.extend({}, currentObject, changedProperties);
+    if (deletedProperties) deletedProperties.forEach(function (prop) {
+      delete changedObject[prop];
+    });
+
+    if (path != '') {
+      var changedObjectId = (0, _util.idFromPath)(path),
+          _parent = (0, _util.parentPath)(path);
+      _arguments = [_x2 = state, _x3 = _parent, _x4 = _defineProperty({}, changedObjectId, changedObject)];
+      _again = true;
+      continue _function;
+    } else {
+      return changedObject;
+    }
+  }
+}
+
+function stateWithDelete(state, path) {
+  var parent = (0, _util.parentPath)(path),
+      id = (0, _util.idFromPath)(path);
+  return stateWithUpdate(state, parent, {}, [id]);
+}
+
+},{"./util":12,"lodash":15}],6:[function(require,module,exports){
 'use strict';
 
 var _ = require('lodash');
@@ -488,7 +553,7 @@ module.exports.views = require('./plugins/views');
 module.exports.relations = require('./plugins/relations');
 module.exports.UserError = require('./errors/user-error.js');
 
-},{"./base":1,"./errors/user-error.js":3,"./plugins/client":7,"./plugins/relations":8,"./plugins/server":9,"./plugins/views":10,"./util":11,"lodash":14}],6:[function(require,module,exports){
+},{"./base":1,"./errors/user-error.js":3,"./plugins/client":8,"./plugins/relations":9,"./plugins/server":10,"./plugins/views":11,"./util":12,"lodash":15}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -602,7 +667,7 @@ function messageValid(message) {
   return true;
 }
 
-},{"../util":11,"lodash":14}],7:[function(require,module,exports){
+},{"../util":12,"lodash":15}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -814,7 +879,7 @@ var ClientPlugin = (function () {
 
 module.exports = exports['default'];
 
-},{"./client-server-base":6,"bluebird":12,"lodash":14}],8:[function(require,module,exports){
+},{"./client-server-base":7,"bluebird":13,"lodash":15}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -991,7 +1056,7 @@ function removeRelation(relations, fromObj, name, toObj) {
 }
 module.exports = exports['default'];
 
-},{"lodash":14}],9:[function(require,module,exports){
+},{"lodash":15}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1221,7 +1286,7 @@ function defaultErrorHandler(err) {
 }
 module.exports = exports['default'];
 
-},{"./client-server-base":6,"bluebird":12,"lodash":14}],10:[function(require,module,exports){
+},{"./client-server-base":7,"bluebird":13,"lodash":15}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1272,7 +1337,7 @@ function watch(object) {
 }
 module.exports = exports['default'];
 
-},{"lodash":14}],11:[function(require,module,exports){
+},{"lodash":15}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1309,7 +1374,7 @@ function functionized(clazz, ctorArgs, defaultMethod) {
 }
 
 function isObject(thing) {
-  return typeof thing == 'object' && !(thing instanceof Array);
+  return thing && typeof thing == 'object' && !(thing instanceof Array);
 }
 
 function parentPath(path) {
@@ -1333,7 +1398,7 @@ function idFromPath(path) {
   }
 }
 
-},{"lodash":14}],12:[function(require,module,exports){
+},{"lodash":15}],13:[function(require,module,exports){
 (function (process,global){
 /* @preserve
  * The MIT License (MIT)
@@ -6193,7 +6258,7 @@ module.exports = ret;
 },{"./es5.js":14}]},{},[4])(4)
 });                    ;if (typeof window !== 'undefined' && window !== null) {                               window.P = window.Promise;                                                     } else if (typeof self !== 'undefined' && self !== null) {                             self.P = self.Promise;                                                         }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":13}],13:[function(require,module,exports){
+},{"_process":14}],14:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -6285,7 +6350,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 (function (global){
 /**
  * @license

@@ -32,9 +32,10 @@ describe("update()", () => {
     });
   });
 
-  it("should do nothing for non-existent nodes", () => {
-    u('bogus').update({some: 'properties'});
-    assert.strictEqual(u('bogus').get, undefined);
+  it("should throw for non-existent nodes", () => {
+    assert.throws(() => {
+      u('bogus').update({some: 'properties'});
+    });
   });
 });
 
@@ -117,9 +118,10 @@ describe("remove()", () => {
     });
   });
 
-  it("should return false if we attempt to remove a non-existent child", () => {
-    let removed = u('things').remove('leafblower');
-    assert.strictEqual(removed, false);
+  it("should throw if we attempt to remove a non-existent child", () => {
+    assert.throws(() => {
+      u('things').remove('leafblower');
+    });
   });
 
   it("should throw on non-existent nodes", () => {
