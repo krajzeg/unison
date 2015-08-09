@@ -138,7 +138,7 @@ describe("Relations plugin", () => {
       {AtoB: 'contains', BtoA: 'isIn', A: 'location', Bs: 'contents'}
     ]));
 
-    let [doctor, london, tardis, bobby] = _.map(['doctor', 'london', 'tardis', 'bobby'], u);
+    let [doctor, london, tardis, bobby] = _.map(['doctor', 'london', 'tardis', 'bobby'], (path) => u(path));
     london.now('contains', bobby);
     london.now('contains', doctor);
     doctor.now('isIn', tardis); // this should move him away from London too
@@ -157,7 +157,7 @@ describe("Relations plugin", () => {
       {AtoB: 'opens', BtoA: 'openedBy', A: 'door', B: 'knob'}
     ]));
 
-    let [door, redKnob, blueKnob] = _.map(['door', 'redKnob', 'blueKnob'], u);
+    let [door, redKnob, blueKnob] = _.map(['door', 'redKnob', 'blueKnob'], (path) => u(path));
     door.now('openedBy', redKnob);
     door.now('openedBy', blueKnob);
 
@@ -166,6 +166,29 @@ describe("Relations plugin", () => {
     assert.ok(blueKnob.opens(door));
     assert.ok(!redKnob.opens(door));
     assert.equal(redKnob.door(), undefined);
+  });
+
+  it("should reflect the state at snapshot time when used with a snapshot node", () => {
+    let u = prepareUnisonInstance([
+      {AtoB: 'fatherOf', BtoA: 'childOf', A: 'father', Bs: 'children'}
+    ]);
+    let tom = u('tom'), jerry = u('jerry'), alice = u('alice'), bob = u('bob');
+
+    // each "now" and "noLonger" operation costs two updates (to both objects), so timestamps increment by 2
+    tom.now('fatherOf', jerry); // timestamp 2: tom.children = [jerry]
+    tom.now('fatherOf', alice); // timestamp 4: tom.children = [jerry, alice]
+
+    let oldTom = u('tom').at(2), oldJerry = u('jerry').at(2), oldAlice = u('alice').at(2);
+
+    // check state at timestamp 1
+    assert.deepEqual(_.invoke(oldTom.children(), 'path'), ['jerry']);
+    assert.equal(oldJerry.father().path(), 'tom');
+    assert.equal(oldAlice.father(), undefined);
+
+    assert.ok(oldTom.fatherOf(oldJerry));
+    assert.ok(!oldTom.fatherOf(oldAlice));
+    assert.ok(oldJerry.childOf(oldTom));
+    assert.ok(!oldAlice.childOf(oldTom));
   });
 });
 

@@ -138,7 +138,7 @@ describe("Relations plugin", function () {
     { AtoB: 'contains', BtoA: 'isIn', A: 'location', Bs: 'contents' }]));var _$map = 
 
 
-    _.map(['doctor', 'london', 'tardis', 'bobby'], u);var _$map2 = _slicedToArray(_$map, 4);var doctor = _$map2[0];var london = _$map2[1];var tardis = _$map2[2];var bobby = _$map2[3];
+    _.map(['doctor', 'london', 'tardis', 'bobby'], function (path) {return u(path);});var _$map2 = _slicedToArray(_$map, 4);var doctor = _$map2[0];var london = _$map2[1];var tardis = _$map2[2];var bobby = _$map2[3];
     london.now('contains', bobby);
     london.now('contains', doctor);
     doctor.now('isIn', tardis); // this should move him away from London too
@@ -157,7 +157,7 @@ describe("Relations plugin", function () {
     { AtoB: 'opens', BtoA: 'openedBy', A: 'door', B: 'knob' }]));var _$map3 = 
 
 
-    _.map(['door', 'redKnob', 'blueKnob'], u);var _$map32 = _slicedToArray(_$map3, 3);var door = _$map32[0];var redKnob = _$map32[1];var blueKnob = _$map32[2];
+    _.map(['door', 'redKnob', 'blueKnob'], function (path) {return u(path);});var _$map32 = _slicedToArray(_$map3, 3);var door = _$map32[0];var redKnob = _$map32[1];var blueKnob = _$map32[2];
     door.now('openedBy', redKnob);
     door.now('openedBy', blueKnob);
 
@@ -165,7 +165,30 @@ describe("Relations plugin", function () {
     assert.ok(!door.openedBy(redKnob));
     assert.ok(blueKnob.opens(door));
     assert.ok(!redKnob.opens(door));
-    assert.equal(redKnob.door(), undefined);});});
+    assert.equal(redKnob.door(), undefined);});
+
+
+  it("should reflect the state at snapshot time when used with a snapshot node", function () {
+    var u = prepareUnisonInstance([
+    { AtoB: 'fatherOf', BtoA: 'childOf', A: 'father', Bs: 'children' }]);
+
+    var tom = u('tom'), jerry = u('jerry'), alice = u('alice'), bob = u('bob');
+
+    // each "now" and "noLonger" operation costs two updates (to both objects), so timestamps increment by 2
+    tom.now('fatherOf', jerry); // timestamp 2: tom.children = [jerry]
+    tom.now('fatherOf', alice); // timestamp 4: tom.children = [jerry, alice]
+
+    var oldTom = u('tom').at(2), oldJerry = u('jerry').at(2), oldAlice = u('alice').at(2);
+
+    // check state at timestamp 1
+    assert.deepEqual(_.invoke(oldTom.children(), 'path'), ['jerry']);
+    assert.equal(oldJerry.father().path(), 'tom');
+    assert.equal(oldAlice.father(), undefined);
+
+    assert.ok(oldTom.fatherOf(oldJerry));
+    assert.ok(!oldTom.fatherOf(oldAlice));
+    assert.ok(oldJerry.childOf(oldTom));
+    assert.ok(!oldAlice.childOf(oldTom));});});
 
 
 

@@ -45,7 +45,24 @@ describe("Event objects passed to listeners", function () {
     assert.ok(callback.called);
     var event = callback.firstCall.args[0];
     assert.equal(event.name, 'updated');
-    assert.equal(event.source.path(), 'bird');});});
+    assert.equal(event.timestamp, 1);
+    assert.equal(event.source.path(), 'bird');});
+
+
+  it("should provide snapshots of the source state at event time", function () {
+    var u = unison({ bird: {} }), callback = sinon.spy();
+    u('bird').on('updated', callback);
+
+    u('bird').update({ flying: true });
+    u('bird').update({ flying: false });
+
+    assert.ok(callback.calledTwice);
+    var firstEvent = callback.firstCall.args[0], secondEvent = callback.secondCall.args[0];
+    assert.equal(firstEvent.timestamp, 1);
+    assert.equal(secondEvent.timestamp, 2);
+    assert.equal(firstEvent.snapshot.get.flying, true);
+    assert.equal(secondEvent.snapshot.get.flying, false);
+    assert.equal(firstEvent.source.get.flying, false);});});
 
 
 

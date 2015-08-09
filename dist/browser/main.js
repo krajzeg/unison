@@ -11,9 +11,13 @@ exports['default'] = Unison;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var _util = require('./util');
+
+var _immutableStates = require('./immutable-states');
 
 var _events = require('./events');
 
@@ -26,36 +30,71 @@ var _ = require('lodash');
 
 function Unison() {
   var initialState = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-
-  this._state = initialState;
-  this._nextId = 1;
+  var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
   this._events = new _events2['default'](this);
 
+  this._states = { 0: initialState };
+  this._current = 0;
+  this._nextId = 1;
+
+  this.config = _.defaults(options, {
+    backlogSize: 1000
+  });
+
   // each Unison object has its own pseudo-class for nodes that can be extended by plugins
   this._nodeBase = Object.create(UnisonNode.prototype);
-  this._makeNode = function (unison, path) {
-    UnisonNode.apply(this, [unison, path]);
+  this._makeNode = function () {
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    UnisonNode.apply(this, args);
   };
   this._makeNode.prototype = this._nodeBase;
 }
 
 Unison.prototype = {
   grab: function grab(path) {
+    var time = arguments.length <= 1 || arguments[1] === undefined ? undefined : arguments[1];
+
+    if (time !== undefined && !this._states[time]) throw 'Can\'t create a snapshot at time ' + time + ' - no state recorded for that timestamp.';
     var Node = this._makeNode;
-    return new Node(this, path);
+    return new Node(this, path, time);
+  },
+
+  currentState: function currentState() {
+    return this._states[this._current];
+  },
+
+  currentTime: function currentTime() {
+    return this._current;
+  },
+
+  stateAt: function stateAt(time) {
+    return time !== undefined ? this._states[time] : this._states[this._current];
+  },
+
+  applyChange: function applyChange(path, changedProperties) {
+    var deletedProperties = arguments.length <= 2 || arguments[2] === undefined ? undefined : arguments[2];
+
+    var changedState = (0, _immutableStates.stateWithUpdate)(this.currentState(), path, changedProperties, deletedProperties);
+    this._states[++this._current] = changedState;
+
+    var backlogSize = this.config.backlogSize;
+    if (backlogSize && this._current >= backlogSize) delete this._states[this._current - backlogSize];
   },
 
   listen: function listen() {
-    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
+    for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+      args[_key2] = arguments[_key2];
     }
 
     return this._events.listen.apply(this._events, args);
   },
   unlisten: function unlisten() {
-    for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-      args[_key2] = arguments[_key2];
+    for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+      args[_key3] = arguments[_key3];
     }
 
     return this._events.unlisten.apply(this._events, args);
@@ -66,7 +105,7 @@ Unison.prototype = {
 
     var acc = arguments.length <= 2 || arguments[2] === undefined ? [] : arguments[2];
 
-    var object = _.get(this._state, path);
+    var object = _.get(this.currentState(), path);
 
     acc.push([path, directEvent]);
     _.each(object, function (child, id) {
@@ -102,16 +141,24 @@ Unison.prototype = {
 
 var UnisonNode = (function () {
   function UnisonNode(unison, path) {
+    var time = arguments.length <= 2 || arguments[2] === undefined ? undefined : arguments[2];
+
     _classCallCheck(this, UnisonNode);
 
     this.u = unison;
     this._path = path;
+    this._time = time; // undefined means 'always use current state'
   }
 
   _createClass(UnisonNode, [{
     key: 'path',
     value: function path() {
       return this._path;
+    }
+  }, {
+    key: 'timestamp',
+    value: function timestamp() {
+      return this._time;
     }
   }, {
     key: 'id',
@@ -121,30 +168,33 @@ var UnisonNode = (function () {
   }, {
     key: 'parent',
     value: function parent() {
-      return this.u.grab((0, _util.parentPath)(this.path()));
+      return this.u.grab((0, _util.parentPath)(this.path()), this._time);
     }
   }, {
     key: 'child',
     value: function child(id) {
-      return this.u.grab((0, _util.childPath)(this.path(), id));
+      return this.u.grab((0, _util.childPath)(this.path(), id), this._time);
+    }
+  }, {
+    key: 'at',
+    value: function at(time) {
+      return this.u.grab(this._path, time);
     }
   }, {
     key: 'state',
     value: function state() {
       if (this._path === '') {
-        return this.u._state;
+        return this.u.stateAt(this._time);
       } else {
-        return _.get(this.u._state, this._path);
+        return _.get(this.u.stateAt(this._time), this._path);
       }
     }
   }, {
     key: 'update',
     value: function update(props) {
-      var state = this.state();
-      if (state === undefined) return;
-
-      _.extend(state, props);
-      this.u._events.trigger(this._path, 'updated');
+      this.ensureCurrent();
+      this.u.applyChange(this._path, props);
+      this.trigger('updated');
     }
   }, {
     key: 'add',
@@ -155,8 +205,8 @@ var UnisonNode = (function () {
       var id = undefined,
           child = undefined;
 
-      for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-        args[_key3] = arguments[_key3];
+      for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+        args[_key4] = arguments[_key4];
       }
 
       if (args.length == 2) {
@@ -168,6 +218,7 @@ var UnisonNode = (function () {
       }
 
       // sanity checks
+      this.ensureCurrent();
       var state = this.state();
       expectObject(state, 'Can\'t add child at ' + this._path);
       if (state[id] !== undefined) {
@@ -176,7 +227,7 @@ var UnisonNode = (function () {
       validateId(id);
 
       // add it
-      state[id] = child;
+      this.u.applyChange(this._path, _defineProperty({}, id, child));
 
       // trigger events
       var pathToChild = (0, _util.childPath)(this.path(), id);
@@ -188,26 +239,23 @@ var UnisonNode = (function () {
   }, {
     key: 'remove',
     value: function remove(id) {
-      var unison = this.u;
-      var state = this.state();
-
       // sanity checks
+      this.ensureCurrent();
+      var state = this.state();
       expectObject(state, 'Can\'t remove child at ' + this._path);
-
-      // does it even exist?
       if (state[id] === undefined) {
-        return false;
+        throw new Error('Can\'t remove child \'' + id + '\' at ' + this._path + ' - no such object exists.');
       }
 
       // store events for later, as the object themselves will disappear
       var pathToChild = (0, _util.childPath)(this._path, id);
-      var events = unison.collectEvents(pathToChild, 'destroyed');
+      var events = this.u.collectEvents(pathToChild, 'destroyed');
 
       // remove the object
-      delete state[id];
+      this.u.applyChange(this._path, {}, [id]);
 
       // trigger the events
-      unison._events.triggerAll(events);
+      this.u._events.triggerAll(events);
 
       // done
       return true;
@@ -255,6 +303,11 @@ var UnisonNode = (function () {
       this.u._events.trigger(this._path, event, payload);
     }
   }, {
+    key: 'ensureCurrent',
+    value: function ensureCurrent() {
+      if (this._time !== undefined) throw new Error("Destructive operations are only allowed on nodes representing the current state, not a snapshot.");
+    }
+  }, {
     key: 'get',
     get: function get() {
       return this.state();
@@ -279,13 +332,13 @@ function validateId(id) {
 }
 module.exports = exports['default'];
 
-},{"./events":4,"./util":11,"lodash":14}],2:[function(require,module,exports){
+},{"./events":4,"./immutable-states":5,"./util":12,"lodash":15}],2:[function(require,module,exports){
 // Root file for the browser version of Unison.
 'use strict';
 
 window.Unison = require('./index');
 
-},{"./index":5}],3:[function(require,module,exports){
+},{"./index":6}],3:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -387,7 +440,7 @@ var UnisonEvents = (function () {
       var payload = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
       var source = this.u(path);
-      var eventObj = new UnisonEvent(event, source, payload);
+      var eventObj = new UnisonEvent(event, source, this.u.currentTime(), payload);
 
       var paths = undefined;
       if (path != '') {
@@ -427,13 +480,15 @@ var UnisonEvents = (function () {
 exports['default'] = UnisonEvents;
 
 var UnisonEvent = (function () {
-  function UnisonEvent(name, source) {
-    var additionalProps = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+  function UnisonEvent(name, source, timestamp) {
+    var additionalProps = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
 
     _classCallCheck(this, UnisonEvent);
 
     this.name = name;
     this.source = source;
+    this.snapshot = source.at(timestamp);
+    this.timestamp = timestamp;
     this._handled = false;
 
     _.extend(this, additionalProps);
@@ -451,7 +506,60 @@ var UnisonEvent = (function () {
 
 module.exports = exports['default'];
 
-},{"./util":11,"lodash":14}],5:[function(require,module,exports){
+},{"./util":12,"lodash":15}],5:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+exports.stateWithUpdate = stateWithUpdate;
+exports.stateWithDelete = stateWithDelete;
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var _util = require('./util');
+
+var _ = require('lodash');
+
+function stateWithUpdate(_x2, _x3, _x4) {
+  var _arguments = arguments;
+  var _again = true;
+
+  _function: while (_again) {
+    var state = _x2,
+        path = _x3,
+        changedProperties = _x4;
+    deletedProperties = currentObject = changedObject = changedObjectId = _parent = undefined;
+    _again = false;
+    var deletedProperties = _arguments.length <= 3 || _arguments[3] === undefined ? undefined : _arguments[3];
+
+    var currentObject = path ? _.get(state, path) : state;
+    if (!(0, _util.isObject)(currentObject)) throw new Error('Cannot apply update at \'' + path + '\': the thing under this path is not an object.');
+
+    var changedObject = _.extend({}, currentObject, changedProperties);
+    if (deletedProperties) deletedProperties.forEach(function (prop) {
+      delete changedObject[prop];
+    });
+
+    if (path != '') {
+      var changedObjectId = (0, _util.idFromPath)(path),
+          _parent = (0, _util.parentPath)(path);
+      _arguments = [_x2 = state, _x3 = _parent, _x4 = _defineProperty({}, changedObjectId, changedObject)];
+      _again = true;
+      continue _function;
+    } else {
+      return changedObject;
+    }
+  }
+}
+
+function stateWithDelete(state, path) {
+  var parent = (0, _util.parentPath)(path),
+      id = (0, _util.idFromPath)(path);
+  return stateWithUpdate(state, parent, {}, [id]);
+}
+
+},{"./util":12,"lodash":15}],6:[function(require,module,exports){
 'use strict';
 
 var _ = require('lodash');
@@ -471,7 +579,7 @@ module.exports.views = require('./plugins/views');
 module.exports.relations = require('./plugins/relations');
 module.exports.UserError = require('./errors/user-error.js');
 
-},{"./base":1,"./errors/user-error.js":3,"./plugins/client":7,"./plugins/relations":8,"./plugins/server":9,"./plugins/views":10,"./util":11,"lodash":14}],6:[function(require,module,exports){
+},{"./base":1,"./errors/user-error.js":3,"./plugins/client":8,"./plugins/relations":9,"./plugins/server":10,"./plugins/views":11,"./util":12,"lodash":15}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -585,7 +693,7 @@ function messageValid(message) {
   return true;
 }
 
-},{"../util":11,"lodash":14}],7:[function(require,module,exports){
+},{"../util":12,"lodash":15}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -797,7 +905,7 @@ var ClientPlugin = (function () {
 
 module.exports = exports['default'];
 
-},{"./client-server-base":6,"bluebird":12,"lodash":14}],8:[function(require,module,exports){
+},{"./client-server-base":7,"bluebird":13,"lodash":15}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -927,14 +1035,20 @@ function makeCheckFn(relationName) {
 function makeSingleGetter(relationName) {
   return function () {
     var rels = this.get[relationName];
-    if (rels && rels.length > 0) return this.u(_.first(rels));else return undefined;
+    var time = this.timestamp();
+    if (rels && rels.length > 0) return this.u(_.first(rels), time);else return undefined;
   };
 }
 
 function makeMultipleGetter(relationName) {
   return function () {
+    var _this2 = this;
+
     var rels = this.get[relationName] || [];
-    return _.map(rels, this.u);
+    var time = this.timestamp();
+    return _.map(rels, function (path) {
+      return _this2.u(path, time);
+    });
   };
 }
 
@@ -974,7 +1088,7 @@ function removeRelation(relations, fromObj, name, toObj) {
 }
 module.exports = exports['default'];
 
-},{"lodash":14}],9:[function(require,module,exports){
+},{"lodash":15}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1204,7 +1318,7 @@ function defaultErrorHandler(err) {
 }
 module.exports = exports['default'];
 
-},{"./client-server-base":6,"bluebird":12,"lodash":14}],10:[function(require,module,exports){
+},{"./client-server-base":7,"bluebird":13,"lodash":15}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1255,7 +1369,7 @@ function watch(object) {
 }
 module.exports = exports['default'];
 
-},{"lodash":14}],11:[function(require,module,exports){
+},{"lodash":15}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1292,7 +1406,7 @@ function functionized(clazz, ctorArgs, defaultMethod) {
 }
 
 function isObject(thing) {
-  return typeof thing == 'object' && !(thing instanceof Array);
+  return thing && typeof thing == 'object' && !(thing instanceof Array);
 }
 
 function parentPath(path) {
@@ -1316,7 +1430,7 @@ function idFromPath(path) {
   }
 }
 
-},{"lodash":14}],12:[function(require,module,exports){
+},{"lodash":15}],13:[function(require,module,exports){
 (function (process,global){
 /* @preserve
  * The MIT License (MIT)
@@ -6176,7 +6290,7 @@ module.exports = ret;
 },{"./es5.js":14}]},{},[4])(4)
 });                    ;if (typeof window !== 'undefined' && window !== null) {                               window.P = window.Promise;                                                     } else if (typeof self !== 'undefined' && self !== null) {                             self.P = self.Promise;                                                         }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":13}],13:[function(require,module,exports){
+},{"_process":14}],14:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -6268,7 +6382,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 (function (global){
 /**
  * @license
