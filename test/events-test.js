@@ -45,7 +45,23 @@ describe("Event objects passed to listeners", () => {
     assert.ok(callback.called);
     let event = callback.firstCall.args[0];
     assert.equal(event.name, 'updated');
+    assert.equal(event.timestamp, 1);
     assert.equal(event.source.path(), 'bird');
+  });
+
+  it("should use snapshots at event time for source objects", () => {
+    let u = unison({bird: {}}), callback = sinon.spy();
+    u('bird').on('updated', callback);
+
+    u('bird').update({flying: true});
+    u('bird').update({flying: false});
+
+    assert.ok(callback.calledTwice);
+    let firstEvent = callback.firstCall.args[0], secondEvent = callback.secondCall.args[0];
+    assert.equal(firstEvent.timestamp, 1);
+    assert.equal(secondEvent.timestamp, 2);
+    assert.equal(firstEvent.source.get.flying, true);
+    assert.equal(secondEvent.source.get.flying, false);
   });
 });
 

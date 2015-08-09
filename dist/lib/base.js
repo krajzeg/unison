@@ -36,6 +36,10 @@ Unison.prototype = {
     return this._states[this._current];}, 
 
 
+  currentTime: function currentTime() {
+    return this._current;}, 
+
+
   stateAt: function stateAt(time) {
     return time !== undefined ? this._states[time] : this._states[this._current];}, 
 

@@ -67,6 +67,10 @@ Unison.prototype = {
     return this._states[this._current];
   },
 
+  currentTime: function currentTime() {
+    return this._current;
+  },
+
   stateAt: function stateAt(time) {
     return time !== undefined ? this._states[time] : this._states[this._current];
   },
@@ -436,7 +440,7 @@ var UnisonEvents = (function () {
       var payload = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
       var source = this.u(path);
-      var eventObj = new UnisonEvent(event, source, payload);
+      var eventObj = new UnisonEvent(event, source, this.u.currentTime(), payload);
 
       var paths = undefined;
       if (path != '') {
@@ -476,13 +480,14 @@ var UnisonEvents = (function () {
 exports['default'] = UnisonEvents;
 
 var UnisonEvent = (function () {
-  function UnisonEvent(name, source) {
-    var additionalProps = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+  function UnisonEvent(name, source, timestamp) {
+    var additionalProps = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
 
     _classCallCheck(this, UnisonEvent);
 
     this.name = name;
-    this.source = source;
+    this.source = source.at(timestamp);
+    this.timestamp = timestamp;
     this._handled = false;
 
     _.extend(this, additionalProps);
