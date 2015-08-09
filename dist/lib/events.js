@@ -78,7 +78,8 @@ UnisonEvents = (function () {
 ;exports['default'] = UnisonEvents;var UnisonEvent = (function () {
   function UnisonEvent(name, source, timestamp) {var additionalProps = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];_classCallCheck(this, UnisonEvent);
     this.name = name;
-    this.source = source.at(timestamp);
+    this.source = source;
+    this.snapshot = source.at(timestamp);
     this.timestamp = timestamp;
     this._handled = false;
 

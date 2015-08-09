@@ -486,7 +486,8 @@ var UnisonEvent = (function () {
     _classCallCheck(this, UnisonEvent);
 
     this.name = name;
-    this.source = source.at(timestamp);
+    this.source = source;
+    this.snapshot = source.at(timestamp);
     this.timestamp = timestamp;
     this._handled = false;
 

@@ -49,7 +49,7 @@ describe("Event objects passed to listeners", function () {
     assert.equal(event.source.path(), 'bird');});
 
 
-  it("should use snapshots at event time for source objects", function () {
+  it("should provide snapshots of the source state at event time", function () {
     var u = unison({ bird: {} }), callback = sinon.spy();
     u('bird').on('updated', callback);
 
@@ -60,8 +60,9 @@ describe("Event objects passed to listeners", function () {
     var firstEvent = callback.firstCall.args[0], secondEvent = callback.secondCall.args[0];
     assert.equal(firstEvent.timestamp, 1);
     assert.equal(secondEvent.timestamp, 2);
-    assert.equal(firstEvent.source.get.flying, true);
-    assert.equal(secondEvent.source.get.flying, false);});});
+    assert.equal(firstEvent.snapshot.get.flying, true);
+    assert.equal(secondEvent.snapshot.get.flying, false);
+    assert.equal(firstEvent.source.get.flying, false);});});
 
 
 
