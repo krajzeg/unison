@@ -96,18 +96,22 @@ UnisonNode = (function () {
     this.u = unison;
     this._path = path;
     this._time = time; // undefined means 'always use current state'
-  }_createClass(UnisonNode, [{ key: 'path', value: 
+  }
 
+  // === Properties of this node
+  _createClass(UnisonNode, [{ key: 'path', value: 
     function path() {
-      return this._path;} }, { key: 'timestamp', value: 
-
-
-    function timestamp() {
-      return this._time;} }, { key: 'id', value: 
+      return this._path;} }, { key: 'id', value: 
 
 
     function id() {
-      return (0, _util.idFromPath)(this.path());} }, { key: 'parent', value: 
+      return (0, _util.idFromPath)(this.path());}
+
+
+    // === Retrieving and interacting with other, related nodes
+  }, { key: 'root', value: 
+    function root() {
+      return this.u.grab('', this._time);} }, { key: 'parent', value: 
 
 
     function parent() {
@@ -115,13 +119,41 @@ UnisonNode = (function () {
 
 
     function child(id) {
-      return this.u.grab((0, _util.childPath)(this.path(), id), this._time);} }, { key: 'at', value: 
+      return this.u.grab((0, _util.childPath)(this.path(), id), this._time);} }, { key: 'is', value: 
 
 
+    function is(otherNode) {
+      return this._path == otherNode._path;} }, { key: 'children', value: 
+
+
+    function children() {var _this2 = this;
+      var children = [];
+      _.each(this.get, function (obj, id) {
+        if ((0, _util.isObject)(obj)) 
+        children.push(_this2.child(id));});
+
+      return children;} }, { key: 'find', value: 
+
+
+    function find(subpath) {
+      if (this._path) 
+      return this.u(this._path + '.' + subpath, this._time);else 
+
+      return this.u(subpath, this._time);}
+
+
+    // === Timestamp-related operations
+  }, { key: 'at', value: 
     function at(time) {
-      return this.u.grab(this._path, time);} }, { key: 'state', value: 
+      return this.u.grab(this._path, time);} }, { key: 'timestamp', value: 
 
 
+    function timestamp() {
+      return this._time;}
+
+
+    // === Retrieving state
+  }, { key: 'state', value: 
     function state() {
       if (this._path === '') {
         return this.u.stateAt(this._time);} else 

@@ -17,7 +17,7 @@ describe("Snapshot nodes", () => {
     });
   });
 
-  it("should return similarly snapshotted nodes from child() and parent()", () => {
+  it("should return similarly snapshotted nodes when navigating using parent(), child(), find() etc.", () => {
     let u = unison({ paladin: {life: 5}, goblin: {life: 12}, battle: 'raging' });
 
     u('paladin').update({life: 666});
@@ -27,6 +27,8 @@ describe("Snapshot nodes", () => {
     let paladinSnapshot = u('paladin').at(0);
     assert.equal(paladinSnapshot.parent().get.battle, 'raging');
     assert.equal(paladinSnapshot.parent().child('goblin').get.life, 12);
+
+    assert.equal(paladinSnapshot.root().find('goblin').parent().child('paladin').get.life, 5);
   });
 
   it("should throw if an invalid timestamp is requested", () => {
