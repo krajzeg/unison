@@ -25,7 +25,7 @@ var _events2 = _interopRequireDefault(_events);var _ = require('lodash');functio
   this._makeNode.prototype = this._nodeBase;}
 
 Unison.prototype = { 
-  grab: function grab(path) {var time = arguments.length <= 1 || arguments[1] === undefined ? undefined : arguments[1];
+  grab: function grab() {var path = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];var time = arguments.length <= 1 || arguments[1] === undefined ? undefined : arguments[1];
     if (time !== undefined && !this._states[time]) 
     throw 'Can\'t create a snapshot at time ' + time + ' - no state recorded for that timestamp.';
     var Node = this._makeNode;

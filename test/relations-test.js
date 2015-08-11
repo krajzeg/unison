@@ -2,7 +2,7 @@ let _ = require('lodash');
 let assert = require('chai').assert;
 let unison = require('../lib');
 let client = require('../lib').client;
-let relations = require('../lib').relations;
+let relations = require('../lib').relatives;
 let sinon = require('sinon');
 
 describe("Relations plugin", () => {

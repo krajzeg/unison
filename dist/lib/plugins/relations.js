@@ -7,16 +7,16 @@ relations;function _defineProperty(obj, key, value) {if (key in obj) {Object.def
 
 Relations = (function () {
   function Relations(relations) {var _this = this;_classCallCheck(this, Relations);
-    this.relations = {};
+    this.relatives = {};
 
     _.each(relations, function (rel) {
-      _this.relations[rel.AtoB] = rel;
-      _this.relations[rel.BtoA] = rel;});}_createClass(Relations, [{ key: 'find', value: 
+      _this.relatives[rel.AtoB] = rel;
+      _this.relatives[rel.BtoA] = rel;});}_createClass(Relations, [{ key: 'find', value: 
 
 
 
     function find(name) {
-      var rel = this.relations[name];
+      var rel = this.relatives[name];
       if (!rel) 
       throw new Error('Unknown relation name: \'$rel\'');
       return rel;} }, { key: 'findInverse', value: 
@@ -48,12 +48,12 @@ Relations = (function () {
       addCommand('noLonger', makeCeaseFn(this));
 
       // add all relation predicates
-      var relationNames = _.keys(this.relations);
+      var relationNames = _.keys(this.relatives);
       var predicates = _.object(_.map(relationNames, function (name) {return [name, makeCheckFn(name)];}));
 
       // add all relation getter methods
       var getters = {};
-      _.each(this.relations, function (rel) {
+      _.each(this.relatives, function (rel) {
         if (rel.A) getters[rel.A] = makeSingleGetter(rel.BtoA);
         if (rel.B) getters[rel.B] = makeSingleGetter(rel.AtoB);
         if (rel.As) getters[rel.As] = makeMultipleGetter(rel.BtoA);

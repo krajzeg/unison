@@ -55,7 +55,8 @@ function Unison() {
 }
 
 Unison.prototype = {
-  grab: function grab(path) {
+  grab: function grab() {
+    var path = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];
     var time = arguments.length <= 1 || arguments[1] === undefined ? undefined : arguments[1];
 
     if (time !== undefined && !this._states[time]) throw 'Can\'t create a snapshot at time ' + time + ' - no state recorded for that timestamp.';
@@ -576,7 +577,7 @@ module.exports = unison;
 module.exports.server = require('./plugins/server');
 module.exports.client = require('./plugins/client');
 module.exports.views = require('./plugins/views');
-module.exports.relations = require('./plugins/relations');
+module.exports.relatives = require('./plugins/relations');
 module.exports.UserError = require('./errors/user-error.js');
 
 },{"./base":1,"./errors/user-error.js":3,"./plugins/client":8,"./plugins/relations":9,"./plugins/server":10,"./plugins/views":11,"./util":12,"lodash":15}],7:[function(require,module,exports){
@@ -935,18 +936,18 @@ var Relations = (function () {
 
     _classCallCheck(this, Relations);
 
-    this.relations = {};
+    this.relatives = {};
 
     _.each(relations, function (rel) {
-      _this.relations[rel.AtoB] = rel;
-      _this.relations[rel.BtoA] = rel;
+      _this.relatives[rel.AtoB] = rel;
+      _this.relatives[rel.BtoA] = rel;
     });
   }
 
   _createClass(Relations, [{
     key: 'find',
     value: function find(name) {
-      var rel = this.relations[name];
+      var rel = this.relatives[name];
       if (!rel) throw new Error('Unknown relation name: \'$rel\'');
       return rel;
     }
@@ -984,14 +985,14 @@ var Relations = (function () {
       addCommand('noLonger', makeCeaseFn(this));
 
       // add all relation predicates
-      var relationNames = _.keys(this.relations);
+      var relationNames = _.keys(this.relatives);
       var predicates = _.object(_.map(relationNames, function (name) {
         return [name, makeCheckFn(name)];
       }));
 
       // add all relation getter methods
       var getters = {};
-      _.each(this.relations, function (rel) {
+      _.each(this.relatives, function (rel) {
         if (rel.A) getters[rel.A] = makeSingleGetter(rel.BtoA);
         if (rel.B) getters[rel.B] = makeSingleGetter(rel.AtoB);
         if (rel.As) getters[rel.As] = makeMultipleGetter(rel.BtoA);

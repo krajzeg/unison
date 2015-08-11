@@ -2,7 +2,7 @@
 var assert = require('chai').assert;
 var unison = require('../lib');
 var client = require('../lib').client;
-var relations = require('../lib').relations;
+var relations = require('../lib').relatives;
 var sinon = require('sinon');
 
 describe("Relations plugin", function () {
