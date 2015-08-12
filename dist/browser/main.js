@@ -131,10 +131,28 @@ Unison.prototype = {
     _.extend(this._nodeBase, props);
   },
 
+  applyNodeWrappers: function applyNodeWrappers(wrappers) {
+    var _this2 = this;
+
+    _.each(wrappers, function (outerFn, methodName) {
+      _this2._nodeBase[methodName] = (0, _util.wrapFunction)(outerFn, _this2._nodeBase[methodName]);
+    });
+  },
+
+  applyGlobalWrappers: function applyGlobalWrappers(wrappers) {
+    var _this3 = this;
+
+    _.each(wrappers, function (outerFn, methodName) {
+      _this3[methodName] = (0, _util.wrapFunction)(outerFn, _this3[methodName]);
+    });
+  },
+
   plugin: function plugin(pluginFn) {
     var additions = pluginFn(this) || {};
     this.registerGlobalProperties(additions.methods || {});
     this.registerNodeProperties(additions.nodeMethods || {});
+    this.applyGlobalWrappers(additions.methodWrappers || {});
+    this.applyNodeWrappers(additions.nodeMethodWrappers || {});
 
     return this;
   }
@@ -189,11 +207,11 @@ var UnisonNode = (function () {
   }, {
     key: 'children',
     value: function children() {
-      var _this2 = this;
+      var _this4 = this;
 
       var children = [];
       _.each(this.get, function (obj, id) {
-        if ((0, _util.isObject)(obj)) children.push(_this2.child(id));
+        if ((0, _util.isObject)(obj)) children.push(_this4.child(id));
       });
       return children;
     }
@@ -387,7 +405,7 @@ var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_ag
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
 
 var UserError = (function (_Error) {
   _inherits(UserError, _Error);
@@ -428,8 +446,6 @@ var UnisonEvents = (function () {
     this.u = unison;
     this._listeners = {};
   }
-
-  // Represents all events triggered from Unison and their common properties.
 
   _createClass(UnisonEvents, [{
     key: 'key',
@@ -512,7 +528,10 @@ var UnisonEvents = (function () {
   }]);
 
   return UnisonEvents;
-})();
+})()
+
+// Represents all events triggered from Unison and their common properties.
+;
 
 exports['default'] = UnisonEvents;
 
@@ -1437,6 +1456,7 @@ Object.defineProperty(exports, '__esModule', {
   value: true
 });
 exports.functionized = functionized;
+exports.wrapFunction = wrapFunction;
 exports.isObject = isObject;
 exports.parentPath = parentPath;
 exports.childPath = childPath;
@@ -1464,6 +1484,16 @@ function functionized(clazz, ctorArgs, defaultMethod) {
 
   // return!
   return fn;
+}
+
+function wrapFunction(wrapper, wrappee) {
+  return function () {
+    for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+      args[_key2] = arguments[_key2];
+    }
+
+    return wrapper.apply(this, [wrappee].concat(args));
+  };
 }
 
 function isObject(thing) {

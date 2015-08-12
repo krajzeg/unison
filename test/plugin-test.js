@@ -38,4 +38,37 @@ describe("Plugins", () => {
 
     assert.equal(u.iWasThere, true);
   });
+
+  it("should be able to wrap selected unison methods", () => {
+    let u = unison({'things': {}});
+    u.plugin(() => {
+      return {
+        methodWrappers: {
+          nextId(oNextId) {
+            let standardId = oNextId.apply(this);
+            return '#' + standardId;
+          }
+        }
+      }
+    });
+
+    u('things').add({name: 'screwdriver'});
+    assert.ok(u('things.#1').get)
+  });
+
+  it("should be able to wrap selected node methods", () => {
+    let u = unison({'apple': {}});
+    u.plugin(() => {
+      return {
+        nodeMethodWrappers: {
+          add(oAdd, id, obj) {
+            oAdd.apply(this, [id.toLowerCase(), obj]);
+          }
+        }
+      }
+    });
+
+    u('apple').add('SEED', {});
+    assert.ok(u('apple.seed').get)
+  });
 });

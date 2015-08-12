@@ -24,11 +24,11 @@ Relations = (function () {
 
     function findInverse(name) {
       var rel = this.find(name);
-      return rel.AtoB == name ? rel.BtoA : rel.AtoB;} }, { key: 'isSingular', 
+      return rel.AtoB == name ? rel.BtoA : rel.AtoB;}
 
 
     // Returns 'true' if the object can only be in this relation with one other object (e.g. "is located in")
-    value: function isSingular(name) {
+  }, { key: 'isSingular', value: function isSingular(name) {
       var rel = this.find(name);
       return !!(rel.AtoB == name && rel.B || rel.BtoA == name && rel.A);} }, { key: 'applyPlugin', value: 
 

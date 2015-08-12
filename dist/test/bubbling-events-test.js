@@ -2,7 +2,7 @@
 var sinon = require('sinon');
 var unison = require('../lib');
 
-describe('X.Y.* (single star) wildcard listeners', function () {
+describe("X.Y.* (single star) wildcard listeners", function () {
   var u = undefined;
   beforeEach(function () {
     u = unison({ 
@@ -10,7 +10,7 @@ describe('X.Y.* (single star) wildcard listeners', function () {
 
 
 
-  it('should be triggered when a child of X.Y has an event', function () {
+  it("should be triggered when a child of X.Y has an event", function () {
     var listenSpy = sinon.spy(), onChildSpy = sinon.spy();
     u.listen('bird.*', 'updated', listenSpy);
     u('bird').onChild('updated', onChildSpy);
@@ -21,7 +21,7 @@ describe('X.Y.* (single star) wildcard listeners', function () {
     assert.ok(onChildSpy.calledOnce);});
 
 
-  it('should not trigger for further descendants of X.Y', function () {
+  it("should not trigger for further descendants of X.Y", function () {
     var listenSpy = sinon.spy(), onChildSpy = sinon.spy();
     u.listen('bird.*', 'updated', listenSpy);
     u('bird').onChild('updated', onChildSpy);
@@ -32,7 +32,7 @@ describe('X.Y.* (single star) wildcard listeners', function () {
     assert.ok(!onChildSpy.called);});
 
 
-  it('should work correctly for the root object', function () {
+  it("should work correctly for the root object", function () {
     var listenSpy = sinon.spy(), onChildSpy = sinon.spy();
     u.listen('*', 'updated', listenSpy);
     u('').onChild('updated', onChildSpy);
@@ -42,7 +42,7 @@ describe('X.Y.* (single star) wildcard listeners', function () {
     assert.ok(listenSpy.called);});
 
 
-  it('should not trigger if bubbling was stopped', function () {
+  it("should not trigger if bubbling was stopped", function () {
     var childSpy = sinon.spy();
     u.listen('bird.wings.*', 'updated', childSpy);
     u.listen('bird.wings.left', 'updated', function (evt) {return evt.stopBubbling();});
@@ -54,7 +54,7 @@ describe('X.Y.* (single star) wildcard listeners', function () {
 
 
 
-describe('X.Y.** (double star) wildcard listeners', function () {
+describe("X.Y.** (double star) wildcard listeners", function () {
   var u = undefined;
   beforeEach(function () {
     u = unison({ 
@@ -62,7 +62,7 @@ describe('X.Y.** (double star) wildcard listeners', function () {
 
 
 
-  it('should be triggered when a child of X.Y has an event', function () {
+  it("should be triggered when a child of X.Y has an event", function () {
     var listenSpy = sinon.spy(), onAnySpy = sinon.spy();
     u.listen('bird.**', 'updated', listenSpy);
     u('bird').onAny('updated', onAnySpy);
@@ -73,7 +73,7 @@ describe('X.Y.** (double star) wildcard listeners', function () {
     assert.ok(onAnySpy.calledOnce);});
 
 
-  it('should trigger for further descendants of X.Y', function () {
+  it("should trigger for further descendants of X.Y", function () {
     var listenSpy = sinon.spy(), onAnySpy = sinon.spy();
     u.listen('bird.**', 'updated', listenSpy);
     u('bird').onAny('updated', onAnySpy);
@@ -85,7 +85,7 @@ describe('X.Y.** (double star) wildcard listeners', function () {
     assert.ok(onAnySpy.calledTwice);});
 
 
-  it('should trigger when X.Y itself has an event', function () {
+  it("should trigger when X.Y itself has an event", function () {
     var listenSpy = sinon.spy(), onAnySpy = sinon.spy();
     u.listen('bird.**', 'updated', listenSpy);
     u('bird').onAny('updated', onAnySpy);
@@ -96,7 +96,7 @@ describe('X.Y.** (double star) wildcard listeners', function () {
     assert.ok(onAnySpy.calledOnce);});
 
 
-  it('should work correctly for the root object', function () {
+  it("should work correctly for the root object", function () {
     var listenSpy = sinon.spy(), onAnySpy = sinon.spy();
     u.listen('**', 'updated', listenSpy);
     u('').onAny('updated', onAnySpy);
@@ -107,7 +107,7 @@ describe('X.Y.** (double star) wildcard listeners', function () {
     assert.ok(onAnySpy.called);});
 
 
-  it('should not trigger if bubbling was stopped', function () {
+  it("should not trigger if bubbling was stopped", function () {
     var childSpy = sinon.spy();
     u.listen('bird.**', 'updated', childSpy);
     u.listen('bird.wings.left', 'updated', function (evt) {return evt.stopBubbling();});

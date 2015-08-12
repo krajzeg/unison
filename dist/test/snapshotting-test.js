@@ -2,8 +2,8 @@
 var assert = require('chai').assert;
 var unison = require('../lib');
 
-describe('Snapshot nodes', function () {
-  it('should access state corresponding to their timestamp', function () {
+describe("Snapshot nodes", function () {
+  it("should access state corresponding to their timestamp", function () {
     var u = unison({ paladin: { life: 5 } });
 
     var paladin = u('paladin');
@@ -17,7 +17,7 @@ describe('Snapshot nodes', function () {
 
 
 
-  it('should return similarly snapshotted nodes when navigating using parent(), child(), find() etc.', function () {
+  it("should return similarly snapshotted nodes when navigating using parent(), child(), find() etc.", function () {
     var u = unison({ paladin: { life: 5 }, goblin: { life: 12 }, battle: 'raging' });
 
     u('paladin').update({ life: 666 });
@@ -31,12 +31,12 @@ describe('Snapshot nodes', function () {
     assert.equal(paladinSnapshot.root().find('goblin').parent().child('paladin').get.life, 5);});
 
 
-  it('should throw if an invalid timestamp is requested', function () {
+  it("should throw if an invalid timestamp is requested", function () {
     var u = unison({ paladin: { life: 5 } });
     assert.throws(function () {return u('paladin').at(1);});});
 
 
-  it('should throw when used to perform updates', function () {
+  it("should throw when used to perform updates", function () {
     var u = unison({ paladin: { life: 4, shield: {} } });
 
     assert.throws(function () {
@@ -50,7 +50,7 @@ describe('Snapshot nodes', function () {
 
 
 
-  it('should support only a limited number of steps in the past to keep memory usage down', function () {
+  it("should support only a limited number of steps in the past to keep memory usage down", function () {
     var u = unison({ paladin: { life: 15, shield: {} } }, { backlogSize: 10 });
 
     var paladin = u('paladin');

@@ -6,9 +6,9 @@
 
 
 
-Unison;function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { 'default': obj };}function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _util = require('./util');var _immutableStates = require('./immutable-states');var _events = require('./events');var _events2 = _interopRequireDefault(_events);var _ = require('lodash'); // Main Unison object.
+Unison;function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { 'default': obj };}function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _util = require('./util');var _immutableStates = require('./immutable-states');var _events = require('./events'); // Main Unison object.
 // Uses classical instead of ES6 classes to allow Unison.apply(...) down the road.
-function Unison() {var initialState = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];this._events = new _events2['default'](this);
+var _events2 = _interopRequireDefault(_events);var _ = require('lodash');function Unison() {var initialState = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];this._events = new _events2['default'](this);
   this._states = { 0: initialState };
   this._current = 0;
   this._nextId = 1;
@@ -82,10 +82,24 @@ Unison.prototype = {
     _.extend(this._nodeBase, props);}, 
 
 
+  applyNodeWrappers: function applyNodeWrappers(wrappers) {var _this2 = this;
+    _.each(wrappers, function (outerFn, methodName) {
+      _this2._nodeBase[methodName] = (0, _util.wrapFunction)(outerFn, _this2._nodeBase[methodName]);});}, 
+
+
+
+  applyGlobalWrappers: function applyGlobalWrappers(wrappers) {var _this3 = this;
+    _.each(wrappers, function (outerFn, methodName) {
+      _this3[methodName] = (0, _util.wrapFunction)(outerFn, _this3[methodName]);});}, 
+
+
+
   plugin: function plugin(pluginFn) {
     var additions = pluginFn(this) || {};
     this.registerGlobalProperties(additions.methods || {});
     this.registerNodeProperties(additions.nodeMethods || {});
+    this.applyGlobalWrappers(additions.methodWrappers || {});
+    this.applyNodeWrappers(additions.nodeMethodWrappers || {});
 
     return this;} };var 
 
@@ -96,20 +110,20 @@ UnisonNode = (function () {
     this.u = unison;
     this._path = path;
     this._time = time; // undefined means 'always use current state'
-  }_createClass(UnisonNode, [{ key: 'path', 
+  }
 
-    // === Properties of this node
-    value: 
+  // === Properties of this node
+  _createClass(UnisonNode, [{ key: 'path', value: 
     function path() {
       return this._path;} }, { key: 'id', value: 
 
 
     function id() {
-      return (0, _util.idFromPath)(this.path());} }, { key: 'root', 
+      return (0, _util.idFromPath)(this.path());}
 
 
     // === Retrieving and interacting with other, related nodes
-    value: 
+  }, { key: 'root', value: 
     function root() {
       return this.u.grab('', this._time);} }, { key: 'parent', value: 
 
@@ -126,11 +140,11 @@ UnisonNode = (function () {
       return this._path == otherNode._path;} }, { key: 'children', value: 
 
 
-    function children() {var _this2 = this;
+    function children() {var _this4 = this;
       var children = [];
       _.each(this.get, function (obj, id) {
         if ((0, _util.isObject)(obj)) 
-        children.push(_this2.child(id));});
+        children.push(_this4.child(id));});
 
       return children;} }, { key: 'find', value: 
 
@@ -139,21 +153,21 @@ UnisonNode = (function () {
       if (this._path) 
       return this.u(this._path + '.' + subpath, this._time);else 
 
-      return this.u(subpath, this._time);} }, { key: 'at', 
+      return this.u(subpath, this._time);}
 
 
     // === Timestamp-related operations
-    value: 
+  }, { key: 'at', value: 
     function at(time) {
       return this.u.grab(this._path, time);} }, { key: 'timestamp', value: 
 
 
     function timestamp() {
-      return this._time;} }, { key: 'state', 
+      return this._time;}
 
 
     // === Retrieving state
-    value: 
+  }, { key: 'state', value: 
     function state() {
       if (this._path === '') {
         return this.u.stateAt(this._time);} else 
@@ -229,7 +243,7 @@ UnisonNode = (function () {
 
     function destroy() {
       // straightforward translation
-      expectObject(this.state(), 'Can\'t destroy ${this._path}');
+      expectObject(this.state(), "Can't destroy ${this._path}");
       return this.parent().remove(this.id());} }, { key: 'on', value: 
 
 
@@ -263,7 +277,7 @@ UnisonNode = (function () {
 
     function ensureCurrent() {
       if (this._time !== undefined) 
-      throw new Error('Destructive operations are only allowed on nodes representing the current state, not a snapshot.');} }, { key: 'get', get: function get() {return this.state();} }]);return UnisonNode;})();
+      throw new Error("Destructive operations are only allowed on nodes representing the current state, not a snapshot.");} }, { key: 'get', get: function get() {return this.state();} }]);return UnisonNode;})();
 
 
 
@@ -278,5 +292,5 @@ function expectObject(state, msg) {
 
 function validateId(id) {
   if (id == '') throw new Error('IDs have to be non-empty.');
-  if (id.indexOf('.') >= 0) throw new Error('IDs cannot contain dots.');}module.exports = exports['default'];
+  if (id.indexOf(".") >= 0) throw new Error('IDs cannot contain dots.');}module.exports = exports['default'];
 //# sourceMappingURL=base.js.map
