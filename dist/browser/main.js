@@ -388,7 +388,7 @@ function validateId(id) {
 }
 module.exports = exports['default'];
 
-},{"./events":4,"./immutable-states":5,"./util":12,"lodash":15}],2:[function(require,module,exports){
+},{"./events":4,"./immutable-states":5,"./util":13,"lodash":16}],2:[function(require,module,exports){
 // Root file for the browser version of Unison.
 'use strict';
 
@@ -562,7 +562,7 @@ var UnisonEvent = (function () {
 
 module.exports = exports['default'];
 
-},{"./util":12,"lodash":15}],5:[function(require,module,exports){
+},{"./util":13,"lodash":16}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -615,7 +615,7 @@ function stateWithDelete(state, path) {
   return stateWithUpdate(state, parent, {}, [id]);
 }
 
-},{"./util":12,"lodash":15}],6:[function(require,module,exports){
+},{"./util":13,"lodash":16}],6:[function(require,module,exports){
 'use strict';
 
 var _ = require('lodash');
@@ -632,10 +632,12 @@ module.exports = unison;
 module.exports.server = require('./plugins/server');
 module.exports.client = require('./plugins/client');
 module.exports.views = require('./plugins/views');
-module.exports.relatives = require('./plugins/relations');
+module.exports.relations = require('./plugins/relations');
+module.exports.templates = require('./plugins/templates');
+
 module.exports.UserError = require('./errors/user-error.js');
 
-},{"./base":1,"./errors/user-error.js":3,"./plugins/client":8,"./plugins/relations":9,"./plugins/server":10,"./plugins/views":11,"./util":12,"lodash":15}],7:[function(require,module,exports){
+},{"./base":1,"./errors/user-error.js":3,"./plugins/client":8,"./plugins/relations":9,"./plugins/server":10,"./plugins/templates":11,"./plugins/views":12,"./util":13,"lodash":16}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -749,7 +751,7 @@ function messageValid(message) {
   return true;
 }
 
-},{"../util":12,"lodash":15}],8:[function(require,module,exports){
+},{"../util":13,"lodash":16}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -961,7 +963,7 @@ var ClientPlugin = (function () {
 
 module.exports = exports['default'];
 
-},{"./client-server-base":7,"bluebird":13,"lodash":15}],9:[function(require,module,exports){
+},{"./client-server-base":7,"bluebird":14,"lodash":16}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1144,7 +1146,7 @@ function removeRelation(relations, fromObj, name, toObj) {
 }
 module.exports = exports['default'];
 
-},{"lodash":15}],10:[function(require,module,exports){
+},{"lodash":16}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1387,7 +1389,74 @@ function defaultErrorHandler(err) {
 }
 module.exports = exports['default'];
 
-},{"./client-server-base":7,"bluebird":13,"lodash":15}],11:[function(require,module,exports){
+},{"./client-server-base":7,"bluebird":14,"lodash":16}],11:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+exports['default'] = templates;
+
+var _util = require('../util');
+
+var _ = require('lodash');
+
+function templates(options) {
+  return (0, _util.functionized)(TemplatesPlugin, [options], 'applyPlugin');
+}
+
+function TemplatesPlugin(templates) {
+  this.templates = templates;
+}
+TemplatesPlugin.prototype = {
+  applyPlugin: function applyPlugin(u) {
+    this.u = u;
+    return {
+      nodeMethodWrappers: {
+        add: this.makeAddWrapper()
+      } /*,
+        nodeMethods: {
+         spawn: spawn
+        }*/
+    };
+  },
+
+  makeAddWrapper: function makeAddWrapper() {
+    var templates = this.templates;
+    return function (oAdd) {
+      for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+        args[_key - 1] = arguments[_key];
+      }
+
+      if (args.length == 1) {
+        args[0] = applyTemplateIfNeeded(templates, args[0]);
+      } else {
+        args[1] = applyTemplateIfNeeded(templates, args[1]);
+      }
+
+      // invoke original add with the modified object
+      return oAdd.apply(this, [].concat(args));
+    };
+  }
+};
+
+function applyTemplateIfNeeded(templates, obj) {
+  // does this object want us to do something?
+  if (!(0, _util.isObject)(obj) || !obj.template) return;
+
+  // find the right template
+  var templateName = obj.template;
+  var template = _.get(templates, templateName);
+  if (!template) {
+    throw new Error('The object you added uses template \'' + templateName + '\', but no such template was found.');
+  }
+
+  // create a new object with the template as prototype, and otherwise the same properties
+  return _.extend(Object.create(template), obj);
+}
+module.exports = exports['default'];
+
+},{"../util":13,"lodash":16}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1449,7 +1518,7 @@ function watch(object) {
 }
 module.exports = exports['default'];
 
-},{"../util":12,"lodash":15}],12:[function(require,module,exports){
+},{"../util":13,"lodash":16}],13:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1521,7 +1590,7 @@ function idFromPath(path) {
   }
 }
 
-},{"lodash":15}],13:[function(require,module,exports){
+},{"lodash":16}],14:[function(require,module,exports){
 (function (process,global){
 /* @preserve
  * The MIT License (MIT)
@@ -6381,7 +6450,7 @@ module.exports = ret;
 },{"./es5.js":14}]},{},[4])(4)
 });                    ;if (typeof window !== 'undefined' && window !== null) {                               window.P = window.Promise;                                                     } else if (typeof self !== 'undefined' && self !== null) {                             self.P = self.Promise;                                                         }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":14}],14:[function(require,module,exports){
+},{"_process":15}],15:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -6473,7 +6542,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 (function (global){
 /**
  * @license
