@@ -3,7 +3,7 @@
 
 
 
-server;function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _ = require('lodash');var Promise = require('bluebird');var cs = require("./client-server-base");function server(options) {
+server;function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _ = require('lodash');var Promise = require('bluebird');var cs = require('./client-server-base');function server(options) {
   var serverPlugin = new ServerPlugin(options);
   var fn = function fn() {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}
     return serverPlugin.applyPlugin.apply(serverPlugin, args);};
@@ -66,7 +66,7 @@ ServerPlugin = (function () {
           case cs.INTENT:
             return _this2.applyIntent(client, message);
           case cs.COMMAND:
-            throw new Error("Servers do not obey commands from clients.");}});} }, { key: 'sendToAll', value: 
+            throw new Error('Servers do not obey commands from clients.');}});} }, { key: 'sendToAll', value: 
 
 
 
@@ -138,11 +138,25 @@ ServerPlugin = (function () {
 
     function makeCommandMethod(commandName, commandFn) {
       var server = this;
-      return function () {for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {args[_key2] = arguments[_key2];}
+
+      return function () {
+        var nested = !!server._runningCommand;for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {args[_key2] = arguments[_key2];}
+        if (!nested) 
+        server._runningCommand = [this, commandName, args];
         // 'this' refers to the Node on which the method was called here
-        commandFn.apply(this, args); // apply the changes on the server
-        server.sendToAll([cs.COMMAND, commandName, this.path(), cs.serializeAll(args)]); // send the changes to all the clients
-      };} }]);return ServerPlugin;})();
+        try {
+          commandFn.apply(this, args);} 
+        catch (e) {
+          if (!nested) 
+          server._runningCommand = null;
+          throw e;}
+
+
+        if (!nested) {
+          server.sendToAll([cs.COMMAND, commandName, this.path(), cs.serializeAll(args)]); // send the changes to all the clients
+          server._runningCommand = null;}};} }]);return ServerPlugin;})();
+
+
 
 
 

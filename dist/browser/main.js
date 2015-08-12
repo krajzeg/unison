@@ -387,7 +387,7 @@ var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_ag
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var UserError = (function (_Error) {
   _inherits(UserError, _Error);
@@ -428,6 +428,8 @@ var UnisonEvents = (function () {
     this.u = unison;
     this._listeners = {};
   }
+
+  // Represents all events triggered from Unison and their common properties.
 
   _createClass(UnisonEvents, [{
     key: 'key',
@@ -510,10 +512,7 @@ var UnisonEvents = (function () {
   }]);
 
   return UnisonEvents;
-})()
-
-// Represents all events triggered from Unison and their common properties.
-;
+})();
 
 exports['default'] = UnisonEvents;
 
@@ -1336,14 +1335,27 @@ var ServerPlugin = (function () {
     key: 'makeCommandMethod',
     value: function makeCommandMethod(commandName, commandFn) {
       var server = this;
+
       return function () {
+        var nested = !!server._runningCommand;
+
         for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
           args[_key2] = arguments[_key2];
         }
 
+        if (!nested) server._runningCommand = [this, commandName, args];
         // 'this' refers to the Node on which the method was called here
-        commandFn.apply(this, args); // apply the changes on the server
-        server.sendToAll([cs.COMMAND, commandName, this.path(), cs.serializeAll(args)]); // send the changes to all the clients
+        try {
+          commandFn.apply(this, args);
+        } catch (e) {
+          if (!nested) server._runningCommand = null;
+          throw e;
+        }
+
+        if (!nested) {
+          server.sendToAll([cs.COMMAND, commandName, this.path(), cs.serializeAll(args)]); // send the changes to all the clients
+          server._runningCommand = null;
+        }
       };
     }
   }]);

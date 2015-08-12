@@ -17,8 +17,7 @@ describe("Server plugin", () => {
           frob(howHard) {
             this.update({frobbed: howHard});
           }
-        },
-        intents: {}
+        }
       }));
 
     comm.attach('client1');
@@ -63,6 +62,31 @@ describe("Server plugin", () => {
     assert.ok(comm.containsMessageFor('client1',
       ['c', 'frob', 'bird', ['lightly', 'client1']]
     ));
+  });
+
+  it("should not send commands nested in other command executions", () => {
+    let comm = new CommunicationMock();
+    let u = unison({})
+      .plugin(server({
+        communication: comm,
+        commands: {
+          frob() {
+            this.update({frobbed: true});
+            this.futz();
+          },
+          futz() {
+            this.update({futzed: true});
+          }
+        }
+      }));
+
+    comm.attach('client1');
+    u().frob();
+
+    let messages = comm.messagesSentTo('client1').slice(1); // remove the _seed command
+    assert.equal(messages.length, 1);
+    assert.deepEqual(messages[0], ['c', 'frob', '', []]);
+    assert.deepEqual(u().state(), {frobbed: true, futzed: true});
   });
 
   it("should not send commands to clients that have already detached", () => {

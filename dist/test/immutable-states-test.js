@@ -2,8 +2,8 @@
 
 '../lib/immutable-states');var assert = require('chai').assert;
 
-describe("stateWithUpdate()", function () {
-  it("should return an updated state and keep the original intact", function () {
+describe('stateWithUpdate()', function () {
+  it('should return an updated state and keep the original intact', function () {
     var original = { 
       paladin: { life: 15 }, 
       goblin: { life: 12, shield: { broken: false } } };
@@ -31,8 +31,8 @@ describe("stateWithUpdate()", function () {
 
 
 
-describe("stateWithDelete()", function () {
-  it("should return a state with properties removed and keep the original intact", function () {
+describe('stateWithDelete()', function () {
+  it('should return a state with properties removed and keep the original intact', function () {
     var original = { 
       paladin: { life: 15 }, 
       goblin: { life: 12, shield: { heavy: true } } };

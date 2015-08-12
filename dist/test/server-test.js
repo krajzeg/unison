@@ -6,8 +6,8 @@ var sinon = require('sinon');
 var Promise = require('bluebird');
 var CommunicationMock = require('./mocks/server-comm');
 
-describe("Server plugin", function () {
-  it("should translate command methods into local changes and network messages to all clients", function () {
+describe('Server plugin', function () {
+  it('should translate command methods into local changes and network messages to all clients', function () {
     var comm = new CommunicationMock();
 
     var u = unison({ bird: {} }).
@@ -15,10 +15,9 @@ describe("Server plugin", function () {
       communication: comm, 
       commands: { 
         frob: function frob(howHard) {
-          this.update({ frobbed: howHard });} }, 
+          this.update({ frobbed: howHard });} } }));
 
 
-      intents: {} }));
 
 
     comm.attach('client1');
@@ -35,7 +34,7 @@ describe("Server plugin", function () {
 
 
 
-  it("should translate intents from clients into command executions via the intent methods", function () {
+  it('should translate intents from clients into command executions via the intent methods', function () {
     var comm = new CommunicationMock();
 
     var u = unison({ bird: {} }).
@@ -65,7 +64,32 @@ describe("Server plugin", function () {
 
 
 
-  it("should not send commands to clients that have already detached", function () {
+  it('should not send commands nested in other command executions', function () {
+    var comm = new CommunicationMock();
+    var u = unison({}).
+    plugin(server({ 
+      communication: comm, 
+      commands: { 
+        frob: function frob() {
+          this.update({ frobbed: true });
+          this.futz();}, 
+
+        futz: function futz() {
+          this.update({ futzed: true });} } }));
+
+
+
+
+    comm.attach('client1');
+    u().frob();
+
+    var messages = comm.messagesSentTo('client1').slice(1); // remove the _seed command
+    assert.equal(messages.length, 1);
+    assert.deepEqual(messages[0], ['c', 'frob', '', []]);
+    assert.deepEqual(u().state(), { frobbed: true, futzed: true });});
+
+
+  it('should not send commands to clients that have already detached', function () {
     var comm = new CommunicationMock();
 
     var u = unison({ bird: {} }).
@@ -88,7 +112,7 @@ describe("Server plugin", function () {
     assert.deepEqual(frobMessages[0], ['c', 'frob', 'bird', ['lightly']]);});
 
 
-  it("should send a '_seed' command with the current state to newly attached clients", function () {
+  it('should send a \'_seed\' command with the current state to newly attached clients', function () {
     var comm = new CommunicationMock();
 
     var u = unison({ bird: { wingspan: 6 } }).
@@ -109,7 +133,7 @@ describe("Server plugin", function () {
 
 
 
-  it("should allow adding commands and intents after the fact", function () {
+  it('should allow adding commands and intents after the fact', function () {
     var comm = new CommunicationMock();
     var u = unison({ bird: {} }).
     plugin(server({ communication: comm }));
@@ -122,7 +146,7 @@ describe("Server plugin", function () {
     assert.ok(u('bird').get.frobbed);});
 
 
-  it("should serialize and deserialize objects over the network correctly", function () {
+  it('should serialize and deserialize objects over the network correctly', function () {
     var comm = new CommunicationMock();
 
     var u = unison({ bird: {}, human: {} }).
@@ -147,14 +171,14 @@ describe("Server plugin", function () {
 
 
 
-  it("should send correct responses when an intent function returns a value", function (done) {
+  it('should send correct responses when an intent function returns a value', function (done) {
     var comm = new CommunicationMock();
 
     var srv = server({ 
       communication: comm, 
       intents: { 
         pleaseFrob: function pleaseFrob() {
-          return "Frobbed!";} } });
+          return 'Frobbed!';} } });
 
 
 
@@ -163,19 +187,19 @@ describe("Server plugin", function () {
 
     srv.plugin.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(function () {
       assert.ok(comm.containsMessageFor('client1', 
-      ['r', 'ok', 1, "Frobbed!"]));}).
+      ['r', 'ok', 1, 'Frobbed!']));}).
 
     then(done)['catch'](done);});
 
 
-  it("should act correctly when an intent function returns a promise", function (done) {
+  it('should act correctly when an intent function returns a promise', function (done) {
     var comm = new CommunicationMock();
 
     var srv = server({ 
       communication: comm, 
       intents: { 
         pleaseFrob: function pleaseFrob() {
-          return wait(10).then(function () {return "Frobbed!";});} } });
+          return wait(10).then(function () {return 'Frobbed!';});} } });
 
 
 
@@ -184,19 +208,19 @@ describe("Server plugin", function () {
 
     srv.plugin.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(function () {
       assert.ok(comm.containsMessageFor('client1', 
-      ['r', 'ok', 1, "Frobbed!"]));}).
+      ['r', 'ok', 1, 'Frobbed!']));}).
 
     then(done)['catch'](done);});
 
 
-  it("should send correct responses when an intent function unexpectedly fails", function (done) {
+  it('should send correct responses when an intent function unexpectedly fails', function (done) {
     var comm = new CommunicationMock(), errorSpy = sinon.spy();
 
     var srv = server({ 
       communication: comm, 
       intents: { 
         pleaseFrob: function pleaseFrob() {
-          throw new Error("It hurts a lot.");} }, 
+          throw new Error('It hurts a lot.');} }, 
 
 
       unexpectedErrorMessage: 'Argh!', 
@@ -208,20 +232,20 @@ describe("Server plugin", function () {
 
     srv.plugin.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(function () {
       assert.ok(comm.containsMessageFor('client1', 
-      ['r', 'err', 1, "Argh!"]));
+      ['r', 'err', 1, 'Argh!']));
 
       assert.ok(errorSpy.calledOnce);}).
     then(done)['catch'](done);});
 
 
 
-  it("should send correct responses when an intent function throws a UserError", function (done) {
+  it('should send correct responses when an intent function throws a UserError', function (done) {
     var comm = new CommunicationMock(), errorSpy = sinon.spy();
     var srv = server({ 
       communication: comm, 
       intents: { 
         pleaseFrob: function pleaseFrob() {
-          throw new unison.UserError("Not frobbable.");} }, 
+          throw new unison.UserError('Not frobbable.');} }, 
 
 
       errorHandler: errorSpy });
@@ -232,13 +256,13 @@ describe("Server plugin", function () {
 
     srv.plugin.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(function () {
       assert.ok(comm.containsMessageFor('client1', 
-      ['r', 'err', 1, "Not frobbable."]));
+      ['r', 'err', 1, 'Not frobbable.']));
 
       assert.ok(!errorSpy.called);}).
     then(done)['catch'](done);});
 
 
-  it("should serialize objects returned from intents", function (done) {
+  it('should serialize objects returned from intents', function (done) {
     var comm = new CommunicationMock();
 
     var srv = server({ 
