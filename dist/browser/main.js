@@ -1414,11 +1414,18 @@ TemplatesPlugin.prototype = {
     return {
       nodeMethodWrappers: {
         add: this.makeAddWrapper()
-      } /*,
-        nodeMethods: {
-         spawn: spawn
-        }*/
+      },
+      methods: {
+        template: this.template.bind(this)
+      },
+      nodeMethods: {
+        spawn: spawn
+      }
     };
+  },
+
+  template: function template(name) {
+    return _.get(this.templates, name);
   },
 
   makeAddWrapper: function makeAddWrapper() {
@@ -1453,6 +1460,12 @@ function applyTemplateIfNeeded(templates, obj) {
 
   // create a new object with the template as prototype, and otherwise the same properties
   return _.extend(Object.create(template), obj);
+}
+
+function spawn(template, properties) {
+  var lastSegment = template.lastIndexOf(".") >= 0 ? template.substring(template.lastIndexOf(".") + 1) : template;
+  var id = lastSegment + "#" + this.u.nextId();
+  return this.add(id, _.extend(properties, { template: template }));
 }
 module.exports = exports['default'];
 
