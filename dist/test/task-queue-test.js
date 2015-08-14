@@ -1,9 +1,9 @@
-'use strict';function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { 'default': obj };}var _libTaskQueues = require(
-'../lib/task-queues');var _libTaskQueues2 = _interopRequireDefault(_libTaskQueues);var assert = require('chai').assert;
+'use strict';var _libTaskQueues = require(
+'../lib/task-queues');var assert = require('chai').assert;
 
-describe("Task queues", function () {
-  it("should execute synchronous tasks synchronously", function () {
-    var q = new _libTaskQueues2['default']();
+describe('Task queues', function () {
+  it('should execute synchronous tasks synchronously', function () {
+    var q = new _libTaskQueues.Queue();
 
     var a = 0;
     q.schedule(function () {a += 1;});
@@ -14,8 +14,8 @@ describe("Task queues", function () {
     assert.equal(a, 25);});
 
 
-  it("should execute asynchronous tasks one at a time in order", function (done) {
-    var q = new _libTaskQueues2['default']();
+  it('should execute asynchronous tasks one at a time in order', function (done) {
+    var q = new _libTaskQueues.Queue();
 
     var a = 0;
     q.schedule(function () {return (
@@ -36,8 +36,8 @@ describe("Task queues", function () {
     then(done)['catch'](done);});
 
 
-  it("should create automatically queued functions with synchronize", function (done) {
-    var q = new _libTaskQueues2['default']();
+  it('should create automatically queued functions with synchronize', function (done) {
+    var q = new _libTaskQueues.Queue();
 
     var a = 0;
     var multiply = q.synchronize(function (x) {return (
@@ -61,4 +61,4 @@ describe("Task queues", function () {
 function wait(ms) {
   return new Promise(function (resolve) {
     setTimeout(resolve, ms);});}
-//# sourceMappingURL=queue-test.js.map
+//# sourceMappingURL=task-queue-test.js.map

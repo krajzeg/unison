@@ -1,22 +1,22 @@
 'use strict';var assert = require('chai').assert;
 var unison = require('../lib');
 
-describe("Plugins", function () {
-  it("should be able to add methods to the core Unison object", function () {
+describe('Plugins', function () {
+  it('should be able to add methods to the core Unison object', function () {
     var u = unison({});
 
     u.plugin(function () {
       return { 
         methods: { 
-          greeting: function greeting() {return "Hello!";} } };});
+          greeting: function greeting() {return 'Hello!';} } };});
 
 
 
 
-    assert.equal(u.greeting(), "Hello!");});
+    assert.equal(u.greeting(), 'Hello!');});
 
 
-  it("should be able to add methods to nodes", function () {
+  it('should be able to add methods to nodes', function () {
     var u = unison({ 'apple': {} });
     u.plugin(function () {
       return { 
@@ -29,7 +29,7 @@ describe("Plugins", function () {
     assert.equal(u('apple').uppercasePath(), 'APPLE');});
 
 
-  it("should be able to affect the Unison object directly if really needed", function () {
+  it('should be able to affect the Unison object directly if really needed', function () {
     var u = unison({});
 
     u.plugin(function (unison) {
@@ -39,7 +39,7 @@ describe("Plugins", function () {
     assert.equal(u.iWasThere, true);});
 
 
-  it("should be able to wrap selected unison methods", function () {
+  it('should be able to wrap selected unison methods', function () {
     var u = unison({ 'things': {} });
     u.plugin(function () {
       return { 
@@ -56,7 +56,7 @@ describe("Plugins", function () {
     assert.ok(u('things.#1').get);});
 
 
-  it("should be able to wrap selected node methods", function () {
+  it('should be able to wrap selected node methods', function () {
     var u = unison({ 'apple': {} });
     u.plugin(function () {
       return { 

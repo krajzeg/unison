@@ -2,27 +2,37 @@
 
 
 
-views;var _util = require('../util');var _ = require('lodash');function views(options) {
+
+views;var _util = require('../util');var _taskQueues = require('../task-queues');var _ = require('lodash');function views(options) {
   return (0, _util.functionized)(ViewsPlugin, [options], 'applyPlugin');}
 
 
-function ViewsPlugin() {}
-
+function ViewsPlugin() {
+  this.animationQueue = new _taskQueues.Queue();}
 
 ViewsPlugin.prototype = { 
   applyPlugin: function applyPlugin(u) {
     this.u = u;
     return { 
+      methods: { 
+        animation: this.animation.bind(this) }, 
+
       nodeMethods: { 
-        watch: watch } };} };
+        watch: watch } };}, 
 
 
+
+
+  animation: function animation(fn) {
+    var synced = this.animationQueue.synchronize(fn);
+    synced._animation = true;
+    return synced;} };
 
 
 
 var EVENTS = ['updated', 'destroyed', 'created'];
 
-function watch(object) {
+function watch(object) {var _this = this;
   // 'this' here will refer to the node .watch() was called on
 
   var boundListeners = [];
@@ -34,6 +44,9 @@ function watch(object) {
     var method = object[eventName];
     if (method && typeof method == 'function') {
       var listener = method.bind(object);
+      if (!listener._animation) 
+      listener = _this.u.animation(listener);
+
       node.on(eventName, listener);
       boundListeners.push({ event: eventName, listener: listener });}});
 

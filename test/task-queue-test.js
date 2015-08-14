@@ -1,5 +1,5 @@
 let assert = require('chai').assert;
-import Queue from '../lib/task-queues'
+import { Queue } from '../lib/task-queues'
 
 describe("Task queues", () => {
   it("should execute synchronous tasks synchronously", () => {

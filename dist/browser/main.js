@@ -388,7 +388,7 @@ function validateId(id) {
 }
 module.exports = exports['default'];
 
-},{"./events":4,"./immutable-states":5,"./util":13,"lodash":16}],2:[function(require,module,exports){
+},{"./events":4,"./immutable-states":5,"./util":14,"lodash":17}],2:[function(require,module,exports){
 // Root file for the browser version of Unison.
 'use strict';
 
@@ -405,7 +405,7 @@ var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_ag
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var UserError = (function (_Error) {
   _inherits(UserError, _Error);
@@ -446,6 +446,8 @@ var UnisonEvents = (function () {
     this.u = unison;
     this._listeners = {};
   }
+
+  // Represents all events triggered from Unison and their common properties.
 
   _createClass(UnisonEvents, [{
     key: 'key',
@@ -528,10 +530,7 @@ var UnisonEvents = (function () {
   }]);
 
   return UnisonEvents;
-})()
-
-// Represents all events triggered from Unison and their common properties.
-;
+})();
 
 exports['default'] = UnisonEvents;
 
@@ -562,7 +561,7 @@ var UnisonEvent = (function () {
 
 module.exports = exports['default'];
 
-},{"./util":13,"lodash":16}],5:[function(require,module,exports){
+},{"./util":14,"lodash":17}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -615,7 +614,7 @@ function stateWithDelete(state, path) {
   return stateWithUpdate(state, parent, {}, [id]);
 }
 
-},{"./util":13,"lodash":16}],6:[function(require,module,exports){
+},{"./util":14,"lodash":17}],6:[function(require,module,exports){
 'use strict';
 
 var _ = require('lodash');
@@ -637,7 +636,7 @@ module.exports.templates = require('./plugins/templates');
 
 module.exports.UserError = require('./errors/user-error.js');
 
-},{"./base":1,"./errors/user-error.js":3,"./plugins/client":8,"./plugins/relations":9,"./plugins/server":10,"./plugins/templates":11,"./plugins/views":12,"./util":13,"lodash":16}],7:[function(require,module,exports){
+},{"./base":1,"./errors/user-error.js":3,"./plugins/client":8,"./plugins/relations":9,"./plugins/server":10,"./plugins/templates":11,"./plugins/views":12,"./util":14,"lodash":17}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -751,7 +750,7 @@ function messageValid(message) {
   return true;
 }
 
-},{"../util":13,"lodash":16}],8:[function(require,module,exports){
+},{"../util":14,"lodash":17}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -963,7 +962,7 @@ var ClientPlugin = (function () {
 
 module.exports = exports['default'];
 
-},{"./client-server-base":7,"bluebird":14,"lodash":16}],9:[function(require,module,exports){
+},{"./client-server-base":7,"bluebird":15,"lodash":17}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1146,7 +1145,7 @@ function removeRelation(relations, fromObj, name, toObj) {
 }
 module.exports = exports['default'];
 
-},{"lodash":16}],10:[function(require,module,exports){
+},{"lodash":17}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1389,7 +1388,7 @@ function defaultErrorHandler(err) {
 }
 module.exports = exports['default'];
 
-},{"./client-server-base":7,"bluebird":14,"lodash":16}],11:[function(require,module,exports){
+},{"./client-server-base":7,"bluebird":15,"lodash":17}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1469,7 +1468,7 @@ function spawn(template, properties) {
 }
 module.exports = exports['default'];
 
-},{"../util":13,"lodash":16}],12:[function(require,module,exports){
+},{"../util":14,"lodash":17}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1479,27 +1478,42 @@ exports['default'] = views;
 
 var _util = require('../util');
 
+var _taskQueues = require('../task-queues');
+
 var _ = require('lodash');
 
 function views(options) {
   return (0, _util.functionized)(ViewsPlugin, [options], 'applyPlugin');
 }
 
-function ViewsPlugin() {}
+function ViewsPlugin() {
+  this.animationQueue = new _taskQueues.Queue();
+}
 ViewsPlugin.prototype = {
   applyPlugin: function applyPlugin(u) {
     this.u = u;
     return {
+      methods: {
+        animation: this.animation.bind(this)
+      },
       nodeMethods: {
         watch: watch
       }
     };
+  },
+
+  animation: function animation(fn) {
+    var synced = this.animationQueue.synchronize(fn);
+    synced._animation = true;
+    return synced;
   }
 };
 
 var EVENTS = ['updated', 'destroyed', 'created'];
 
 function watch(object) {
+  var _this = this;
+
   // 'this' here will refer to the node .watch() was called on
 
   var boundListeners = [];
@@ -1511,6 +1525,8 @@ function watch(object) {
     var method = object[eventName];
     if (method && typeof method == 'function') {
       var listener = method.bind(object);
+      if (!listener._animation) listener = _this.u.animation(listener);
+
       node.on(eventName, listener);
       boundListeners.push({ event: eventName, listener: listener });
     }
@@ -1531,7 +1547,110 @@ function watch(object) {
 }
 module.exports = exports['default'];
 
-},{"../util":13,"lodash":16}],13:[function(require,module,exports){
+},{"../task-queues":13,"../util":14,"lodash":17}],13:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var Promise = require('bluebird');
+
+var Queue = (function () {
+  function Queue() {
+    _classCallCheck(this, Queue);
+
+    this.runningTask = null;
+    this.queuedTasks = [];
+
+    this.emptyPromise = null;
+    this.triggerEmpty = null;
+  }
+
+  _createClass(Queue, [{
+    key: 'schedule',
+    value: function schedule(task) {
+      var _this = this;
+
+      this.queuedTasks.push(task);
+      if (!this.emptyPromise) {
+        this.emptyPromise = new Promise(function (resolve) {
+          _this.triggerEmpty = resolve;
+        });
+      }
+      this.runNextTask();
+    }
+  }, {
+    key: 'runNextTask',
+    value: function runNextTask() {
+      var _this2 = this;
+
+      while (!this.runningTask && this.queuedTasks.length) {
+        // pick next task
+        var task = this.runningTask = this.queuedTasks.shift();
+        // start it!
+        var maybeAPromise = task();
+
+        if (maybeAPromise && maybeAPromise.then) {
+          // the task returned a promise, so we'll wait for it to resolve
+          maybeAPromise.then(function () {
+            _this2.runningTask = null;
+            _this2.runNextTask();
+          })['catch'](function (err) {
+            // if it resolves with an error, we still have to manage the queue
+            _this2.runningTask = null;
+            setTimeout(_this2.runNextTask.bind(_this2), 0);
+            // but we rethrow the error anyway
+            throw err;
+          });
+        } else {
+          // the task didn't return a promise, meaning we can mark it as done synchronously
+          this.runningTask = null;
+        }
+      }
+
+      if (!this.runningTask && !this.queuedTasks.length) {
+        // out of tasks?
+        this.triggerEmpty();
+        this.emptyPromise = this.triggerEmpty = null;
+      }
+    }
+
+    /**
+      Takes a function and returns the same function synchronized with this queue. This means
+      that this function's execution will always be delayed until nothing else is in this queue.
+     **/
+  }, {
+    key: 'synchronize',
+    value: function synchronize(fn) {
+      var queue = this;
+      return function () {
+        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+          args[_key] = arguments[_key];
+        }
+
+        queue.schedule(function () {
+          return fn.apply(undefined, args);
+        });
+      };
+    }
+  }, {
+    key: 'waitUntilEmpty',
+    value: function waitUntilEmpty() {
+      return this.emptyPromise || Promise.resolve();
+    }
+  }]);
+
+  return Queue;
+})();
+
+exports.Queue = Queue;
+
+},{"bluebird":15}],14:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1603,7 +1722,7 @@ function idFromPath(path) {
   }
 }
 
-},{"lodash":16}],14:[function(require,module,exports){
+},{"lodash":17}],15:[function(require,module,exports){
 (function (process,global){
 /* @preserve
  * The MIT License (MIT)
@@ -6463,7 +6582,7 @@ module.exports = ret;
 },{"./es5.js":14}]},{},[4])(4)
 });                    ;if (typeof window !== 'undefined' && window !== null) {                               window.P = window.Promise;                                                     } else if (typeof self !== 'undefined' && self !== null) {                             self.P = self.Promise;                                                         }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":15}],15:[function(require,module,exports){
+},{"_process":16}],16:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -6555,7 +6674,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 (function (global){
 /**
  * @license

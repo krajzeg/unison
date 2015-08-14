@@ -69,13 +69,13 @@ UnisonEvents = (function () {
 
     function triggerAll(events) {var _this2 = this;
       _.each(events, function (event) {
-        _this2.trigger.apply(_this2, event);});} }]);return UnisonEvents;})()
+        _this2.trigger.apply(_this2, event);});} }]);return UnisonEvents;})();exports['default'] = UnisonEvents;
 
 
 
 
 // Represents all events triggered from Unison and their common properties.
-;exports['default'] = UnisonEvents;var UnisonEvent = (function () {
+var UnisonEvent = (function () {
   function UnisonEvent(name, source, timestamp) {var additionalProps = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];_classCallCheck(this, UnisonEvent);
     this.name = name;
     this.source = source;

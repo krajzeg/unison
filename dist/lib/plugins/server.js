@@ -3,7 +3,7 @@
 
 
 
-server;function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _ = require('lodash');var Promise = require('bluebird');var cs = require("./client-server-base");function server(options) {
+server;function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _ = require('lodash');var Promise = require('bluebird');var cs = require('./client-server-base');function server(options) {
   var serverPlugin = new ServerPlugin(options);
   var fn = function fn() {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}
     return serverPlugin.applyPlugin.apply(serverPlugin, args);};
@@ -66,7 +66,7 @@ ServerPlugin = (function () {
           case cs.INTENT:
             return _this2.applyIntent(client, message);
           case cs.COMMAND:
-            throw new Error("Servers do not obey commands from clients.");}});} }, { key: 'sendToAll', value: 
+            throw new Error('Servers do not obey commands from clients.');}});} }, { key: 'sendToAll', value: 
 
 
 

@@ -2,7 +2,7 @@
 var sinon = require('sinon');
 var unison = require('../lib');
 
-describe("When objects are updated", function () {
+describe('When objects are updated', function () {
   var u = undefined;
   beforeEach(function () {
     u = unison({ 
@@ -10,7 +10,7 @@ describe("When objects are updated", function () {
 
 
 
-  it("events should be triggered once for each update", function () {
+  it('events should be triggered once for each update', function () {
     var callback = sinon.spy();
 
     u('bird').on('updated', callback);
@@ -21,8 +21,8 @@ describe("When objects are updated", function () {
 
 
 
-describe("Multiple listeners per event", function () {
-  it("should be supported", function () {
+describe('Multiple listeners per event', function () {
+  it('should be supported', function () {
     var u = unison({}), spy1 = sinon.spy(), spy2 = sinon.spy();
     u('').on('updated', spy1);
     u('').on('updated', spy2);
@@ -35,8 +35,8 @@ describe("Multiple listeners per event", function () {
 
 
 
-describe("Event objects passed to listeners", function () {
-  it("should have a correct 'name' and 'source' property", function () {
+describe('Event objects passed to listeners', function () {
+  it('should have a correct \'name\' and \'source\' property', function () {
     var u = unison({ bird: {} }), callback = sinon.spy();
     u('bird').on('updated', callback);
 
@@ -49,7 +49,7 @@ describe("Event objects passed to listeners", function () {
     assert.equal(event.source.path(), 'bird');});
 
 
-  it("should provide snapshots of the source state at event time", function () {
+  it('should provide snapshots of the source state at event time', function () {
     var u = unison({ bird: {} }), callback = sinon.spy();
     u('bird').on('updated', callback);
 
@@ -66,7 +66,7 @@ describe("Event objects passed to listeners", function () {
 
 
 
-describe("When children are added", function () {
+describe('When children are added', function () {
   var u = undefined;
   beforeEach(function () {
     u = unison({ 
@@ -74,7 +74,7 @@ describe("When children are added", function () {
 
 
 
-  it("a correct 'created' event should trigger on the child", function () {
+  it('a correct \'created\' event should trigger on the child', function () {
     var spy = sinon.spy();
 
     u('food.cucumber').on('created', spy);
@@ -83,7 +83,7 @@ describe("When children are added", function () {
     assert.ok(spy.calledOnce);});
 
 
-  it("'created' events should trigger for nested objects", function () {
+  it('\'created\' events should trigger for nested objects', function () {
     var created = sinon.spy(), deepCreated = sinon.spy();
 
     u('food.apple.seed.inside').on('created', deepCreated);
@@ -97,7 +97,7 @@ describe("When children are added", function () {
 
 
 
-describe("When children are removed", function () {
+describe('When children are removed', function () {
   var u = undefined;
   beforeEach(function () {
     u = unison({ 
@@ -107,7 +107,7 @@ describe("When children are removed", function () {
 
 
 
-  it("a correct 'destroyed' event should trigger on the child", function () {
+  it('a correct \'destroyed\' event should trigger on the child', function () {
     var spy = sinon.spy();
 
     u('food.apple.seed.inside').on('destroyed', spy);
@@ -116,7 +116,7 @@ describe("When children are removed", function () {
     assert.ok(spy.calledOnce);});
 
 
-  it("'destroyed' events should trigger for nested objects", function () {
+  it('\'destroyed\' events should trigger for nested objects', function () {
     var destroyed = sinon.spy(), deepDestroyed = sinon.spy(), wildcardDestroyed = sinon.spy();
 
     u('food.apple.seed.inside').on('destroyed', deepDestroyed);
