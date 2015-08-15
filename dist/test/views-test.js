@@ -36,8 +36,24 @@ describe("Views plugin", function () {
       u('').add('stuff', {});
       u('stuff').update({ ignored: "very much" });
 
-      assert.equal(watcher.updateCount, 0);});});
+      assert.equal(watcher.updateCount, 0);});
 
+
+    it("should allow registering wildcard listeners", function () {
+      var watcher = new TestWatcher();
+      u('stuff').watch(watcher, { 
+        '*:created': watcher.create, 
+        '**:destroyed': watcher.destroy });
+
+
+      u('stuff').add('things', {});
+      u('stuff.things').add('cruft', {});
+      u('stuff.things.cruft').destroy();
+      u('stuff.things').destroy();
+
+      assert.equal(watcher.createCount, 1); // only 'things'
+      assert.equal(watcher.destroyCount, 2); // both 'cruft' and 'things'
+    });});
 
 
   describe("view()", function () {

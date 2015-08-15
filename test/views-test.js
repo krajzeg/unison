@@ -38,6 +38,22 @@ describe("Views plugin", () => {
 
       assert.equal(watcher.updateCount, 0);
     });
+
+    it("should allow registering wildcard listeners", () => {
+      let watcher = new TestWatcher();
+      u('stuff').watch(watcher, {
+        '*:created': watcher.create,
+        '**:destroyed': watcher.destroy
+      });
+
+      u('stuff').add('things', {});
+      u('stuff.things').add('cruft', {});
+      u('stuff.things.cruft').destroy();
+      u('stuff.things').destroy();
+
+      assert.equal(watcher.createCount, 1); // only 'things'
+      assert.equal(watcher.destroyCount, 2); // both 'cruft' and 'things'
+    });
   });
 
   describe("view()", () => {

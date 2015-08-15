@@ -6,9 +6,9 @@
 
 
 
-Unison;function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { 'default': obj };}function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _util = require('./util');var _immutableStates = require('./immutable-states');var _events = require('./events');var _events2 = _interopRequireDefault(_events); // Main Unison object.
+Unison;function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { 'default': obj };}function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _util = require('./util');var _immutableStates = require('./immutable-states');var _events3 = require('./events');var _events4 = _interopRequireDefault(_events3); // Main Unison object.
 // Uses classical instead of ES6 classes to allow Unison.apply(...) down the road.
-var _ = require('lodash');function Unison() {var initialState = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];this._events = new _events2['default'](this);
+var _ = require('lodash');function Unison() {var initialState = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];this._events = new _events4['default'](this);
   this._states = { 0: initialState };
   this._current = 0;
   this._nextId = 1;
@@ -53,8 +53,8 @@ Unison.prototype = {
     delete this._states[this._current - backlogSize];}, 
 
 
-  listen: function listen() {for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {args[_key2] = arguments[_key2];}return this._events.listen.apply(this._events, args);}, 
-  unlisten: function unlisten() {for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {args[_key3] = arguments[_key3];}return this._events.unlisten.apply(this._events, args);}, 
+  listen: function listen() {var _events;return (_events = this._events).listen.apply(_events, arguments);}, 
+  unlisten: function unlisten() {var _events2;return (_events2 = this._events).unlisten.apply(_events2, arguments);}, 
 
   collectEvents: function collectEvents(path, directEvent) {var _this = this;var acc = arguments.length <= 2 || arguments[2] === undefined ? [] : arguments[2];
     var object = _.get(this.currentState(), path);
@@ -195,7 +195,7 @@ UnisonNode = (function () {
       var unison = this.u;
 
       // extract arguments (either (child) or (id, child))
-      var id = undefined, child = undefined;for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {args[_key4] = arguments[_key4];}
+      var id = undefined, child = undefined;for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {args[_key2] = arguments[_key2];}
       if (args.length == 2) {
         id = args[0];child = args[1];} else 
       {
