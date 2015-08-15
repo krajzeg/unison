@@ -1,4 +1,4 @@
-'use strict';var _ = require('lodash');
+'use strict';var _createClass = (function () {function defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ('value' in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);}}return function (Constructor, protoProps, staticProps) {if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;};})();function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _ = require('lodash');
 var assert = require('chai').assert;
 var unison = require('../lib');
 var views = require('../lib').views;
@@ -12,26 +12,31 @@ describe("Views plugin", function () {
 
   describe("watch()", function () {
     it("should bind all methods matching event names as listeners", function () {
-      var spies = { updated: sinon.spy(), destroyed: sinon.spy() };
-      u('stuff').watch(spies);
+      var watcher = new TestWatcher();
+      u('stuff').watch(watcher, { 
+        updated: watcher.update, 
+        destroyed: watcher.destroy });
+
 
       u('stuff').update({ heavy: true });
       u('stuff').destroy();
 
-      assert.ok(spies.updated.calledOnce);
-      assert.ok(spies.destroyed.calledOnce);});
+      assert.equal(watcher.updateCount, 1);
+      assert.equal(watcher.destroyCount, 1);});
 
 
     it("should automatically unbind all listeners when the node is destroyed", function () {
-      var spies = { updated: sinon.spy() };
+      var watcher = new TestWatcher();
 
-      u('stuff').watch(spies);
+      u('stuff').watch(watcher, { 
+        updated: watcher.update });
+
       u('stuff').destroy();
 
       u('').add('stuff', {});
       u('stuff').update({ ignored: "very much" });
 
-      assert.ok(!spies.updated.called);});});
+      assert.equal(watcher.updateCount, 0);});});
 
 
 
@@ -46,5 +51,17 @@ describe("Views plugin", function () {
       var v = {};
       u('stuff').registerView(v);
       u('stuff').destroy();
-      assert.strictEqual(u('stuff').view(), undefined);});});});
+      assert.strictEqual(u('stuff').view(), undefined);});});});var 
+
+
+
+
+
+TestWatcher = (function () {
+  function TestWatcher() {_classCallCheck(this, TestWatcher);
+    this.updateCount = this.destroyCount = this.createCount = 0;}_createClass(TestWatcher, [{ key: 'update', value: 
+
+    function update() {this.updateCount++;} }, { key: 'destroy', value: 
+    function destroy() {this.destroyCount++;} }, { key: 'create', value: 
+    function create() {this.createCount++;} }]);return TestWatcher;})();
 //# sourceMappingURL=views-test.js.map

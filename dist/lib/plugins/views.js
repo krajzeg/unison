@@ -35,26 +35,21 @@ ViewsPlugin.prototype = {
 
 
 
-var EVENTS = ['updated', 'destroyed', 'created'];
-
-function watch(object) {var _this = this;
+function watch(object, events) {var _this = this;
   // 'this' here will refer to the node .watch() was called on
 
   var boundListeners = [];
   var node = this;
 
-  // scan all methods of the object looking for matches with event names
-  // register all such methods as listeners
-  EVENTS.forEach(function (eventName) {
-    var method = object[eventName];
-    if (method && typeof method == 'function') {
-      var listener = method.bind(object);
-      if (!listener._animation) 
-      listener = _this.u.animation(listener);
+  // apply all the requested listeners
+  _.each(events, function (method, event) {
+    var listener = method.bind(object);
 
-      node.on(eventName, listener);
-      boundListeners.push({ event: eventName, listener: listener });}});
+    if (!listener._animation) 
+    listener = _this.u.animation(listener);
 
+    node.on(event, listener);
+    boundListeners.push({ event: event, listener: listener });});
 
 
   // when the node we are watching gets destroyed, we want to unbind all those listeners
