@@ -47,14 +47,14 @@ Queue = (function () {
       if (!this.runningTask && !this.queuedTasks.length) {
         // out of tasks?
         this.triggerEmpty();
-        this.emptyPromise = this.triggerEmpty = null;}} }, { key: 'synchronize', 
+        this.emptyPromise = this.triggerEmpty = null;}}
 
 
 
     /**
       Takes a function and returns the same function synchronized with this queue. This means
       that this function's execution will always be delayed until nothing else is in this queue.
-     **/value: 
+     **/ }, { key: 'synchronize', value: 
     function synchronize(fn) {
       var queue = this;
       return function () {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}

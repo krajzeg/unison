@@ -1,8 +1,8 @@
 'use strict';var _libTaskQueues = require(
 '../lib/task-queues');var assert = require('chai').assert;
 
-describe('Task queues', function () {
-  it('should execute synchronous tasks synchronously', function () {
+describe("Task queues", function () {
+  it("should execute synchronous tasks synchronously", function () {
     var q = new _libTaskQueues.Queue();
 
     var a = 0;
@@ -14,7 +14,7 @@ describe('Task queues', function () {
     assert.equal(a, 25);});
 
 
-  it('should execute asynchronous tasks one at a time in order', function (done) {
+  it("should execute asynchronous tasks one at a time in order", function (done) {
     var q = new _libTaskQueues.Queue();
 
     var a = 0;
@@ -36,7 +36,7 @@ describe('Task queues', function () {
     then(done)['catch'](done);});
 
 
-  it('should create automatically queued functions with synchronize', function (done) {
+  it("should create automatically queued functions with synchronize", function (done) {
     var q = new _libTaskQueues.Queue();
 
     var a = 0;

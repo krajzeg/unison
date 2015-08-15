@@ -5,9 +5,9 @@ var client = require('../lib').client;
 var relations = require('../lib').relations;
 var sinon = require('sinon');
 
-describe('Relations plugin', function () {
+describe("Relations plugin", function () {
 
-  it('should allow introducing and checking relations between objects from both sides', function () {
+  it("should allow introducing and checking relations between objects from both sides", function () {
     var u = prepareUnisonInstance([
     { AtoB: 'fatherOf', BtoA: 'childOf', A: 'father', Bs: 'children' }]);
 
@@ -22,7 +22,7 @@ describe('Relations plugin', function () {
     assert.ok(alice.childOf(bob));});
 
 
-  it('should allow severing relations between objects', function () {
+  it("should allow severing relations between objects", function () {
     var u = prepareUnisonInstance([
     { AtoB: 'fatherOf', BtoA: 'childOf', A: 'father', Bs: 'children' }]);
 
@@ -35,7 +35,7 @@ describe('Relations plugin', function () {
     assert.ok(!jerry.childOf(tom));});
 
 
-  it('should support getting related objects through properly named methods', function () {
+  it("should support getting related objects through properly named methods", function () {
     var u = prepareUnisonInstance([
     { AtoB: 'fatherOf', BtoA: 'childOf', A: 'father', Bs: 'children' }]);
 
@@ -52,7 +52,7 @@ describe('Relations plugin', function () {
     assert.deepEqual(bob.children(), []);});
 
 
-  it('should throw when introducing a relation that\'s already there', function () {
+  it("should throw when introducing a relation that's already there", function () {
     var u = prepareUnisonInstance([
     { AtoB: 'fatherOf', BtoA: 'childOf', A: 'father', Bs: 'children' }]);
 
@@ -64,7 +64,7 @@ describe('Relations plugin', function () {
 
 
 
-  it('should throw when severing a relation that\'s not there', function () {
+  it("should throw when severing a relation that's not there", function () {
     var u = prepareUnisonInstance([
     { AtoB: 'fatherOf', BtoA: 'childOf', A: 'father', Bs: 'children' }]);
 
@@ -73,7 +73,7 @@ describe('Relations plugin', function () {
     assert.throws(function () {return tom.noLonger('fatherOf', bob);});});
 
 
-  it('should trigger \'updated\' events on both sides when relations change', function () {
+  it("should trigger 'updated' events on both sides when relations change", function () {
     var u = prepareUnisonInstance([
     { AtoB: 'fatherOf', BtoA: 'childOf', A: 'father', Bs: 'children' }]);
 
@@ -89,7 +89,7 @@ describe('Relations plugin', function () {
     assert.ok(jerrySpy.calledTwice);});
 
 
-  it('should trigger \'now:X\' and \'noLonger:x\' events when relations change', function () {
+  it("should trigger 'now:X' and 'noLonger:x' events when relations change", function () {
     var u = prepareUnisonInstance([
     { AtoB: 'fatherOf', BtoA: 'childOf', A: 'father', Bs: 'children' }]);
 
@@ -108,7 +108,7 @@ describe('Relations plugin', function () {
     assert.equal(noLongerSpy.firstCall.args[0].target.path(), 'tom');});
 
 
-  it('should send correct commands when relations are introduced and severed', function () {
+  it("should send correct commands when relations are introduced and severed", function () {
     var server = require('../lib').server;
     var comm = new (require('./mocks/server-comm'))();
     var u = unison({ 
@@ -130,7 +130,7 @@ describe('Relations plugin', function () {
 
 
 
-  it('should automatically sever an old n:1 relation when the 1-side changes', function () {
+  it("should automatically sever an old n:1 relation when the 1-side changes", function () {
     var u = unison({ 
       doctor: {}, london: {}, tardis: {}, bobby: {} });
 
@@ -149,7 +149,7 @@ describe('Relations plugin', function () {
     assert.equal(doctor.location().path(), 'tardis');});
 
 
-  it('should automatically sever an old 1:1 relation when a new one is added', function () {
+  it("should automatically sever an old 1:1 relation when a new one is added", function () {
     var u = unison({ 
       door: {}, redKnob: {}, blueKnob: {} });
 
@@ -168,7 +168,7 @@ describe('Relations plugin', function () {
     assert.equal(redKnob.door(), undefined);});
 
 
-  it('should reflect the state at snapshot time when used with a snapshot node', function () {
+  it("should reflect the state at snapshot time when used with a snapshot node", function () {
     var u = prepareUnisonInstance([
     { AtoB: 'fatherOf', BtoA: 'childOf', A: 'father', Bs: 'children' }]);
 

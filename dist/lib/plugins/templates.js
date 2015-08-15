@@ -61,7 +61,7 @@ function applyTemplateIfNeeded(templates, obj) {
 
 
 function spawn(template, properties) {
-  var lastSegment = template.lastIndexOf('.') >= 0 ? template.substring(template.lastIndexOf('.') + 1) : template;
-  var id = lastSegment + '#' + this.u.nextId();
+  var lastSegment = template.lastIndexOf(".") >= 0 ? template.substring(template.lastIndexOf(".") + 1) : template;
+  var id = lastSegment + "#" + this.u.nextId();
   return this.add(id, _.extend(properties, { template: template }));}module.exports = exports['default'];
 //# sourceMappingURL=../plugins/templates.js.map

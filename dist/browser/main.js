@@ -154,6 +154,11 @@ Unison.prototype = {
     this.applyGlobalWrappers(additions.methodWrappers || {});
     this.applyNodeWrappers(additions.nodeMethodWrappers || {});
 
+    if (additions.name) {
+      this.plugins = this.plugins || {};
+      this.plugins[additions.name] = pluginFn;
+    }
+
     return this;
   }
 };
@@ -405,7 +410,7 @@ var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_ag
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
 
 var UserError = (function (_Error) {
   _inherits(UserError, _Error);
@@ -446,8 +451,6 @@ var UnisonEvents = (function () {
     this.u = unison;
     this._listeners = {};
   }
-
-  // Represents all events triggered from Unison and their common properties.
 
   _createClass(UnisonEvents, [{
     key: 'key',
@@ -530,7 +533,10 @@ var UnisonEvents = (function () {
   }]);
 
   return UnisonEvents;
-})();
+})()
+
+// Represents all events triggered from Unison and their common properties.
+;
 
 exports['default'] = UnisonEvents;
 

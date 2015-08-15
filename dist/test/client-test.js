@@ -4,8 +4,8 @@ var client = require('../lib').client;
 var sinon = require('sinon');
 var CommunicationMock = require('./mocks/client-comm');
 
-describe('Client plugin', function () {
-  it('should translate intent methods into network messages properly', function () {
+describe("Client plugin", function () {
+  it("should translate intent methods into network messages properly", function () {
     var comm = new CommunicationMock();
 
     var u = unison({ bird: {} }).
@@ -13,12 +13,12 @@ describe('Client plugin', function () {
       communication: comm, 
       commands: {}, 
       intents: { 
-        frob: function frob(howHard) {}, 
-
-
-        ageBy: function ageBy(howMany, units) {} } }));
-
-
+        frob: function frob(howHard) {
+          // body irrelevant on the client
+        }, 
+        ageBy: function ageBy(howMany, units) {
+          // body irrelevant on the client
+        } } }));
 
 
 
@@ -31,7 +31,7 @@ describe('Client plugin', function () {
 
 
 
-  it('should translate command methods into simple executions', function () {
+  it("should translate command methods into simple executions", function () {
     var comm = new CommunicationMock();
     var u = unison({}).
     plugin(client({ 
@@ -49,7 +49,7 @@ describe('Client plugin', function () {
     assert.deepEqual(comm.sentMessages, []);});
 
 
-  it('should apply commands sent by the server', function () {
+  it("should apply commands sent by the server", function () {
     var comm = new CommunicationMock();
     var u = unison({ bird: {} }).
     plugin(client({ 
@@ -67,7 +67,7 @@ describe('Client plugin', function () {
     assert.equal(u('bird').get.frobbed, 'very hard');});
 
 
-  it('should not break on receiving various broken messages', function () {
+  it("should not break on receiving various broken messages", function () {
     var comm = new CommunicationMock();
     var u = unison({ bird: {} }).
     plugin(client({ 
@@ -75,16 +75,16 @@ describe('Client plugin', function () {
       commands: {}, intents: {} }));
 
 
-    comm.pushServerString('['); // broken JSON
-    comm.pushServerString('fw0ur0q923'); // not JSON
-    comm.pushServerString('123'); // not a command or intent
-    comm.pushServerString('[1,2,3,4]'); // bad format
+    comm.pushServerString("["); // broken JSON
+    comm.pushServerString("fw0ur0q923"); // not JSON
+    comm.pushServerString("123"); // not a command or intent
+    comm.pushServerString("[1,2,3,4]"); // bad format
     comm.pushServerCommand('bogusCommand', 'bogusObject', 'bogus'); // non-existent command
 
     // if we reach the end of the test, we should be OK
   });
 
-  it('should handle \'_seed\' commands out of the box', function () {
+  it("should handle '_seed' commands out of the box", function () {
     var comm = new CommunicationMock();
     var u = unison({}).
     plugin(client({ 
@@ -103,7 +103,7 @@ describe('Client plugin', function () {
     assert.ok(listener.calledOnce);});
 
 
-  it('should allow adding commands and intents after the fact', function () {
+  it("should allow adding commands and intents after the fact", function () {
     var comm = new CommunicationMock();
     var u = unison({}).
     plugin(client({ 
@@ -126,7 +126,7 @@ describe('Client plugin', function () {
 
 
 
-  it('should serialize objects in intent arguments correctly', function () {
+  it("should serialize objects in intent arguments correctly", function () {
     var comm = new CommunicationMock();
 
     var u = unison({ bird: {}, human: {} }).
@@ -145,7 +145,7 @@ describe('Client plugin', function () {
 
 
 
-  it('should deserialize objects in received command arguments', function () {
+  it("should deserialize objects in received command arguments", function () {
     var comm = new CommunicationMock();
     var u = unison({ bird: {} }).
     plugin(client({ 
@@ -163,7 +163,7 @@ describe('Client plugin', function () {
     assert.equal(u('bird').get.frobbed, true);});
 
 
-  it('should resolve intent promises with return values from the server', function (done) {
+  it("should resolve intent promises with return values from the server", function (done) {
     var comm = new CommunicationMock(), resolvedSpy = sinon.spy();
     var u = unison({ bird: {} }).
     plugin(client({ 
@@ -182,7 +182,7 @@ describe('Client plugin', function () {
     comm.pushServerResponse('ok', 1, { _u: 'bird' });});
 
 
-  it('should reject intent promises with errors from the server', function (done) {
+  it("should reject intent promises with errors from the server", function (done) {
     var comm = new CommunicationMock();
     var u = unison({ bird: {} }).
     plugin(client({ 
@@ -194,13 +194,13 @@ describe('Client plugin', function () {
     then(function (err) {
       assert.equal(err.intent, 'frob');
       assert.equal(err.target.path(), 'bird');
-      assert.equal(err.message, 'Oops.');}).
+      assert.equal(err.message, "Oops.");}).
     then(done)['catch'](done);
 
-    comm.pushServerResponse('err', 1, 'Oops.');});
+    comm.pushServerResponse('err', 1, "Oops.");});
 
 
-  it('should trigger \'error\' events when an intent fails', function () {
+  it("should trigger 'error' events when an intent fails", function () {
     var comm = new CommunicationMock(), errorSpy = sinon.spy();
     var u = unison({ bird: {} }).
     plugin(client({ 
@@ -210,7 +210,7 @@ describe('Client plugin', function () {
 
     u('bird').on('error', errorSpy);
     u('bird').frob()['catch'](function () {});
-    comm.pushServerResponse('err', 1, 'Oops.');
+    comm.pushServerResponse('err', 1, "Oops.");
 
     assert.ok(errorSpy.calledOnce);});});
 
@@ -220,6 +220,5 @@ function expectRejection(promise) {
   return new Promise(function (resolve, reject) {
     promise.then(function (result) {
       reject('The promise wasn\'t rejected, but resolved with value ' + result + '.');})['catch'](
-    resolve);});} // body irrelevant on the client
-// body irrelevant on the client
+    resolve);});}
 //# sourceMappingURL=client-test.js.map

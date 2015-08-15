@@ -3,7 +3,7 @@
 
 
 
-client;function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _ = require('lodash');var Promise = require('bluebird');var cs = require('./client-server-base');function client(options) {
+client;function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _ = require('lodash');var Promise = require('bluebird');var cs = require("./client-server-base");function client(options) {
   var clientPlugin = new ClientPlugin(options);
   return function () {for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {args[_key] = arguments[_key];}
     return clientPlugin.applyPlugin.apply(clientPlugin, args);};}var 
@@ -20,33 +20,33 @@ ClientPlugin = (function () {
 
     _.extend(this.commands, cs.BUILTIN_COMMANDS);
 
-    this.communication.onReceive(function (msg) {return _this.receive(msg);});}_createClass(ClientPlugin, [{ key: 'send', 
+    this.communication.onReceive(function (msg) {return _this.receive(msg);});}
 
 
-    // Send a message over the provided 'communication' object.
-    value: function send(message) {
+  // Send a message over the provided 'communication' object.
+  _createClass(ClientPlugin, [{ key: 'send', value: function send(message) {
       var msgString = JSON.stringify(message);
-      this.communication.send(msgString);} }, { key: 'receive', 
+      this.communication.send(msgString);}
 
 
     // Called whenever a message is receive on the 'communication' object, will execute
     // commands receive from the server in response.
-    value: function receive(msgString) {var _this2 = this;
+  }, { key: 'receive', value: function receive(msgString) {var _this2 = this;
       cs.parseMessage(msgString, function (message) {var _message = _slicedToArray(
         message, 1);var messageType = _message[0];
         switch (messageType) {
           case cs.COMMAND:
             return _this2.applyCommand(message);
           case cs.INTENT:
-            throw new Error('Intents should not be sent to clients.');
+            throw new Error("Intents should not be sent to clients.");
           case cs.RESPONSE:
-            return _this2.applyIntentResponse(message);}});} }, { key: 'applyPlugin', 
+            return _this2.applyIntentResponse(message);}});}
 
 
 
 
     // This method is called (indirectly) by u.plugin(client).
-    value: function applyPlugin(u) {
+  }, { key: 'applyPlugin', value: function applyPlugin(u) {
       this.u = u;
 
       this.addNodeMethods();
@@ -54,33 +54,33 @@ ClientPlugin = (function () {
       return { 
         methods: { 
           addIntent: this.addIntent.bind(this), 
-          addCommand: this.addCommand.bind(this) } };} }, { key: 'addNodeMethods', 
+          addCommand: this.addCommand.bind(this) } };}
 
 
 
 
     // Generates a map of methods that will send named intents when called.
-    value: function addNodeMethods() {var _this3 = this;
+  }, { key: 'addNodeMethods', value: function addNodeMethods() {var _this3 = this;
       _.each(this.intents, function (i, name) {_this3.addIntent(name, i);});
-      _.each(this.commands, function (c, name) {_this3.addCommand(name, c);});} }, { key: 'addIntent', 
+      _.each(this.commands, function (c, name) {_this3.addCommand(name, c);});}
 
 
     // Adds a new intent, including a method on nodes.
-    value: function addIntent(intentName, _) {
+  }, { key: 'addIntent', value: function addIntent(intentName, _) {
       this.u.registerNodeProperties(_defineProperty({}, 
-      intentName, this.makeIntentMethod(intentName)));} }, { key: 'addCommand', 
+      intentName, this.makeIntentMethod(intentName)));}
 
 
 
     // Adds a new command, including a method on nodes.
-    value: function addCommand(commandName, commandCode) {
+  }, { key: 'addCommand', value: function addCommand(commandName, commandCode) {
       this.u.registerNodeProperties(_defineProperty({}, 
-      commandName, commandCode));} }, { key: 'makeIntentMethod', 
+      commandName, commandCode));}
 
 
 
     // Generates a method that will send a named intent with the right parameters when called.
-    value: function makeIntentMethod(intentName) {
+  }, { key: 'makeIntentMethod', value: function makeIntentMethod(intentName) {
       var client = this;
       return function () {var _this4 = this;
         // this here will be the node we're called upon
@@ -89,13 +89,13 @@ ClientPlugin = (function () {
         client.send(intent);
 
         return new Promise(function (resolve, reject) {
-          client._pendingIntents[intentId] = { name: intentName, target: _this4, resolve: resolve, reject: reject };});};} }, { key: 'applyIntentResponse', 
+          client._pendingIntents[intentId] = { name: intentName, target: _this4, resolve: resolve, reject: reject };});};}
 
 
 
 
     // Applies a response to an intent sent earlier.
-    value: function applyIntentResponse(_ref2) {var _ref22 = _slicedToArray(_ref2, 4);var code = _ref22[0];var status = _ref22[1];var intentId = _ref22[2];var resultOrMessage = _ref22[3];
+  }, { key: 'applyIntentResponse', value: function applyIntentResponse(_ref2) {var _ref22 = _slicedToArray(_ref2, 4);var code = _ref22[0];var status = _ref22[1];var intentId = _ref22[2];var resultOrMessage = _ref22[3];
       var intent = this._pendingIntents[intentId];
       if (!intent) 
       throw new Error('Received response to an unknown or expired intent: ' + intentId + '.');
@@ -109,11 +109,11 @@ ClientPlugin = (function () {
         throw new Error('Unrecognized intent response status: ' + status + '.');}
 
 
-      delete this._pendingIntents[intentId];} }, { key: 'applyCommand', 
+      delete this._pendingIntents[intentId];}
 
 
     // Applies a command received from the server to the local state.
-    value: function applyCommand(_ref3) {var _ref32 = _slicedToArray(_ref3, 4);var code = _ref32[0];var commandName = _ref32[1];var objectPath = _ref32[2];var args = _ref32[3];
+  }, { key: 'applyCommand', value: function applyCommand(_ref3) {var _ref32 = _slicedToArray(_ref3, 4);var code = _ref32[0];var commandName = _ref32[1];var objectPath = _ref32[2];var args = _ref32[3];
       // find the right one
       var command = this.commands[commandName];
       if (!command) 

@@ -1,6 +1,8 @@
 let assert = require('chai').assert;
 let unison = require('../lib');
 
+import { functionized } from '../lib/util';
+
 describe("Plugins", () => {
   it("should be able to add methods to the core Unison object", () => {
     let u = unison({});
@@ -71,4 +73,19 @@ describe("Plugins", () => {
     u('apple').add('SEED', {});
     assert.ok(u('apple.seed').get)
   });
+
+  it("should be accessible through the unison object if they provide a name", () => {
+    function TestPlugin() {
+      this.answer = 42;
+    }
+    TestPlugin.prototype = {
+      apply() { return {name: "test"}; }
+    };
+    let testPlugin = functionized(TestPlugin, [], 'apply');
+
+    let u = unison({}).plugin(testPlugin);
+
+    assert.ok(u.plugins.test);
+    assert.equal(u.plugins.test.answer, 42);
+  })
 });
