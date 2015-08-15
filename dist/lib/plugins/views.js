@@ -8,17 +8,22 @@ views;var _util = require('../util');var _taskQueues = require('../task-queues')
 
 
 function ViewsPlugin() {
-  this.animationQueue = new _taskQueues.Queue();}
+  this.animationQueue = new _taskQueues.Queue();
+  this.registeredViews = {};}
 
 ViewsPlugin.prototype = { 
   applyPlugin: function applyPlugin(u) {
     this.u = u;
     return { 
+      name: 'views', 
       methods: { 
         animation: this.animation.bind(this) }, 
 
       nodeMethods: { 
-        watch: watch } };}, 
+        watch: watch, 
+
+        registerView: registerView, 
+        view: view } };}, 
 
 
 
@@ -60,5 +65,17 @@ function watch(object) {var _this = this;
 
 
   node.on('destroyed', unbindListener);
-  boundListeners.push({ event: 'destroyed', listener: unbindListener });}module.exports = exports['default'];
+  boundListeners.push({ event: 'destroyed', listener: unbindListener });}
+
+
+function registerView(viewObject) {
+  var views = this.u.plugins.views, path = this.path();
+  views.registeredViews[path] = viewObject;
+  this.on('destroyed', function () {
+    delete views.registeredViews[path];});}
+
+
+
+function view() {
+  return this.u.plugins.views.registeredViews[this.path()];}module.exports = exports['default'];
 //# sourceMappingURL=../plugins/views.js.map

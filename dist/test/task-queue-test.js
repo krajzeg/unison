@@ -1,5 +1,6 @@
 'use strict';var _libTaskQueues = require(
-'../lib/task-queues');var assert = require('chai').assert;
+
+'../lib/task-queues');var assert = require('chai').assert;var Promise = require('bluebird');
 
 describe("Task queues", function () {
   it("should execute synchronous tasks synchronously", function () {
@@ -19,16 +20,16 @@ describe("Task queues", function () {
 
     var a = 0;
     q.schedule(function () {return (
-      wait(10).then(function () {a += 1;}));});
+        wait(10).then(function () {a += 1;}));});
 
     q.schedule(function () {return (
-      wait(10).then(function () {a *= 2;}));});
+        wait(10).then(function () {a *= 2;}));});
 
     q.schedule(function () {return (
-      wait(10).then(function () {a += 3;}));});
+        wait(10).then(function () {a += 3;}));});
 
     q.schedule(function () {return (
-      wait(10).then(function () {a *= 5;}));});
+        wait(10).then(function () {a *= 5;}));});
 
 
     q.waitUntilEmpty().then(function () {
@@ -41,10 +42,10 @@ describe("Task queues", function () {
 
     var a = 0;
     var multiply = q.synchronize(function (x) {return (
-      wait(10).then(function () {a *= x;}));});
+        wait(10).then(function () {a *= x;}));});
 
     var add = q.synchronize(function (x) {return (
-      wait(10).then(function () {a += x;}));});
+        wait(10).then(function () {a += x;}));});
 
 
     add(2);

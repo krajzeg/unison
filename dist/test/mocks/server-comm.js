@@ -26,7 +26,7 @@
 
     function containsMessageFor(clientId, message) {
       return this.sentPerClient[clientId].some(function (msg) {return (
-        JSON.stringify(msg) == JSON.stringify(message));});} }, { key: "pushClientMessage", value: 
+          JSON.stringify(msg) == JSON.stringify(message));});} }, { key: "pushClientMessage", value: 
 
 
 

@@ -1,4 +1,5 @@
 let assert = require('chai').assert;
+let Promise = require('bluebird');
 import { Queue } from '../lib/task-queues'
 
 describe("Task queues", () => {

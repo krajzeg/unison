@@ -2,6 +2,7 @@ var assert = require('chai').assert;
 var unison = require('../lib');
 var client = require('../lib').client;
 var sinon = require('sinon');
+var Promise = require('bluebird');
 var CommunicationMock = require('./mocks/client-comm');
 
 describe("Client plugin", () => {

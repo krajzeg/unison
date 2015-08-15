@@ -21,11 +21,10 @@ var _immutableStates = require('./immutable-states');
 
 var _events = require('./events');
 
-// Main Unison object.
-// Uses classical instead of ES6 classes to allow Unison.apply(...) down the road.
-
 var _events2 = _interopRequireDefault(_events);
 
+// Main Unison object.
+// Uses classical instead of ES6 classes to allow Unison.apply(...) down the road.
 var _ = require('lodash');
 
 function Unison() {
@@ -410,7 +409,7 @@ var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_ag
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var UserError = (function (_Error) {
   _inherits(UserError, _Error);
@@ -451,6 +450,8 @@ var UnisonEvents = (function () {
     this.u = unison;
     this._listeners = {};
   }
+
+  // Represents all events triggered from Unison and their common properties.
 
   _createClass(UnisonEvents, [{
     key: 'key',
@@ -533,10 +534,7 @@ var UnisonEvents = (function () {
   }]);
 
   return UnisonEvents;
-})()
-
-// Represents all events triggered from Unison and their common properties.
-;
+})();
 
 exports['default'] = UnisonEvents;
 
@@ -1494,16 +1492,21 @@ function views(options) {
 
 function ViewsPlugin() {
   this.animationQueue = new _taskQueues.Queue();
+  this.registeredViews = {};
 }
 ViewsPlugin.prototype = {
   applyPlugin: function applyPlugin(u) {
     this.u = u;
     return {
+      name: 'views',
       methods: {
         animation: this.animation.bind(this)
       },
       nodeMethods: {
-        watch: watch
+        watch: watch,
+
+        registerView: registerView,
+        view: view
       }
     };
   },
@@ -1550,6 +1553,19 @@ function watch(object) {
   };
   node.on('destroyed', unbindListener);
   boundListeners.push({ event: 'destroyed', listener: unbindListener });
+}
+
+function registerView(viewObject) {
+  var views = this.u.plugins.views,
+      path = this.path();
+  views.registeredViews[path] = viewObject;
+  this.on('destroyed', function () {
+    delete views.registeredViews[path];
+  });
+}
+
+function view() {
+  return this.u.plugins.views.registeredViews[this.path()];
 }
 module.exports = exports['default'];
 
@@ -6684,7 +6700,7 @@ process.umask = function() { return 0; };
 (function (global){
 /**
  * @license
- * lodash 3.10.0 (Custom Build) <https://lodash.com/>
+ * lodash 3.10.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern -d -o ./index.js`
  * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
  * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
@@ -6697,7 +6713,7 @@ process.umask = function() { return 0; };
   var undefined;
 
   /** Used as the semantic version number. */
-  var VERSION = '3.10.0';
+  var VERSION = '3.10.1';
 
   /** Used to compose bitmasks for wrapper metadata. */
   var BIND_FLAG = 1,
