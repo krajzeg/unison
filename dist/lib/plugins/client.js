@@ -75,7 +75,17 @@ ClientPlugin = (function () {
     // Adds a new command, including a method on nodes.
   }, { key: 'addCommand', value: function addCommand(commandName, commandCode) {
       this.u.registerNodeProperties(_defineProperty({}, 
-      commandName, commandCode));}
+      commandName, this.makeCommandMethod(commandName, commandCode)));}
+
+
+
+    // Generates a method that executes a command and triggers events about it.
+  }, { key: 'makeCommandMethod', value: function makeCommandMethod(commandName, commandCode) {
+      return function () {for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {args[_key2] = arguments[_key2];}
+        this.trigger('before:' + commandName, { args: args });
+        var result = commandCode.apply(this, args);
+        this.trigger('after:' + commandName, { args: args });
+        return result;};}
 
 
 
@@ -84,7 +94,7 @@ ClientPlugin = (function () {
       var client = this;
       return function () {var _this4 = this;
         // this here will be the node we're called upon
-        var intentId = client._nextIntentId++;for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {args[_key2] = arguments[_key2];}
+        var intentId = client._nextIntentId++;for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {args[_key3] = arguments[_key3];}
         var intent = [cs.INTENT, intentName, this.path(), cs.serializeAll(args), intentId];
         client.send(intent);
 
@@ -115,13 +125,12 @@ ClientPlugin = (function () {
     // Applies a command received from the server to the local state.
   }, { key: 'applyCommand', value: function applyCommand(_ref3) {var _ref32 = _slicedToArray(_ref3, 4);var code = _ref32[0];var commandName = _ref32[1];var objectPath = _ref32[2];var args = _ref32[3];
       // find the right one
-      var command = this.commands[commandName];
-      if (!command) 
+      if (!this.commands[commandName]) 
       throw new Error('Received unknown command: \'' + commandName + '\'.');
 
       var u = this.u;
       var target = u(objectPath);
       args = cs.deserializeAll(u, args);
 
-      return command.apply(target, args);} }]);return ClientPlugin;})();module.exports = exports['default'];
+      return target[commandName].apply(target, args);} }]);return ClientPlugin;})();module.exports = exports['default'];
 //# sourceMappingURL=../plugins/client.js.map

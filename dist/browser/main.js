@@ -881,7 +881,23 @@ var ClientPlugin = (function () {
   }, {
     key: 'addCommand',
     value: function addCommand(commandName, commandCode) {
-      this.u.registerNodeProperties(_defineProperty({}, commandName, commandCode));
+      this.u.registerNodeProperties(_defineProperty({}, commandName, this.makeCommandMethod(commandName, commandCode)));
+    }
+
+    // Generates a method that executes a command and triggers events about it.
+  }, {
+    key: 'makeCommandMethod',
+    value: function makeCommandMethod(commandName, commandCode) {
+      return function () {
+        for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+          args[_key2] = arguments[_key2];
+        }
+
+        this.trigger('before:' + commandName, { args: args });
+        var result = commandCode.apply(this, args);
+        this.trigger('after:' + commandName, { args: args });
+        return result;
+      };
     }
 
     // Generates a method that will send a named intent with the right parameters when called.
@@ -895,8 +911,8 @@ var ClientPlugin = (function () {
         // this here will be the node we're called upon
         var intentId = client._nextIntentId++;
 
-        for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-          args[_key2] = arguments[_key2];
+        for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+          args[_key3] = arguments[_key3];
         }
 
         var intent = [cs.INTENT, intentName, this.path(), cs.serializeAll(args), intentId];
@@ -946,14 +962,13 @@ var ClientPlugin = (function () {
       var args = _ref32[3];
 
       // find the right one
-      var command = this.commands[commandName];
-      if (!command) throw new Error('Received unknown command: \'' + commandName + '\'.');
+      if (!this.commands[commandName]) throw new Error('Received unknown command: \'' + commandName + '\'.');
 
       var u = this.u;
       var target = u(objectPath);
       args = cs.deserializeAll(u, args);
 
-      return command.apply(target, args);
+      return target[commandName].apply(target, args);
     }
   }]);
 

@@ -50,6 +50,28 @@ describe("Client plugin", function () {
     assert.deepEqual(comm.sentMessages, []);});
 
 
+  it("should trigger 'before:X' and 'after:X' events for command executions", function () {
+    var comm = new CommunicationMock();
+    var u = unison({ frobbed: false }).
+    plugin(client({ 
+      communication: comm, 
+      commands: { 
+        frob: function frob() {
+          this.update({ frobbed: true });} } }));
+
+
+
+
+    var beforeFrobState = undefined, afterFrobState = undefined;
+    u().on('before:frob', function (evt) {beforeFrobState = evt.snapshot.get.frobbed;});
+    u().on('after:frob', function (evt) {afterFrobState = evt.snapshot.get.frobbed;});
+
+    comm.pushServerCommand('frob', '');
+
+    assert.strictEqual(beforeFrobState, false);
+    assert.strictEqual(afterFrobState, true);});
+
+
   it("should apply commands sent by the server", function () {
     var comm = new CommunicationMock();
     var u = unison({ bird: {} }).
