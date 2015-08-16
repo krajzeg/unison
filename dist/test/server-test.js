@@ -64,6 +64,34 @@ describe("Server plugin", function () {
 
 
 
+  it("should trigger before:X/after:X events on all command executions", function () {
+    var comm = new CommunicationMock();
+    var u = unison({});
+    u.plugin(server({ 
+      communication: comm, 
+      commands: { 
+        frob: function frob() {
+          this.update({ frobbed: true });
+          this.futz();}, 
+
+        futz: function futz() {
+          this.update({ futzed: true });} } }));
+
+
+
+
+    var calls = [], events = ['before:frob', 'after:frob', 'before:futz', 'after:futz'];
+    _.map(events, function (event) {
+      u().on(event, function (evt) {
+        calls.push(evt.name);});});
+
+
+
+    u().frob();
+
+    assert.deepEqual(calls, ['before:frob', 'before:futz', 'after:futz', 'after:frob']);});
+
+
   it("should not send commands nested in other command executions", function () {
     var comm = new CommunicationMock();
     var u = unison({}).

@@ -1372,16 +1372,19 @@ var ServerPlugin = (function () {
       var server = this;
 
       return function () {
-        var nested = !!server._runningCommand;
-
         for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
           args[_key2] = arguments[_key2];
         }
 
+        // handle nested executions
+        var nested = !!server._runningCommand;
         if (!nested) server._runningCommand = [this, commandName, args];
-        // 'this' refers to the Node on which the method was called here
+
+        // execute the command, trigger events
         try {
+          this.trigger('before:' + commandName, { args: args });
           commandFn.apply(this, args);
+          this.trigger('after:' + commandName, { args: args });
         } catch (e) {
           if (!nested) server._runningCommand = null;
           throw e;
