@@ -47,7 +47,7 @@ describe("Server plugin", function () {
 
       intents: { 
         pleaseFrob: function pleaseFrob(howHard, client) {
-          this.frob(howHard, client);} } }));
+          this.frob(howHard, client.id);} } }));
 
 
 
@@ -62,6 +62,31 @@ describe("Server plugin", function () {
     assert.ok(comm.containsMessageFor('client1', 
     ['c', 'frob', 'bird', ['lightly', 'client1']]));});
 
+
+
+  it("should let intents store data on the client objects", function () {
+    var comm = new CommunicationMock();
+
+    var counterValues = {};
+
+    var u = unison({}).
+    plugin(server({ 
+      communication: comm, 
+      intents: { 
+        pleaseBumpCounter: function pleaseBumpCounter(client) {
+          client.counter = client.counter ? client.counter + 1 : 1;
+          counterValues[client.id] = client.counter;} } }));
+
+
+
+
+    comm.attach('client1');comm.attach('client2');
+    comm.pushClientMessage('client1', ['i', 'pleaseBumpCounter', '', [], 1]);
+    comm.pushClientMessage('client2', ['i', 'pleaseBumpCounter', '', [], 2]);
+    comm.pushClientMessage('client1', ['i', 'pleaseBumpCounter', '', [], 3]);
+
+    assert.equal(counterValues['client1'], 2);
+    assert.equal(counterValues['client2'], 1);});
 
 
   it("should trigger before:X/after:X events on all command executions", function () {

@@ -27,7 +27,7 @@ ServerPlugin = (function () {
       unexpectedErrorMessage: unexpectedErrorMessage };
 
 
-    this.clients = [];
+    this.clientObjects = {};
 
     this.communication.onAttach(function (client) {return _this.attach(client);});
     this.communication.onDetach(function (client) {return _this.detach(client);});
@@ -46,25 +46,23 @@ ServerPlugin = (function () {
 
 
 
-    function attach(client) {
-      this.clients.push(client);
+    function attach(clientId) {
+      this.clientObjects[clientId] = { id: clientId };
 
       var u = this.u, rootState = u('').state();
-      this.sendTo(client, [cs.COMMAND, '_seed', '', [rootState]]);} }, { key: 'detach', value: 
+      this.sendTo(clientId, [cs.COMMAND, '_seed', '', [rootState]]);} }, { key: 'detach', value: 
 
 
-    function detach(client) {
-      var position = this.clients.indexOf(client);
-      if (position >= 0) 
-      this.clients.splice(position, 1);} }, { key: 'receive', value: 
+    function detach(clientId) {
+      delete this.clientObjects[clientId];} }, { key: 'receive', value: 
 
 
-    function receive(client, msgString) {var _this2 = this;
+    function receive(clientId, msgString) {var _this2 = this;
       cs.parseMessage(msgString, function (message) {var _message = _slicedToArray(
         message, 1);var messageType = _message[0];
         switch (messageType) {
           case cs.INTENT:
-            return _this2.applyIntent(client, message);
+            return _this2.applyIntent(clientId, message);
           case cs.COMMAND:
             throw new Error("Servers do not obey commands from clients.");}});} }, { key: 'sendToAll', value: 
 
@@ -73,30 +71,30 @@ ServerPlugin = (function () {
 
     function sendToAll(message) {var _this3 = this;
       var msgString = JSON.stringify(message);
-      _.each(this.clients, function (client) {
-        _this3.communication.sendTo(client, msgString);});} }, { key: 'sendTo', value: 
+      _.each(this.clientObjects, function (_ref2) {var id = _ref2.id;
+        _this3.communication.sendTo(id, msgString);});} }, { key: 'sendTo', value: 
 
 
 
-    function sendTo(client, message) {
+    function sendTo(clientId, message) {
       var msgString = JSON.stringify(message);
-      this.communication.sendTo(client, msgString);} }, { key: 'sendErrorResponse', value: 
+      this.communication.sendTo(clientId, msgString);} }, { key: 'sendErrorResponse', value: 
 
 
-    function sendErrorResponse(client, intentId, message) {
-      this.sendTo(client, [cs.RESPONSE, cs.RESPONSE_ERROR, intentId, message]);} }, { key: 'sendOkResponse', value: 
+    function sendErrorResponse(clientId, intentId, message) {
+      this.sendTo(clientId, [cs.RESPONSE, cs.RESPONSE_ERROR, intentId, message]);} }, { key: 'sendOkResponse', value: 
 
 
-    function sendOkResponse(client, intentId, result) {
-      this.sendTo(client, [cs.RESPONSE, cs.RESPONSE_OK, intentId, cs.serialize(result)]);} }, { key: 'applyIntent', value: 
+    function sendOkResponse(clientId, intentId, result) {
+      this.sendTo(clientId, [cs.RESPONSE, cs.RESPONSE_OK, intentId, cs.serialize(result)]);} }, { key: 'applyIntent', value: 
 
 
-    function applyIntent(client, _ref2) {var _this4 = this;var _ref22 = _slicedToArray(_ref2, 5);var code = _ref22[0];var intentName = _ref22[1];var objectPath = _ref22[2];var args = _ref22[3];var intentId = _ref22[4];
+    function applyIntent(clientId, _ref3) {var _this4 = this;var _ref32 = _slicedToArray(_ref3, 5);var code = _ref32[0];var intentName = _ref32[1];var objectPath = _ref32[2];var args = _ref32[3];var intentId = _ref32[4];
       var intentFn = this.intents[intentName];
       var u = this.u, target = u(objectPath);
 
       args = cs.deserializeAll(u, args);
-      var fullArgs = args.concat(client);
+      var fullArgs = args.concat(this.clientObjects[clientId]);
 
       var runIntent = new Promise(function (resolve, reject) {
         try {
@@ -108,12 +106,12 @@ ServerPlugin = (function () {
 
 
       return runIntent.then(function (result) {
-        _this4.sendOkResponse(client, intentId, result);})['catch'](
+        _this4.sendOkResponse(clientId, intentId, result);})['catch'](
       function (err) {
         if (err.reportToUser) {
-          _this4.sendErrorResponse(client, intentId, err.message);} else 
+          _this4.sendErrorResponse(clientId, intentId, err.message);} else 
         {
-          _this4.sendErrorResponse(client, intentId, _this4.config.unexpectedErrorMessage);
+          _this4.sendErrorResponse(clientId, intentId, _this4.config.unexpectedErrorMessage);
           _this4.config.errorHandler(err);}});} }, { key: 'addNodeMethods', value: 
 
 
