@@ -350,7 +350,14 @@ describe("Server plugin", function () {
       assert.ok(comm.containsMessageFor('client1', 
       ['r', 'ok', 1, { _u: 'cockatoo' }]));}).
 
-    then(done)['catch'](done);});});
+    then(done)['catch'](done);});
+
+
+  it("should let us recognize that we're on the serverside", function () {
+    var comm = new CommunicationMock();
+    var u = unison({}).plugin(server({ communication: comm }));
+
+    assert.ok(u.serverSide);});});
 
 
 

@@ -39,9 +39,11 @@ ServerPlugin = (function () {
       this.addNodeMethods();
 
       return { 
+        name: 'server', 
         methods: { 
           addIntent: this.addIntent.bind(this), 
-          addCommand: this.addCommand.bind(this) } };} }, { key: 'attach', value: 
+          addCommand: this.addCommand.bind(this), 
+          serverSide: true } };} }, { key: 'attach', value: 
 
 
 

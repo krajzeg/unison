@@ -52,9 +52,11 @@ ClientPlugin = (function () {
       this.addNodeMethods();
 
       return { 
+        name: 'client', 
         methods: { 
           addIntent: this.addIntent.bind(this), 
-          addCommand: this.addCommand.bind(this) } };}
+          addCommand: this.addCommand.bind(this), 
+          clientSide: true } };}
 
 
 

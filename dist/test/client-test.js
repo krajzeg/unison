@@ -235,7 +235,14 @@ describe("Client plugin", function () {
     u('bird').frob()['catch'](function () {});
     comm.pushServerResponse('err', 1, "Oops.");
 
-    assert.ok(errorSpy.calledOnce);});});
+    assert.ok(errorSpy.calledOnce);});
+
+
+  it("should let us recognize that we're on the clientside", function () {
+    var comm = new CommunicationMock();
+    var u = unison({}).plugin(client({ communication: comm }));
+
+    assert.ok(u.clientSide);});});
 
 
 

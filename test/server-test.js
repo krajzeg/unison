@@ -353,6 +353,13 @@ describe("Server plugin", () => {
     }).then(done).catch(done);
   });
 
+  it("should let us recognize that we're on the serverside", () => {
+    let comm = new CommunicationMock();
+    let u = unison({}).plugin(server({communication: comm}));
+
+    assert.ok(u.serverSide);
+  });
+
 });
 
 function wait(ms) {

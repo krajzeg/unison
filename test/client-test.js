@@ -237,6 +237,13 @@ describe("Client plugin", () => {
 
     assert.ok(errorSpy.calledOnce);
   });
+
+  it("should let us recognize that we're on the clientside", () => {
+    let comm = new CommunicationMock();
+    let u = unison({}).plugin(client({communication: comm}));
+
+    assert.ok(u.clientSide);
+  });
 });
 
 function expectRejection(promise) {
