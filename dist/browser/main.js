@@ -1250,9 +1250,12 @@ var ServerPlugin = (function () {
     value: function attach(clientId) {
       this.clientObjects[clientId] = { id: clientId };
 
-      var u = this.u,
-          rootState = u('').state();
-      this.sendTo(clientId, [cs.COMMAND, '_seed', '', [rootState]]);
+      var u = this.u;
+
+      var seedInformation = _.extend({}, u().state()); // independent copy to keep original state intact
+      delete seedInformation['local']; // anything under 'local' is not propagated to the clients
+
+      this.sendTo(clientId, [cs.COMMAND, '_seed', '', [seedInformation]]);
     }
   }, {
     key: 'detach',

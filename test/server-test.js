@@ -186,6 +186,23 @@ describe("Server plugin", () => {
     ]);
   });
 
+  it("should not propagate state under 'local' through the '_seed' command", () => {
+    let comm = new CommunicationMock();
+
+    let u = unison({
+      answer: 42,
+      local: {should: ['not', 'be', 'propagated']}
+    });
+    u.plugin(server({communication: comm}));
+
+    comm.attach('client1');
+
+    var messages = comm.messagesSentTo('client1');
+    assert.deepEqual(messages, [
+      ['c', '_seed', '', [{answer: 42}]]
+    ]);
+  });
+
   it("should allow adding commands and intents after the fact", () => {
     let comm = new CommunicationMock();
     let u = unison({bird: {}})
