@@ -41,6 +41,10 @@ function Unison() {
     backlogSize: 1000
   });
 
+  // this is a space for additional private state kept by the server/client
+  // intended for objects with methods and other non-JSON-serializable stuff
+  this.privates = {};
+
   // each Unison object has its own pseudo-class for nodes that can be extended by plugins
   this._nodeBase = Object.create(UnisonNode.prototype);
   this._makeNode = function () {
