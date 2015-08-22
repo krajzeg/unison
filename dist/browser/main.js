@@ -1019,7 +1019,7 @@ var Relations = (function () {
     key: 'find',
     value: function find(name) {
       var rel = this.relatives[name];
-      if (!rel) throw new Error('Unknown relation name: \'$rel\'');
+      if (!rel) throw new Error('Unknown relation name: \'' + name + '\'');
       return rel;
     }
   }, {

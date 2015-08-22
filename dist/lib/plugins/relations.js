@@ -18,7 +18,7 @@ Relations = (function () {
     function find(name) {
       var rel = this.relatives[name];
       if (!rel) 
-      throw new Error('Unknown relation name: \'$rel\'');
+      throw new Error('Unknown relation name: \'' + name + '\'');
       return rel;} }, { key: 'findInverse', value: 
 
 
