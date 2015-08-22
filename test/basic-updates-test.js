@@ -49,24 +49,22 @@ describe("add()", () => {
     });
   });
 
-  it("should automatically assign IDs to children and return their path", () => {
-    var hairdryerPath = u('things').add({name: 'hairdryer'});
-    var lemonPath = u('things').add({name: 'lemon'});
+  it("should automatically assign IDs to children and return the added node", () => {
+    let hairdryer = u('things').add({name: 'hairdryer'});
+    let lemon = u('things').add({name: 'lemon'});
 
-    assert.ok(hairdryerPath && lemonPath);
+    assert.equal(hairdryer.path(), 'things.1');
+    assert.equal(lemon.path(), 'things.2');
 
-    assert.ok(/^things\./.test(hairdryerPath));
-    assert.ok(/^things\./.test(lemonPath));
-
-    assert.equal(u(hairdryerPath).get.name, 'hairdryer');
-    assert.equal(u(lemonPath).get.name, 'lemon');
+    assert.equal(hairdryer.get.name, 'hairdryer');
+    assert.equal(lemon.get.name, 'lemon');
   });
 
   it("should respect manually chosen IDs if provided", () => {
-    var hairdryerPath = u('things').add('hairdryer', {name: 'hairdryer'});
+    let hairdryer = u('things').add('hairdryer', {name: 'hairdryer'});
 
-    assert.equal(hairdryerPath, 'things.hairdryer');
-    assert.equal(u(hairdryerPath).get.name, 'hairdryer');
+    assert.equal(hairdryer.path(), 'things.hairdryer');
+    assert.equal(hairdryer.get.name, 'hairdryer');
   });
 
   it("should throw and leave things unchanged if you add a child that exists already", () => {

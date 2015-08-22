@@ -219,8 +219,8 @@ UnisonNode = (function () {
       var pathToChild = (0, _util.childPath)(this.path(), id);
       unison._events.triggerAll(unison.collectEvents(pathToChild, 'created'));
 
-      // return the path to the newly created child
-      return pathToChild;} }, { key: 'remove', value: 
+      // return the node for the new child
+      return this.child(id);} }, { key: 'remove', value: 
 
 
     function remove(id) {
