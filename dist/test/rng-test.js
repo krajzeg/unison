@@ -34,7 +34,34 @@ describe("Server-side RNG", function () {
     assert.ok(extras);
     assert.ok(extras.rng);
     assert.deepEqual(extras.rng, [u().get.d6, u().get.d12]);
-    assert.deepEqual(extras.rng, [5, 7]);});});
+    assert.deepEqual(extras.rng, [5, 7]);});
+
+
+  it("should send correct extras for rng.pick()", function () {
+    var comm = new ServerCommunicationMock();
+    var u = unison({});
+    u.plugin(server({ 
+      communication: comm, 
+      commands: { 
+        pickOne: function pickOne() {
+          var u = this.u, picked = u.rng.pick([3, 4, 5, 6, 7]);
+          this.update({ picked: picked });} } }));
+
+
+
+    u.plugin(rng({ 
+      version: 'server', seed: 12345 }));
+
+
+    comm.attach('client1');
+
+    u().pickOne();
+
+    var pickMessage = comm.messagesSentTo('client1')[1];
+    var extras = pickMessage[4];
+    assert.deepEqual(extras.rng, [u().get.picked - 3]);
+    assert.deepEqual(extras.rng, [3]);
+    assert.equal(u().get.picked, 6);});});
 
 
 
@@ -57,5 +84,24 @@ describe("Client-side RNG", function () {
     comm.pushServerString('["c","rollSomeDice","",[],{"rng":[5,7]}]');
 
     assert.equal(u().get.d6, 5);
-    assert.equal(u().get.d12, 7);});});
+    assert.equal(u().get.d12, 7);});
+
+
+  it("should repeat collection picks made by the server", function () {
+    var comm = new ClientCommunicationMock();
+    var u = unison({});
+    u.plugin(client({ 
+      communication: comm, 
+      commands: { 
+        pickOne: function pickOne() {
+          var u = this.u, picked = u.rng.pick([3, 4, 5, 6, 7]);
+          this.update({ picked: picked });} } }));
+
+
+
+    u.plugin(rng({ version: 'client' }));
+
+    comm.pushServerString('["c","pickOne","",[],{"rng":[3]}]');
+
+    assert.equal(u().get.picked, 6);});});
 //# sourceMappingURL=rng-test.js.map

@@ -1201,7 +1201,7 @@ var CommonRNG = {
   },
 
   randomPick: function randomPick(collection) {
-    return collection(this.randomInt(0, collection.length));
+    return collection[this.u.rng.int(0, collection.length)];
   }
 };
 
