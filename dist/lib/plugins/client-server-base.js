@@ -6,9 +6,9 @@ var RESPONSE_OK = 'ok', RESPONSE_ERROR = 'err';exports.RESPONSE_OK = RESPONSE_OK
 
 var ACCEPTABLE_MESSAGE_TYPES = [COMMAND, INTENT, RESPONSE];
 var ACCEPTABLE_MESSAGE_LENGTHS = (_ACCEPTABLE_MESSAGE_LENGTHS = {}, _defineProperty(_ACCEPTABLE_MESSAGE_LENGTHS, 
-COMMAND, 4), _defineProperty(_ACCEPTABLE_MESSAGE_LENGTHS, 
-INTENT, 5), _defineProperty(_ACCEPTABLE_MESSAGE_LENGTHS, 
-RESPONSE, 4), _ACCEPTABLE_MESSAGE_LENGTHS);
+COMMAND, [4, 5]), _defineProperty(_ACCEPTABLE_MESSAGE_LENGTHS, 
+INTENT, [5]), _defineProperty(_ACCEPTABLE_MESSAGE_LENGTHS, 
+RESPONSE, [4]), _ACCEPTABLE_MESSAGE_LENGTHS);
 
 
 var BUILTIN_COMMANDS = { 
@@ -79,7 +79,7 @@ function messageValid(message) {
 
   var type = message[0];
   if (ACCEPTABLE_MESSAGE_TYPES.indexOf(type) < 0) return false;
-  if (message.length != ACCEPTABLE_MESSAGE_LENGTHS[type]) return false;
+  if (ACCEPTABLE_MESSAGE_LENGTHS[type].indexOf(message.length) < 0) return false;
 
   return true;}
 //# sourceMappingURL=../plugins/client-server-base.js.map

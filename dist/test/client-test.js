@@ -242,7 +242,24 @@ describe("Client plugin", function () {
     var comm = new CommunicationMock();
     var u = unison({}).plugin(client({ communication: comm }));
 
-    assert.ok(u.clientSide);});});
+    assert.ok(u.clientSide);});
+
+
+  it("should make command extras sent by the server available during command execution", function () {
+    var comm = new CommunicationMock();
+    var u = unison({}).plugin(client({ 
+      communication: comm, 
+      commands: { 
+        applySpecialSauce: function applySpecialSauce() {
+          var u = this.u, sauce = u.plugins.client.getCommandExtras().sauce;
+          u().update({ sauce: sauce });} } }));
+
+
+
+
+    comm.pushServerString('["c","applySpecialSauce","",[],{"sauce":"worcestershire"}]');
+
+    assert.equal(u().get.sauce, "worcestershire");});});
 
 
 

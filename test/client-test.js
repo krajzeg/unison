@@ -244,6 +244,23 @@ describe("Client plugin", () => {
 
     assert.ok(u.clientSide);
   });
+
+  it("should make command extras sent by the server available during command execution", () => {
+    let comm = new CommunicationMock();
+    let u = unison({}).plugin(client({
+      communication: comm,
+      commands: {
+        applySpecialSauce() {
+          let u = this.u, sauce = u.plugins.client.getCommandExtras().sauce;
+          u().update({sauce});
+        }
+      }
+    }));
+
+    comm.pushServerString('["c","applySpecialSauce","",[],{"sauce":"worcestershire"}]');
+
+    assert.equal(u().get.sauce, "worcestershire");
+  });
 });
 
 function expectRejection(promise) {

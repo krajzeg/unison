@@ -376,7 +376,7 @@ describe("Server plugin", function () {
     u().applySpecialSauce();
 
     assert.ok(comm.containsMessageFor('client1', 
-    ['c', 'applySpecialSauce', '', [], { specialSauce: 'appliesd' }]));});});
+    ['c', 'applySpecialSauce', '', [], { specialSauce: 'applied' }]));});});
 
 
 
