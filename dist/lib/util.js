@@ -13,8 +13,8 @@ function functionized(clazz, ctorArgs, defaultMethod) {
   // set up prototypes correctly
   var generatedPrototype = Object.create(function () {});
   _.extend(generatedPrototype, clazz.prototype);
+  generatedPrototype.__proto__ = clazz.prototype.__proto__;
   fn.__proto__ = generatedPrototype;
-
 
   // return!
   return fn;}
