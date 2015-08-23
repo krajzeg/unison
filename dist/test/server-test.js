@@ -255,7 +255,7 @@ describe("Server plugin", function () {
     var u = unison({}).plugin(srv);
     comm.attach('client1');
 
-    srv.plugin.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(function () {
+    u.plugins.server.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(function () {
       assert.ok(comm.containsMessageFor('client1', 
       ['r', 'ok', 1, "Frobbed!"]));}).
 
@@ -276,7 +276,7 @@ describe("Server plugin", function () {
     var u = unison({}).plugin(srv);
     comm.attach('client1');
 
-    srv.plugin.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(function () {
+    u.plugins.server.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(function () {
       assert.ok(comm.containsMessageFor('client1', 
       ['r', 'ok', 1, "Frobbed!"]));}).
 
@@ -300,7 +300,7 @@ describe("Server plugin", function () {
     var u = unison({}).plugin(srv);
     comm.attach('client1');
 
-    srv.plugin.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(function () {
+    u.plugins.server.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(function () {
       assert.ok(comm.containsMessageFor('client1', 
       ['r', 'err', 1, "Argh!"]));
 
@@ -324,7 +324,7 @@ describe("Server plugin", function () {
     var u = unison({}).plugin(srv);
     comm.attach('client1');
 
-    srv.plugin.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(function () {
+    u.plugins.server.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(function () {
       assert.ok(comm.containsMessageFor('client1', 
       ['r', 'err', 1, "Not frobbable."]));
 
@@ -346,7 +346,7 @@ describe("Server plugin", function () {
     var u = unison({ cockatoo: {} }).plugin(srv);
     comm.attach('client1');
 
-    srv.plugin.applyIntent('client1', ['i', 'pleaseFrob', 'cockatoo', [], 1]).then(function () {
+    u.plugins.server.applyIntent('client1', ['i', 'pleaseFrob', 'cockatoo', [], 1]).then(function () {
       assert.ok(comm.containsMessageFor('client1', 
       ['r', 'ok', 1, { _u: 'cockatoo' }]));}).
 
@@ -357,7 +357,27 @@ describe("Server plugin", function () {
     var comm = new CommunicationMock();
     var u = unison({}).plugin(server({ communication: comm }));
 
-    assert.ok(u.serverSide);});});
+    assert.ok(u.serverSide);});
+
+
+  it("should allow extra information to be sent along with commands by other plugins", function () {
+    var comm = new CommunicationMock();
+    var u = unison({}).plugin(server({ 
+      communication: comm, 
+      commands: { 
+        applySpecialSauce: function applySpecialSauce() {
+          var u = this.u;
+          u.plugins.server.getCommandExtras().specialSauce = 'applied';} } }));
+
+
+
+
+    comm.attach('client1');
+    u().applySpecialSauce();
+
+    assert.ok(comm.containsMessageFor('client1', 
+    ['c', 'applySpecialSauce', '', [], { specialSauce: 'appliesd' }]));});});
+
 
 
 
