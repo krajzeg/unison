@@ -61,8 +61,36 @@ describe("Server-side RNG", function () {
     var extras = pickMessage[4];
     assert.deepEqual(extras.rng, [u().get.picked - 3]);
     assert.deepEqual(extras.rng, [3]);
-    assert.equal(u().get.picked, 6);});});
+    assert.equal(u().get.picked, 6);});
 
+
+  it("should shuffle correctly", function () {
+    var comm = new ServerCommunicationMock();
+    var u = unison({});
+    u.plugin(server({ 
+      communication: comm, 
+      commands: { 
+        shuffle: function shuffle() {
+          var u = this.u, shuffled = u.rng.shuffle([1, 2, 3, 4, 5]);
+          this.update({ shuffled: shuffled });} } }));
+
+
+
+    u.plugin(rng({ 
+      version: 'server', seed: 12346 }));
+
+
+    comm.attach('client1');
+
+    u().shuffle();
+
+    assert.sameMembers(u().get.shuffled, [1, 2, 3, 4, 5]);
+
+    var pickMessage = comm.messagesSentTo('client1')[1];
+    var extras = pickMessage[4];
+    assert.ok(extras.rng);
+    assert.lengthOf(extras.rng, 4); // shuffling 5 elements requires 4 picks
+  });});
 
 
 describe("Client-side RNG", function () {

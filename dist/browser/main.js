@@ -1194,7 +1194,8 @@ var CommonRNG = {
         rng: {
           u: u,
           int: this.randomInt,
-          pick: this.randomPick
+          pick: this.randomPick,
+          shuffle: this.shuffle
         }
       }
     };
@@ -1202,6 +1203,18 @@ var CommonRNG = {
 
   randomPick: function randomPick(collection) {
     return collection[this.u.rng.int(0, collection.length)];
+  },
+
+  shuffle: function shuffle(xs) {
+    for (var highIndex = xs.length - 1; highIndex > 0; highIndex--) {
+      var lowIndex = this.u.rng.int(0, highIndex + 1);
+
+      var t = xs[highIndex];
+      xs[highIndex] = xs[lowIndex];
+      xs[lowIndex] = t;
+    }
+
+    return xs;
   }
 };
 

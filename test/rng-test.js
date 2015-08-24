@@ -63,6 +63,34 @@ describe("Server-side RNG", () => {
     assert.deepEqual(extras.rng, [3]);
     assert.equal(u().get.picked, 6);
   });
+
+  it("should shuffle correctly", () => {
+    let comm = new ServerCommunicationMock();
+    let u = unison({});
+    u.plugin(server({
+      communication: comm,
+      commands: {
+        shuffle() {
+          let u = this.u, shuffled = u.rng.shuffle([1,2,3,4,5]);
+          this.update({shuffled});
+        }
+      }
+    }));
+    u.plugin(rng({
+      version: 'server', seed: 12346
+    }));
+
+    comm.attach('client1');
+
+    u().shuffle();
+
+    assert.sameMembers(u().get.shuffled, [1,2,3,4,5]);
+
+    let pickMessage = comm.messagesSentTo('client1')[1];
+    let extras = pickMessage[4];
+    assert.ok(extras.rng);
+    assert.lengthOf(extras.rng, 4); // shuffling 5 elements requires 4 picks
+  });
 });
 
 describe("Client-side RNG", () => {
