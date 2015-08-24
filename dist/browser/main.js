@@ -1634,6 +1634,8 @@ ViewsPlugin.prototype = {
 function watch(object, events) {
   var _this = this;
 
+  if (!object || !events) throw new Error("Please call as u(...).watch(yourObject, {event: method, event: method, ...}).");
+
   // 'this' here will refer to the node .watch() was called on
 
   var boundListeners = [];
