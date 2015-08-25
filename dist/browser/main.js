@@ -45,16 +45,12 @@ function Unison() {
   // intended for objects with methods and other non-JSON-serializable stuff
   this.privates = {};
 
-  // each Unison object has its own pseudo-class for nodes that can be extended by plugins
-  this._nodeBase = Object.create(UnisonNode.prototype);
-  this._makeNode = function () {
-    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    UnisonNode.apply(this, args);
+  // nodes in the Unison state can have different class-like types
+  // Node is the master-type that they all inherit from, and can be used
+  // to add capabilities to all nodes
+  this.types = {
+    Node: { definition: {}, proto: Object.create(UnisonNode.prototype) }
   };
-  this._makeNode.prototype = this._nodeBase;
 }
 
 Unison.prototype = {
@@ -63,8 +59,10 @@ Unison.prototype = {
     var time = arguments.length <= 1 || arguments[1] === undefined ? undefined : arguments[1];
 
     if (time !== undefined && !this._states[time]) throw 'Can\'t create a snapshot at time ' + time + ' - no state recorded for that timestamp.';
-    var Node = this._makeNode;
-    return new Node(this, path, time);
+
+    var node = Object.create(this.types.Node.proto);
+    UnisonNode.apply(node, [this, path, time]);
+    return node;
   },
 
   currentState: function currentState() {
@@ -127,14 +125,14 @@ Unison.prototype = {
   },
 
   registerNodeProperties: function registerNodeProperties(props) {
-    _.extend(this._nodeBase, props);
+    _.extend(this.types.Node.proto, props);
   },
 
   applyNodeWrappers: function applyNodeWrappers(wrappers) {
     var _this2 = this;
 
     _.each(wrappers, function (outerFn, methodName) {
-      _this2._nodeBase[methodName] = (0, _util.wrapFunction)(outerFn, _this2._nodeBase[methodName]);
+      _this2.types.Node.proto[methodName] = (0, _util.wrapFunction)(outerFn, _this2.types.Node.proto[methodName]);
     });
   },
 
@@ -265,8 +263,8 @@ var UnisonNode = (function () {
       var id = undefined,
           child = undefined;
 
-      for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-        args[_key2] = arguments[_key2];
+      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
       }
 
       if (args.length == 2) {
