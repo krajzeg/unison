@@ -91,8 +91,9 @@ describe("Client-side RNG", () => {
   it("should repeat the values given by the server in extras", () => {
     let comm = new ClientCommunicationMock();
     let u = unison({});
-    u.plugin(client({
-      communication: comm,
+    u.plugin(client({communication: comm}));
+    u.plugin(rng({version: 'client'}));
+    u.define({
       commands: {
         rollSomeDice() {
           let u = this.u;
@@ -100,8 +101,7 @@ describe("Client-side RNG", () => {
           this.update({d6, d12});
         }
       }
-    }));
-    u.plugin(rng({version: 'client'}));
+    });
 
     comm.pushServerString('["c","rollSomeDice","",[],{"rng":[5,7]}]');
 
@@ -112,16 +112,16 @@ describe("Client-side RNG", () => {
   it("should repeat collection picks made by the server", () => {
     let comm = new ClientCommunicationMock();
     let u = unison({});
-    u.plugin(client({
-      communication: comm,
+    u.plugin(client({communication: comm}));
+    u.plugin(rng({version: 'client'}));
+    u.define({
       commands: {
         pickOne() {
           let u = this.u, picked = u.rng.pick([3, 4, 5, 6, 7]);
           this.update({picked});
         }
       }
-    }));
-    u.plugin(rng({version: 'client'}));
+    });
 
     comm.pushServerString('["c","pickOne","",[],{"rng":[3]}]');
 

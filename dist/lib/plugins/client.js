@@ -8,9 +8,9 @@ client;function _defineProperty(obj, key, value) {if (key in obj) {Object.define
   return (0, _util.functionized)(ClientPlugin, [options], 'applyPlugin');}
 
 
-function ClientPlugin(_ref) {var _this = this;var communication = _ref.communication;var _ref$intents = _ref.intents;var intents = _ref$intents === undefined ? {} : _ref$intents;var _ref$commands = _ref.commands;var commands = _ref$commands === undefined ? {} : _ref$commands;
+function ClientPlugin(_ref) {var _this = this;var communication = _ref.communication;
   _.extend(this, { 
-    communication: communication, intents: intents, commands: commands, 
+    communication: communication, 
 
     _nextIntentId: 1, 
     _pendingIntents: {} });
@@ -46,7 +46,6 @@ ClientPlugin.prototype = {
     this.u = u;
 
     u.define({ commands: cs.BUILTIN_COMMANDS }); // add the _seed command by default
-    u.define({ commands: this.commands, intents: this.intents });
 
     return { 
       name: 'client', 

@@ -91,17 +91,17 @@ describe("Client-side RNG", function () {
   it("should repeat the values given by the server in extras", function () {
     var comm = new ClientCommunicationMock();
     var u = unison({});
-    u.plugin(client({ 
-      communication: comm, 
+    u.plugin(client({ communication: comm }));
+    u.plugin(rng({ version: 'client' }));
+    u.define({ 
       commands: { 
         rollSomeDice: function rollSomeDice() {
           var u = this.u;
           var d6 = u.rng.int(1, 6 + 1), d12 = u.rng.int(1, 12 + 1);
-          this.update({ d6: d6, d12: d12 });} } }));
+          this.update({ d6: d6, d12: d12 });} } });
 
 
 
-    u.plugin(rng({ version: 'client' }));
 
     comm.pushServerString('["c","rollSomeDice","",[],{"rng":[5,7]}]');
 
@@ -112,16 +112,16 @@ describe("Client-side RNG", function () {
   it("should repeat collection picks made by the server", function () {
     var comm = new ClientCommunicationMock();
     var u = unison({});
-    u.plugin(client({ 
-      communication: comm, 
+    u.plugin(client({ communication: comm }));
+    u.plugin(rng({ version: 'client' }));
+    u.define({ 
       commands: { 
         pickOne: function pickOne() {
           var u = this.u, picked = u.rng.pick([3, 4, 5, 6, 7]);
-          this.update({ picked: picked });} } }));
+          this.update({ picked: picked });} } });
 
 
 
-    u.plugin(rng({ version: 'client' }));
 
     comm.pushServerString('["c","pickOne","",[],{"rng":[3]}]');
 
