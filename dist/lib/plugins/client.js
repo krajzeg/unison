@@ -4,7 +4,7 @@
 
 
 
-client;function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}var _util = require('../util');var _ = require('lodash');var Promise = require('bluebird');var cs = require("./client-server-base");function client(options) {
+client;var _util = require('../util');var _ = require('lodash');var Promise = require('bluebird');var cs = require("./client-server-base");function client(options) {
   return (0, _util.functionized)(ClientPlugin, [options], 'applyPlugin');}
 
 
@@ -53,8 +53,6 @@ ClientPlugin.prototype = {
       onDefine: this.processDefinitions.bind(this), 
 
       methods: { 
-        addIntent: this.addIntent.bind(this), 
-        addCommand: this.addCommand.bind(this), 
         clientSide: true } };}, 
 
 
@@ -69,20 +67,6 @@ ClientPlugin.prototype = {
         _this3.makeCommandMethod(name, cmdCode));});
 
     _.extend(prototype, intentMethods, commandMethods);}, 
-
-
-  // Adds a new intent, including a method on nodes.
-  addIntent: function addIntent(intentName, _) {
-    this.u.registerNodeProperties(_defineProperty({}, 
-    intentName, this.makeIntentMethod(intentName)));}, 
-
-
-
-  // Adds a new command, including a method on nodes.
-  addCommand: function addCommand(commandName, commandCode) {
-    this.u.registerNodeProperties(_defineProperty({}, 
-    commandName, this.makeCommandMethod(commandName, commandCode)));}, 
-
 
 
   // Generates a method that executes a command and triggers events about it.

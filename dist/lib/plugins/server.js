@@ -4,7 +4,7 @@
 
 
 
-server;function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}var _util = require('../util');var _ = require('lodash');var Promise = require('bluebird');var cs = require("./client-server-base");function server(options) {
+server;var _util = require('../util');var _ = require('lodash');var Promise = require('bluebird');var cs = require("./client-server-base");function server(options) {
   return (0, _util.functionized)(ServerPlugin, [options], 'applyPlugin');}
 
 
@@ -39,9 +39,6 @@ ServerPlugin.prototype = {
       onDefine: this.processDefinitions.bind(this), 
 
       methods: { 
-        addIntent: this.addIntent.bind(this), 
-        addCommand: this.addCommand.bind(this), 
-
         serverSide: true } };}, 
 
 
@@ -131,18 +128,6 @@ ServerPlugin.prototype = {
 
     // add to the prototype of our type
     _.extend(prototype, commandMethods, intentMethods);}, 
-
-
-  addCommand: function addCommand(commandName, commandCode) {
-    this.u.registerNodeProperties(_defineProperty({}, 
-    commandName, this.makeCommandMethod(commandName, commandCode)));}, 
-
-
-
-  addIntent: function addIntent(intentName, intentCode) {
-    this.u.registerNodeProperties(_defineProperty({}, 
-    intentName, intentCode));}, 
-
 
 
   makeCommandMethod: function makeCommandMethod(commandName, commandFn) {

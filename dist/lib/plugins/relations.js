@@ -37,15 +37,20 @@ Relations = (function () {
       this.u = u;
 
       // add the core 'relate' and 'cease' commands (or methods if not in a client/server environment)
-      var commands = {}, addCommand = undefined;
+      var fallbackMethods = {};
+      if (u.serverSide || u.clientSide) {
+        u.define({ 
+          commands: { 
+            now: makeRelateFn(this), 
+            noLonger: makeCeaseFn(this) } });} else 
 
-      if (u.addCommand) {
-        addCommand = u.addCommand.bind(u);} else 
+
       {
-        addCommand = function (name, fn) {commands[name] = fn;};}
+        fallbackMethods = { 
+          now: makeRelateFn(this), 
+          noLonger: makeCeaseFn(this) };}
 
-      addCommand('now', makeRelateFn(this));
-      addCommand('noLonger', makeCeaseFn(this));
+
 
       // add all relation predicates
       var relationNames = _.keys(this.relatives);
@@ -62,7 +67,7 @@ Relations = (function () {
 
       // done!
       return { 
-        nodeMethods: _.extend(commands, predicates, getters) };} }]);return Relations;})();
+        nodeMethods: _.extend(fallbackMethods, predicates, getters) };} }]);return Relations;})();
 
 
 

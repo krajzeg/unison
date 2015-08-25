@@ -832,8 +832,6 @@ var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = 
 
 exports['default'] = client;
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 var _util = require('../util');
 
 var _ = require('lodash');
@@ -901,8 +899,6 @@ ClientPlugin.prototype = {
       onDefine: this.processDefinitions.bind(this),
 
       methods: {
-        addIntent: this.addIntent.bind(this),
-        addCommand: this.addCommand.bind(this),
         clientSide: true
       }
     };
@@ -919,16 +915,6 @@ ClientPlugin.prototype = {
       return _this3.makeCommandMethod(name, cmdCode);
     });
     _.extend(prototype, intentMethods, commandMethods);
-  },
-
-  // Adds a new intent, including a method on nodes.
-  addIntent: function addIntent(intentName, _) {
-    this.u.registerNodeProperties(_defineProperty({}, intentName, this.makeIntentMethod(intentName)));
-  },
-
-  // Adds a new command, including a method on nodes.
-  addCommand: function addCommand(commandName, commandCode) {
-    this.u.registerNodeProperties(_defineProperty({}, commandName, this.makeCommandMethod(commandName, commandCode)));
   },
 
   // Generates a method that executes a command and triggers events about it.
@@ -1099,18 +1085,20 @@ var Relations = (function () {
       this.u = u;
 
       // add the core 'relate' and 'cease' commands (or methods if not in a client/server environment)
-      var commands = {},
-          addCommand = undefined;
-
-      if (u.addCommand) {
-        addCommand = u.addCommand.bind(u);
+      var fallbackMethods = {};
+      if (u.serverSide || u.clientSide) {
+        u.define({
+          commands: {
+            now: makeRelateFn(this),
+            noLonger: makeCeaseFn(this)
+          }
+        });
       } else {
-        addCommand = function (name, fn) {
-          commands[name] = fn;
+        fallbackMethods = {
+          now: makeRelateFn(this),
+          noLonger: makeCeaseFn(this)
         };
       }
-      addCommand('now', makeRelateFn(this));
-      addCommand('noLonger', makeCeaseFn(this));
 
       // add all relation predicates
       var relationNames = _.keys(this.relatives);
@@ -1129,7 +1117,7 @@ var Relations = (function () {
 
       // done!
       return {
-        nodeMethods: _.extend(commands, predicates, getters)
+        nodeMethods: _.extend(fallbackMethods, predicates, getters)
       };
     }
   }]);
@@ -1336,8 +1324,6 @@ var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = 
 
 exports['default'] = server;
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 var _util = require('../util');
 
 var _ = require('lodash');
@@ -1389,9 +1375,6 @@ ServerPlugin.prototype = {
       onDefine: this.processDefinitions.bind(this),
 
       methods: {
-        addIntent: this.addIntent.bind(this),
-        addCommand: this.addCommand.bind(this),
-
         serverSide: true
       }
     };
@@ -1503,14 +1486,6 @@ ServerPlugin.prototype = {
 
     // add to the prototype of our type
     _.extend(prototype, commandMethods, intentMethods);
-  },
-
-  addCommand: function addCommand(commandName, commandCode) {
-    this.u.registerNodeProperties(_defineProperty({}, commandName, this.makeCommandMethod(commandName, commandCode)));
-  },
-
-  addIntent: function addIntent(intentName, intentCode) {
-    this.u.registerNodeProperties(_defineProperty({}, intentName, intentCode));
   },
 
   makeCommandMethod: function makeCommandMethod(commandName, commandFn) {
