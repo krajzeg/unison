@@ -372,8 +372,36 @@ describe("Server plugin", function () {
     u().applySpecialSauce();
 
     assert.ok(comm.containsMessageFor('client1', 
-    ['c', 'applySpecialSauce', '', [], { specialSauce: 'applied' }]));});});
+    ['c', 'applySpecialSauce', '', [], { specialSauce: 'applied' }]));});
 
+
+
+  it("should allow commands and intents to be defined only on specific node types", function () {
+    var comm = new CommunicationMock();
+
+    var u = unison({ 
+      bird: { _t: 'Bird' }, 
+      dog: { _t: 'Dog' } });
+
+    u.plugin(server({ communication: comm }));
+
+    u.define('Bird', { 
+      commands: { 
+        makeNoise: function makeNoise() {this.update({ chirped: true });} } });
+
+
+    u.define('Dog', { 
+      commands: { 
+        makeNoise: function makeNoise() {this.update({ bark: 'loud' });} } });
+
+
+
+    u('bird').makeNoise();
+    u('dog').makeNoise();
+
+    assert.equal(u('bird').get.chirped, true);
+    assert.equal(u('dog').get.bark, 'loud');
+    assert.throws(function () {return u().chirp();});});});
 
 
 

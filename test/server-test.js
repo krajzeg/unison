@@ -376,6 +376,34 @@ describe("Server plugin", () => {
     ));
   });
 
+  it("should allow commands and intents to be defined only on specific node types", () => {
+    let comm = new CommunicationMock();
+
+    let u = unison({
+      bird: {_t:'Bird'},
+      dog: {_t:'Dog'}
+    });
+    u.plugin(server({communication: comm}));
+
+    u.define('Bird', {
+      commands: {
+        makeNoise() { this.update({chirped: true}); }
+      }
+    });
+    u.define('Dog', {
+      commands: {
+        makeNoise() { this.update({bark: 'loud'})}
+      }
+    });
+
+    u('bird').makeNoise();
+    u('dog').makeNoise();
+
+    assert.equal(u('bird').get.chirped, true);
+    assert.equal(u('dog').get.bark, 'loud');
+    assert.throws(() => u().chirp());
+  });
+
 });
 
 function wait(ms) {
