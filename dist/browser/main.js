@@ -60,7 +60,11 @@ Unison.prototype = {
 
     if (time !== undefined && !this._states[time]) throw 'Can\'t create a snapshot at time ' + time + ' - no state recorded for that timestamp.';
 
-    var node = Object.create(this.types.Node.proto);
+    var nodeState = path ? _.get(this.stateAt(time), path) : this.stateAt(time);
+    var nodeType = nodeState && nodeState._t || 'Node';
+    if (!this.types[nodeType]) throw new Error('Node \'' + path + '\' proclaims it is of type \'' + nodeType + '\', but no such type is known.');
+
+    var node = Object.create(this.types[nodeType].proto);
     UnisonNode.apply(node, [this, path, time]);
     return node;
   },
