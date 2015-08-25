@@ -190,7 +190,7 @@ Unison.prototype = {
       if (existing instanceof Array) {
         typeObj.definitions[name] = existing.concat(newlyDefined);
       } else if ((0, _util.isObject)(existing)) {
-        typeObj.definitions[name] = _.extend(existing, newlyDefined);
+        typeObj.definitions[name] = _.extend({}, existing, newlyDefined);
       } else {
         typeObj.definitions[name] = newlyDefined;
       }
@@ -860,7 +860,6 @@ function ClientPlugin(_ref) {
     _nextIntentId: 1,
     _pendingIntents: {}
   });
-  _.extend(this.commands, cs.BUILTIN_COMMANDS);
 
   this.communication.onReceive(function (msg) {
     return _this.receive(msg);
@@ -898,10 +897,14 @@ ClientPlugin.prototype = {
   applyPlugin: function applyPlugin(u) {
     this.u = u;
 
-    this.addNodeMethods();
+    u.define({ commands: cs.BUILTIN_COMMANDS }); // add the _seed command by default
+    u.define({ commands: this.commands, intents: this.intents });
 
     return {
       name: 'client',
+
+      onDefine: this.processDefinitions.bind(this),
+
       methods: {
         addIntent: this.addIntent.bind(this),
         addCommand: this.addCommand.bind(this),
@@ -911,15 +914,16 @@ ClientPlugin.prototype = {
   },
 
   // Generates a map of methods that will send named intents when called.
-  addNodeMethods: function addNodeMethods() {
+  processDefinitions: function processDefinitions(typeName, definitions, prototype) {
     var _this3 = this;
 
-    _.each(this.intents, function (i, name) {
-      _this3.addIntent(name, i);
+    var intentMethods = _.mapValues(definitions.intents || {}, function (intentCode, name) {
+      return _this3.makeIntentMethod(name);
     });
-    _.each(this.commands, function (c, name) {
-      _this3.addCommand(name, c);
+    var commandMethods = _.mapValues(definitions.commands || {}, function (cmdCode, name) {
+      return _this3.makeCommandMethod(name, cmdCode);
     });
+    _.extend(prototype, intentMethods, commandMethods);
   },
 
   // Adds a new intent, including a method on nodes.
@@ -1002,13 +1006,13 @@ ClientPlugin.prototype = {
     var args = _ref32[3];
     var optionalExtras = _ref32[4];
 
-    // find the right one
-    if (!this.commands[commandName]) throw new Error('Received unknown command: \'' + commandName + '\'.');
-
     // extract the information from the command
     var u = this.u;
     var target = u(objectPath);
     args = cs.deserializeAll(u, args);
+
+    // ensure the command's existence
+    if (!target[commandName]) throw new Error('Received unknown command: \'' + commandName + '\'.');
 
     // if extras were sent, make them available to client-side plugins for perusal
     // otherwise, set an empty object to make it easy to use

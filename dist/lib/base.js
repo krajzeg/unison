@@ -149,7 +149,7 @@ Unison.prototype = {
       if (existing instanceof Array) {
         typeObj.definitions[name] = existing.concat(newlyDefined);} else 
       if ((0, _util.isObject)(existing)) {
-        typeObj.definitions[name] = _.extend(existing, newlyDefined);} else 
+        typeObj.definitions[name] = _.extend({}, existing, newlyDefined);} else 
       {
         typeObj.definitions[name] = newlyDefined;}});}, 
 
