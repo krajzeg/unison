@@ -1354,17 +1354,12 @@ function ServerPlugin(_ref) {
   var _this = this;
 
   var communication = _ref.communication;
-  var _ref$intents = _ref.intents;
-  var intents = _ref$intents === undefined ? {} : _ref$intents;
-  var _ref$commands = _ref.commands;
-  var commands = _ref$commands === undefined ? {} : _ref$commands;
   var _ref$errorHandler = _ref.errorHandler;
   var errorHandler = _ref$errorHandler === undefined ? defaultErrorHandler : _ref$errorHandler;
   var _ref$unexpectedErrorMessage = _ref.unexpectedErrorMessage;
   var unexpectedErrorMessage = _ref$unexpectedErrorMessage === undefined ? 'Oops! Something went very wrong on the server.' : _ref$unexpectedErrorMessage;
 
-  _.extend(this, { communication: communication, intents: intents, commands: commands });
-  _.extend(this.commands, cs.BUILTIN_COMMANDS);
+  this.communication = communication;
   this.config = {
     errorHandler: errorHandler,
     unexpectedErrorMessage: unexpectedErrorMessage
@@ -1385,7 +1380,9 @@ function ServerPlugin(_ref) {
 ServerPlugin.prototype = {
   applyPlugin: function applyPlugin(u) {
     this.u = u;
-    this.processDefinitions('Node', { commands: this.commands, intents: this.intents }, u.types.Node.proto);
+
+    // apply definitions
+    u.define({ commands: cs.BUILTIN_COMMANDS }); // _seed command
 
     return {
       name: 'server',

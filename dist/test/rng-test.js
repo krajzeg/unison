@@ -11,18 +11,16 @@ describe("Server-side RNG", function () {
   it("should send random numbers generated in commands as command extras", function () {
     var comm = new ServerCommunicationMock();
     var u = unison({});
-    u.plugin(server({ 
-      communication: comm, 
+    u.plugin(server({ communication: comm }));
+    u.plugin(rng({ version: 'server', seed: 12345 }));
+    u.define({ 
       commands: { 
         rollSomeDice: function rollSomeDice() {
           var u = this.u;
           var d6 = u.rng.int(1, 6 + 1), d12 = u.rng.int(1, 12 + 1);
-          this.update({ d6: d6, d12: d12 });} } }));
+          this.update({ d6: d6, d12: d12 });} } });
 
 
-
-    u.plugin(rng({ 
-      version: 'server', seed: 12345 }));
 
 
     comm.attach('client1');
@@ -40,17 +38,15 @@ describe("Server-side RNG", function () {
   it("should send correct extras for rng.pick()", function () {
     var comm = new ServerCommunicationMock();
     var u = unison({});
-    u.plugin(server({ 
-      communication: comm, 
+    u.plugin(server({ communication: comm }));
+    u.plugin(rng({ version: 'server', seed: 12345 }));
+    u.define({ 
       commands: { 
         pickOne: function pickOne() {
           var u = this.u, picked = u.rng.pick([3, 4, 5, 6, 7]);
-          this.update({ picked: picked });} } }));
+          this.update({ picked: picked });} } });
 
 
-
-    u.plugin(rng({ 
-      version: 'server', seed: 12345 }));
 
 
     comm.attach('client1');
@@ -67,17 +63,15 @@ describe("Server-side RNG", function () {
   it("should shuffle correctly", function () {
     var comm = new ServerCommunicationMock();
     var u = unison({});
-    u.plugin(server({ 
-      communication: comm, 
+    u.plugin(server({ communication: comm }));
+    u.plugin(rng({ version: 'server', seed: 12346 }));
+    u.define({ 
       commands: { 
         shuffle: function shuffle() {
           var u = this.u, shuffled = u.rng.shuffle([1, 2, 3, 4, 5]);
-          this.update({ shuffled: shuffled });} } }));
+          this.update({ shuffled: shuffled });} } });
 
 
-
-    u.plugin(rng({ 
-      version: 'server', seed: 12346 }));
 
 
     comm.attach('client1');

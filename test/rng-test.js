@@ -11,8 +11,9 @@ describe("Server-side RNG", () => {
   it("should send random numbers generated in commands as command extras", () => {
     let comm = new ServerCommunicationMock();
     let u = unison({});
-    u.plugin(server({
-      communication: comm,
+    u.plugin(server({communication: comm}));
+    u.plugin(rng({version: 'server', seed: 12345}));
+    u.define({
       commands: {
         rollSomeDice() {
           let u = this.u;
@@ -20,10 +21,7 @@ describe("Server-side RNG", () => {
           this.update({d6, d12});
         }
       }
-    }));
-    u.plugin(rng({
-      version: 'server', seed: 12345
-    }));
+    });
 
     comm.attach('client1');
 
@@ -40,18 +38,16 @@ describe("Server-side RNG", () => {
   it("should send correct extras for rng.pick()", () => {
     let comm = new ServerCommunicationMock();
     let u = unison({});
-    u.plugin(server({
-      communication: comm,
+    u.plugin(server({communication: comm}));
+    u.plugin(rng({version: 'server', seed: 12345}));
+    u.define({
       commands: {
         pickOne() {
           let u = this.u, picked = u.rng.pick([3, 4, 5, 6, 7]);
           this.update({picked});
         }
       }
-    }));
-    u.plugin(rng({
-      version: 'server', seed: 12345
-    }));
+    });
 
     comm.attach('client1');
 
@@ -67,18 +63,16 @@ describe("Server-side RNG", () => {
   it("should shuffle correctly", () => {
     let comm = new ServerCommunicationMock();
     let u = unison({});
-    u.plugin(server({
-      communication: comm,
+    u.plugin(server({communication: comm}));
+    u.plugin(rng({version: 'server', seed: 12346}));
+    u.define({
       commands: {
         shuffle() {
           let u = this.u, shuffled = u.rng.shuffle([1,2,3,4,5]);
           this.update({shuffled});
         }
       }
-    }));
-    u.plugin(rng({
-      version: 'server', seed: 12346
-    }));
+    });
 
     comm.attach('client1');
 
