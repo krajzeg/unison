@@ -11,14 +11,14 @@ describe("Server plugin", () => {
     let comm = new CommunicationMock();
 
     let u = unison({bird: {}})
-      .plugin(server({
-        communication: comm,
-        commands: {
-          frob(howHard) {
-            this.update({frobbed: howHard});
-          }
+    u.define({
+      commands: {
+        frob(howHard) {
+          this.update({frobbed: howHard});
         }
-      }));
+      }
+    });
+    u.plugin(server({communication: comm}));
 
     comm.attach('client1');
     comm.attach('client2');

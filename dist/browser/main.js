@@ -49,8 +49,9 @@ function Unison() {
   // Node is the master-type that they all inherit from, and can be used
   // to add capabilities to all nodes
   this.types = {
-    Node: { definition: {}, proto: Object.create(UnisonNode.prototype) }
+    Node: { definitions: {}, proto: Object.create(UnisonNode.prototype) }
   };
+  this.onDefineCallbacks = [];
 }
 
 Unison.prototype = {
@@ -151,16 +152,74 @@ Unison.prototype = {
     });
   },
 
-  plugin: function plugin(pluginFn) {
-    var additions = pluginFn(this) || {};
-    this.registerGlobalProperties(additions.methods || {});
-    this.registerNodeProperties(additions.nodeMethods || {});
-    this.applyGlobalWrappers(additions.methodWrappers || {});
-    this.applyNodeWrappers(additions.nodeMethodWrappers || {});
+  type: function type(name) {
+    if (!this.types[name]) {
+      this.types[name] = {
+        definitions: {},
+        proto: Object.create(this.types.Node.proto)
+      };
+    }
+    return this.types[name];
+  },
 
-    if (additions.name) {
+  // Defines something about a chosen type (or all nodes). What exactly can be defined depends on the added plugins.
+  // Server and client plugins allow you to define 'commmands' and 'intents'. The relations plugin adds 'relations'.
+  define: function define(typeOrDefinitions, definitions) {
+    // determine arguments (either define({...}) or define('Type', {...}))
+    var typeName = undefined;
+    if (!definitions) {
+      typeName = 'Node';definitions = typeOrDefinitions;
+    } else {
+      typeName = typeOrDefinitions;
+    }
+
+    // grab the type object
+    var typeObj = this.type(typeName);
+
+    // go through all plugins that process definitions
+    _.each(this.onDefineCallbacks, function (callback) {
+      callback(typeName, definitions, typeObj.proto);
+    });
+
+    // store the definitions in case a plugin appears later that would want them
+    // we make sure that array/object-like properties get merged instead of overwritten
+    _.each(definitions, function (newlyDefined, name) {
+      var existing = typeObj.definitions[name];
+      if (existing instanceof Array) {
+        typeObj.definitions[name] = existing.concat(newlyDefined);
+      } else if ((0, _util.isObject)(existing)) {
+        typeObj.definitions[name] = _.extend(existing, newlyDefined);
+      } else {
+        typeObj.definitions[name] = newlyDefined;
+      }
+    });
+  },
+
+  plugin: function plugin(pluginFn) {
+    var _this4 = this;
+
+    var options = pluginFn(this) || {};
+    this.registerGlobalProperties(options.methods || {});
+    this.registerNodeProperties(options.nodeMethods || {});
+    this.applyGlobalWrappers(options.methodWrappers || {});
+    this.applyNodeWrappers(options.nodeMethodWrappers || {});
+
+    if (options.name) {
       this.plugins = this.plugins || {};
-      this.plugins[additions.name] = pluginFn;
+      this.plugins[options.name] = pluginFn;
+    }
+
+    if (options.onDefine) {
+      (function () {
+        var onDefine = options.onDefine;
+
+        // apply existing definitions
+        _.each(_this4.types, function (type, typeName) {
+          return onDefine(typeName, type.definitions, type.proto);
+        });
+        // make sure future definitions are picked up
+        _this4.onDefineCallbacks.push(onDefine);
+      })();
     }
 
     return this;
@@ -216,11 +275,11 @@ var UnisonNode = (function () {
   }, {
     key: 'children',
     value: function children() {
-      var _this4 = this;
+      var _this5 = this;
 
       var children = [];
       _.each(this.get, function (obj, id) {
-        if ((0, _util.isObject)(obj)) children.push(_this4.child(id));
+        if ((0, _util.isObject)(obj)) children.push(_this5.child(id));
       });
       return children;
     }

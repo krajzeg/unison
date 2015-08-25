@@ -10,15 +10,15 @@ describe("Server plugin", function () {
   it("should translate command methods into local changes and network messages to all clients", function () {
     var comm = new CommunicationMock();
 
-    var u = unison({ bird: {} }).
-    plugin(server({ 
-      communication: comm, 
+    var u = unison({ bird: {} });
+    u.define({ 
       commands: { 
         frob: function frob(howHard) {
-          this.update({ frobbed: howHard });} } }));
+          this.update({ frobbed: howHard });} } });
 
 
 
+    u.plugin(server({ communication: comm }));
 
     comm.attach('client1');
     comm.attach('client2');
