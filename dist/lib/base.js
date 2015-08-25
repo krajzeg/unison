@@ -9,7 +9,7 @@
 Unison;function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { 'default': obj };}function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _util = require('./util');var _immutableStates = require('./immutable-states');var _events3 = require('./events');var _events4 = _interopRequireDefault(_events3); // Main Unison object.
 // Uses classical instead of ES6 classes to allow Unison.apply(...) down the road.
 var _ = require('lodash');function Unison() {var initialState = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];this._events = new _events4['default'](this);
-  this._states = { 0: initialState };
+  this._states = { 0: _.extend(initialState, { _t: 'Root' }) };
   this._current = 0;
   this._nextId = 1;
 
@@ -24,10 +24,13 @@ var _ = require('lodash');function Unison() {var initialState = arguments.length
   // nodes in the Unison state can have different class-like types
   // Node is the master-type that they all inherit from, and can be used
   // to add capabilities to all nodes
-  this.types = { 
-    Node: { definitions: {}, proto: Object.create(UnisonNode.prototype) } };
+  this.types = {};
+  this.types.Node = { definitions: {}, proto: Object.create(UnisonNode.prototype) };
+  this.types.Root = { definitions: {}, proto: Object.create(this.types.Node.proto) };
 
+  // machinery behind the 'define' call
   this.onDefineCallbacks = [];}
+
 
 Unison.prototype = { 
   grab: function grab() {var path = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];var time = arguments.length <= 1 || arguments[1] === undefined ? undefined : arguments[1];

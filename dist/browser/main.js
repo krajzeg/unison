@@ -33,7 +33,7 @@ function Unison() {
 
   this._events = new _events4['default'](this);
 
-  this._states = { 0: initialState };
+  this._states = { 0: _.extend(initialState, { _t: 'Root' }) };
   this._current = 0;
   this._nextId = 1;
 
@@ -48,9 +48,11 @@ function Unison() {
   // nodes in the Unison state can have different class-like types
   // Node is the master-type that they all inherit from, and can be used
   // to add capabilities to all nodes
-  this.types = {
-    Node: { definitions: {}, proto: Object.create(UnisonNode.prototype) }
-  };
+  this.types = {};
+  this.types.Node = { definitions: {}, proto: Object.create(UnisonNode.prototype) };
+  this.types.Root = { definitions: {}, proto: Object.create(this.types.Node.proto) };
+
+  // machinery behind the 'define' call
   this.onDefineCallbacks = [];
 }
 

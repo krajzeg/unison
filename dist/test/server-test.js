@@ -139,7 +139,7 @@ describe("Server plugin", function () {
     var messages = comm.messagesSentTo('client1').slice(1); // remove the _seed command
     assert.equal(messages.length, 1);
     assert.deepEqual(messages[0], ['c', 'frob', '', []]);
-    assert.deepEqual(u().state(), { frobbed: true, futzed: true });});
+    assert.deepEqual(u().state(), { _t: 'Root', frobbed: true, futzed: true });});
 
 
   it("should not send commands to clients that have already detached", function () {
@@ -182,7 +182,7 @@ describe("Server plugin", function () {
 
     var messages = comm.messagesSentTo('client1');
     assert.deepEqual(messages, [
-    ['c', '_seed', '', [{ bird: { wingspan: 6 } }]]]);});
+    ['c', '_seed', '', [{ _t: 'Root', bird: { wingspan: 6 } }]]]);});
 
 
 
@@ -199,7 +199,7 @@ describe("Server plugin", function () {
 
     var messages = comm.messagesSentTo('client1');
     assert.deepEqual(messages, [
-    ['c', '_seed', '', [{ answer: 42 }]]]);});
+    ['c', '_seed', '', [{ _t: 'Root', answer: 42 }]]]);});
 
 
 
@@ -402,7 +402,6 @@ describe("Server plugin", function () {
     assert.equal(u('bird').get.chirped, true);
     assert.equal(u('dog').get.bark, 'loud');
     assert.throws(function () {return u().chirp();});});});
-
 
 
 
