@@ -231,6 +231,32 @@ describe("Client plugin", () => {
 
     assert.equal(u().get.sauce, "worcestershire");
   });
+
+  it("should distinguish types correctly when applying commands", () => {
+    let comm = new CommunicationMock();
+    let u = unison({
+      bird: {_t:'Bird'},
+      dog: {_t:'Dog'}
+    });
+    u.plugin(client({communication: comm}));
+
+    u.define('Bird', {
+      commands: {
+        makeNoise() { this.update({chirped: true}); }
+      }
+    });
+    u.define('Dog', {
+      commands: {
+        makeNoise() { this.update({bark: 'loud'})}
+      }
+    });
+
+    comm.pushServerCommand('makeNoise', 'bird', []);
+    comm.pushServerCommand('makeNoise', 'dog', []);
+
+    assert.equal(u('bird').get.chirped, true);
+    assert.equal(u('dog').get.bark, 'loud');
+  });
 });
 
 function expectRejection(promise) {

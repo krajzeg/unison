@@ -229,7 +229,33 @@ describe("Client plugin", function () {
 
     comm.pushServerString('["c","applySpecialSauce","",[],{"sauce":"worcestershire"}]');
 
-    assert.equal(u().get.sauce, "worcestershire");});});
+    assert.equal(u().get.sauce, "worcestershire");});
+
+
+  it("should distinguish types correctly when applying commands", function () {
+    var comm = new CommunicationMock();
+    var u = unison({ 
+      bird: { _t: 'Bird' }, 
+      dog: { _t: 'Dog' } });
+
+    u.plugin(client({ communication: comm }));
+
+    u.define('Bird', { 
+      commands: { 
+        makeNoise: function makeNoise() {this.update({ chirped: true });} } });
+
+
+    u.define('Dog', { 
+      commands: { 
+        makeNoise: function makeNoise() {this.update({ bark: 'loud' });} } });
+
+
+
+    comm.pushServerCommand('makeNoise', 'bird', []);
+    comm.pushServerCommand('makeNoise', 'dog', []);
+
+    assert.equal(u('bird').get.chirped, true);
+    assert.equal(u('dog').get.bark, 'loud');});});
 
 
 
