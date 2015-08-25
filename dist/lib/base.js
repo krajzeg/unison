@@ -33,6 +33,9 @@ Unison.prototype = {
     if (time !== undefined && !this._states[time]) 
     throw 'Can\'t create a snapshot at time ' + time + ' - no state recorded for that timestamp.';
 
+    // determine what prototype to use for this node
+    // node with a '_t' property will get the type named by it
+    // nodes with no '_t' property and non-existent nodes will just get Node
     var nodeState = path ? _.get(this.stateAt(time), path) : this.stateAt(time);
     var nodeType = nodeState && nodeState._t || 'Node';
     if (!this.types[nodeType]) 

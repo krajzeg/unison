@@ -60,6 +60,9 @@ Unison.prototype = {
 
     if (time !== undefined && !this._states[time]) throw 'Can\'t create a snapshot at time ' + time + ' - no state recorded for that timestamp.';
 
+    // determine what prototype to use for this node
+    // node with a '_t' property will get the type named by it
+    // nodes with no '_t' property and non-existent nodes will just get Node
     var nodeState = path ? _.get(this.stateAt(time), path) : this.stateAt(time);
     var nodeType = nodeState && nodeState._t || 'Node';
     if (!this.types[nodeType]) throw new Error('Node \'' + path + '\' proclaims it is of type \'' + nodeType + '\', but no such type is known.');
@@ -1321,10 +1324,13 @@ function ServerPlugin(_ref) {
 ServerPlugin.prototype = {
   applyPlugin: function applyPlugin(u) {
     this.u = u;
-    this.addNodeMethods();
+    this.processDefinitions('Node', { commands: this.commands, intents: this.intents }, u.types.Node.proto);
 
     return {
       name: 'server',
+
+      onDefine: this.processDefinitions.bind(this),
+
       methods: {
         addIntent: this.addIntent.bind(this),
         addCommand: this.addCommand.bind(this),
@@ -1429,15 +1435,17 @@ ServerPlugin.prototype = {
     });
   },
 
-  addNodeMethods: function addNodeMethods() {
+  processDefinitions: function processDefinitions(typeName, definitions, prototype) {
     var _this5 = this;
 
-    _.each(this.commands, function (cmd, name) {
-      _this5.addCommand(name, cmd);
+    // generate methods
+    var commandMethods = _.mapValues(definitions.commands || {}, function (code, name) {
+      return _this5.makeCommandMethod(name, code);
     });
-    _.each(this.intents, function (i, name) {
-      _this5.addIntent(name, i);
-    });
+    var intentMethods = definitions.intents || {};
+
+    // add to the prototype of our type
+    _.extend(prototype, commandMethods, intentMethods);
   },
 
   addCommand: function addCommand(commandName, commandCode) {

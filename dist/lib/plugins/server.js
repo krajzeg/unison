@@ -29,10 +29,13 @@ function ServerPlugin(_ref)
 ServerPlugin.prototype = { 
   applyPlugin: function applyPlugin(u) {
     this.u = u;
-    this.addNodeMethods();
+    this.processDefinitions('Node', { commands: this.commands, intents: this.intents }, u.types.Node.proto);
 
     return { 
       name: 'server', 
+
+      onDefine: this.processDefinitions.bind(this), 
+
       methods: { 
         addIntent: this.addIntent.bind(this), 
         addCommand: this.addCommand.bind(this), 
@@ -117,9 +120,15 @@ ServerPlugin.prototype = {
 
 
 
-  addNodeMethods: function addNodeMethods() {var _this5 = this;
-    _.each(this.commands, function (cmd, name) {_this5.addCommand(name, cmd);});
-    _.each(this.intents, function (i, name) {_this5.addIntent(name, i);});}, 
+  processDefinitions: function processDefinitions(typeName, definitions, prototype) {var _this5 = this;
+    // generate methods
+    var commandMethods = _.mapValues(definitions.commands || {}, function (code, name) {return (
+        _this5.makeCommandMethod(name, code));});
+
+    var intentMethods = definitions.intents || {};
+
+    // add to the prototype of our type
+    _.extend(prototype, commandMethods, intentMethods);}, 
 
 
   addCommand: function addCommand(commandName, commandCode) {
