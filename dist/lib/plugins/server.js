@@ -93,8 +93,8 @@ ServerPlugin.prototype = {
 
 
   applyIntent: function applyIntent(clientId, _ref3) {var _this4 = this;var _ref32 = _slicedToArray(_ref3, 5);var code = _ref32[0];var intentName = _ref32[1];var objectPath = _ref32[2];var args = _ref32[3];var intentId = _ref32[4];
-    var intentFn = this.intents[intentName];
     var u = this.u, target = u(objectPath);
+    var intentFn = target[intentName];
 
     args = cs.deserializeAll(u, args);
     var fullArgs = args.concat(this.clientObjects[clientId]);

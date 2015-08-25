@@ -1466,9 +1466,9 @@ ServerPlugin.prototype = {
     var args = _ref32[3];
     var intentId = _ref32[4];
 
-    var intentFn = this.intents[intentName];
     var u = this.u,
         target = u(objectPath);
+    var intentFn = target[intentName];
 
     args = cs.deserializeAll(u, args);
     var fullArgs = args.concat(this.clientObjects[clientId]);

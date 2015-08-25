@@ -37,9 +37,9 @@ describe("Server plugin", function () {
   it("should translate intents from clients into command executions via the intent methods", function () {
     var comm = new CommunicationMock();
 
-    var u = unison({ bird: {} }).
-    plugin(server({ 
-      communication: comm, 
+    var u = unison({ bird: {} });
+    u.plugin(server({ communication: comm }));
+    u.define({ 
       commands: { 
         frob: function frob(howHard, by) {
           this.update({ frobbed: howHard, by: by });} }, 
@@ -47,7 +47,7 @@ describe("Server plugin", function () {
 
       intents: { 
         pleaseFrob: function pleaseFrob(howHard, client) {
-          this.frob(howHard, client.id);} } }));
+          this.frob(howHard, client.id);} } });
 
 
 
@@ -69,13 +69,13 @@ describe("Server plugin", function () {
 
     var counterValues = {};
 
-    var u = unison({}).
-    plugin(server({ 
-      communication: comm, 
+    var u = unison({});
+    u.plugin(server({ communication: comm }));
+    u.define({ 
       intents: { 
         pleaseBumpCounter: function pleaseBumpCounter(client) {
           client.counter = client.counter ? client.counter + 1 : 1;
-          counterValues[client.id] = client.counter;} } }));
+          counterValues[client.id] = client.counter;} } });
 
 
 
@@ -92,15 +92,15 @@ describe("Server plugin", function () {
   it("should trigger before:X/after:X events on all command executions", function () {
     var comm = new CommunicationMock();
     var u = unison({});
-    u.plugin(server({ 
-      communication: comm, 
+    u.plugin(server({ communication: comm }));
+    u.define({ 
       commands: { 
         frob: function frob() {
           this.update({ frobbed: true });
           this.futz();}, 
 
         futz: function futz() {
-          this.update({ futzed: true });} } }));
+          this.update({ futzed: true });} } });
 
 
 
@@ -119,16 +119,16 @@ describe("Server plugin", function () {
 
   it("should not send commands nested in other command executions", function () {
     var comm = new CommunicationMock();
-    var u = unison({}).
-    plugin(server({ 
-      communication: comm, 
+    var u = unison({});
+    u.plugin(server({ communication: comm }));
+    u.define({ 
       commands: { 
         frob: function frob() {
           this.update({ frobbed: true });
           this.futz();}, 
 
         futz: function futz() {
-          this.update({ futzed: true });} } }));
+          this.update({ futzed: true });} } });
 
 
 
@@ -145,12 +145,12 @@ describe("Server plugin", function () {
   it("should not send commands to clients that have already detached", function () {
     var comm = new CommunicationMock();
 
-    var u = unison({ bird: {} }).
-    plugin(server({ 
-      communication: comm, 
+    var u = unison({ bird: {} });
+    u.plugin(server({ communication: comm }));
+    u.define({ 
       commands: { 
         frob: function frob(howHard) {
-          this.update({ frobbed: howHard });} } }));
+          this.update({ frobbed: howHard });} } });
 
 
 
@@ -168,12 +168,12 @@ describe("Server plugin", function () {
   it("should send a '_seed' command with the current state to newly attached clients", function () {
     var comm = new CommunicationMock();
 
-    var u = unison({ bird: { wingspan: 6 } }).
-    plugin(server({ 
-      communication: comm, 
+    var u = unison({ bird: { wingspan: 6 } });
+    u.plugin(server({ communication: comm }));
+    u.define({ 
       commands: { 
         frob: function frob(howHard) {
-          this.update({ frobbed: howHard });} } }));
+          this.update({ frobbed: howHard });} } });
 
 
 
@@ -203,31 +203,18 @@ describe("Server plugin", function () {
 
 
 
-  it("should allow adding commands and intents after the fact", function () {
-    var comm = new CommunicationMock();
-    var u = unison({ bird: {} }).
-    plugin(server({ communication: comm }));
-
-    u.addIntent('pleaseFrob', function () {this.frob();});
-    u.addCommand('frob', function () {this.update({ frobbed: true });});
-
-    u('bird').pleaseFrob();
-
-    assert.ok(u('bird').get.frobbed);});
-
-
   it("should serialize and deserialize objects over the network correctly", function () {
     var comm = new CommunicationMock();
 
-    var u = unison({ bird: {}, human: {} }).
-    plugin(server({ 
-      communication: comm, 
+    var u = unison({ bird: {}, human: {} });
+    u.plugin(server({ communication: comm }));
+    u.define({ 
       commands: { 
         frob: function frob(who) {who.update({ frobbedBy: this.path() });} }, 
 
       intents: { 
         pleaseFrob: function pleaseFrob(who) {
-          this.frob(who);} } }));
+          this.frob(who);} } });
 
 
 
@@ -244,15 +231,16 @@ describe("Server plugin", function () {
   it("should send correct responses when an intent function returns a value", function (done) {
     var comm = new CommunicationMock();
 
-    var srv = server({ 
-      communication: comm, 
+    var u = unison({});
+    u.plugin(server({ communication: comm }));
+    u.define({ 
       intents: { 
         pleaseFrob: function pleaseFrob() {
           return "Frobbed!";} } });
 
 
 
-    var u = unison({}).plugin(srv);
+
     comm.attach('client1');
 
     u.plugins.server.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(function () {
@@ -265,15 +253,16 @@ describe("Server plugin", function () {
   it("should act correctly when an intent function returns a promise", function (done) {
     var comm = new CommunicationMock();
 
-    var srv = server({ 
-      communication: comm, 
+    var u = unison({});
+    u.plugin(server({ communication: comm }));
+    u.define({ 
       intents: { 
         pleaseFrob: function pleaseFrob() {
           return wait(10).then(function () {return "Frobbed!";});} } });
 
 
 
-    var u = unison({}).plugin(srv);
+
     comm.attach('client1');
 
     u.plugins.server.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(function () {
@@ -288,16 +277,18 @@ describe("Server plugin", function () {
 
     var srv = server({ 
       communication: comm, 
-      intents: { 
-        pleaseFrob: function pleaseFrob() {
-          throw new Error("It hurts a lot.");} }, 
-
-
       unexpectedErrorMessage: 'Argh!', 
       errorHandler: errorSpy });
 
-
     var u = unison({}).plugin(srv);
+    u.define({ 
+      intents: { 
+        pleaseFrob: function pleaseFrob() {
+          throw new Error("It hurts a lot.");} } });
+
+
+
+
     comm.attach('client1');
 
     u.plugins.server.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(function () {
@@ -313,15 +304,17 @@ describe("Server plugin", function () {
     var comm = new CommunicationMock(), errorSpy = sinon.spy();
     var srv = server({ 
       communication: comm, 
-      intents: { 
-        pleaseFrob: function pleaseFrob() {
-          throw new unison.UserError("Not frobbable.");} }, 
-
-
       errorHandler: errorSpy });
 
-
     var u = unison({}).plugin(srv);
+    u.define({ 
+      intents: { 
+        pleaseFrob: function pleaseFrob() {
+          throw new unison.UserError("Not frobbable.");} } });
+
+
+
+
     comm.attach('client1');
 
     u.plugins.server.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(function () {
@@ -335,15 +328,16 @@ describe("Server plugin", function () {
   it("should serialize objects returned from intents", function (done) {
     var comm = new CommunicationMock();
 
-    var srv = server({ 
-      communication: comm, 
+    var u = unison({ cockatoo: {} });
+    u.plugin(server({ communication: comm }));
+    u.define({ 
       intents: { 
         pleaseFrob: function pleaseFrob() {
           return this;} } });
 
 
 
-    var u = unison({ cockatoo: {} }).plugin(srv);
+
     comm.attach('client1');
 
     u.plugins.server.applyIntent('client1', ['i', 'pleaseFrob', 'cockatoo', [], 1]).then(function () {
@@ -362,12 +356,14 @@ describe("Server plugin", function () {
 
   it("should allow extra information to be sent along with commands by other plugins", function () {
     var comm = new CommunicationMock();
-    var u = unison({}).plugin(server({ 
-      communication: comm, 
+
+    var u = unison({});
+    u.plugin(server({ communication: comm }));
+    u.define({ 
       commands: { 
         applySpecialSauce: function applySpecialSauce() {
           var u = this.u;
-          u.plugins.server.getCommandExtras().specialSauce = 'applied';} } }));
+          u.plugins.server.getCommandExtras().specialSauce = 'applied';} } });
 
 
 

@@ -37,20 +37,20 @@ describe("Server plugin", () => {
   it("should translate intents from clients into command executions via the intent methods", () => {
     let comm = new CommunicationMock();
 
-    let u = unison({bird: {}})
-      .plugin(server({
-        communication: comm,
-        commands: {
-          frob(howHard, by) {
-            this.update({frobbed: howHard, by: by});
-          }
-        },
-        intents: {
-          pleaseFrob(howHard, client) {
-            this.frob(howHard, client.id);
-          }
+    let u = unison({bird: {}});
+    u.plugin(server({communication: comm}));
+    u.define({
+      commands: {
+        frob(howHard, by) {
+          this.update({frobbed: howHard, by: by});
         }
-      }));
+      },
+      intents: {
+        pleaseFrob(howHard, client) {
+          this.frob(howHard, client.id);
+        }
+      }
+    });
 
     comm.attach('client1');
     comm.pushClientMessage('client1', ['i', 'pleaseFrob', 'bird', ['lightly'], 1]);
@@ -69,16 +69,16 @@ describe("Server plugin", () => {
 
     let counterValues = {};
 
-    let u = unison({})
-      .plugin(server({
-        communication: comm,
-        intents: {
-          pleaseBumpCounter(client) {
-            client.counter = client.counter ? client.counter + 1 : 1;
-            counterValues[client.id] = client.counter;
-          }
+    let u = unison({});
+    u.plugin(server({communication: comm}));
+    u.define({
+      intents: {
+        pleaseBumpCounter(client) {
+          client.counter = client.counter ? client.counter + 1 : 1;
+          counterValues[client.id] = client.counter;
         }
-      }));
+      }
+    });
 
     comm.attach('client1'); comm.attach('client2');
     comm.pushClientMessage('client1', ['i', 'pleaseBumpCounter', '', [], 1]);
@@ -91,9 +91,9 @@ describe("Server plugin", () => {
 
   it("should trigger before:X/after:X events on all command executions", () => {
     let comm = new CommunicationMock();
-    let u = unison({})
-    u.plugin(server({
-      communication: comm,
+    let u = unison({});
+    u.plugin(server({communication: comm}));
+    u.define({
       commands: {
         frob() {
           this.update({frobbed: true});
@@ -103,7 +103,7 @@ describe("Server plugin", () => {
           this.update({futzed: true});
         }
       }
-    }));
+    });
 
     let calls = [], events = ['before:frob', 'after:frob', 'before:futz', 'after:futz']
     _.map(events, (event) => {
@@ -119,19 +119,19 @@ describe("Server plugin", () => {
 
   it("should not send commands nested in other command executions", () => {
     let comm = new CommunicationMock();
-    let u = unison({})
-      .plugin(server({
-        communication: comm,
-        commands: {
-          frob() {
-            this.update({frobbed: true});
-            this.futz();
-          },
-          futz() {
-            this.update({futzed: true});
-          }
+    let u = unison({});
+    u.plugin(server({communication: comm}));
+    u.define({
+      commands: {
+        frob() {
+          this.update({frobbed: true});
+          this.futz();
+        },
+        futz() {
+          this.update({futzed: true});
         }
-      }));
+      }
+    });
 
     comm.attach('client1');
     u().frob();
@@ -145,15 +145,15 @@ describe("Server plugin", () => {
   it("should not send commands to clients that have already detached", () => {
     let comm = new CommunicationMock();
 
-    let u = unison({bird: {}})
-      .plugin(server({
-        communication: comm,
-        commands: {
-          frob(howHard) {
-            this.update({frobbed: howHard});
-          }
+    let u = unison({bird: {}});
+    u.plugin(server({communication: comm}));
+    u.define({
+      commands: {
+        frob(howHard) {
+          this.update({frobbed: howHard});
         }
-      }));
+      }
+    });
 
     comm.attach('client1');
     u('bird').frob('lightly');
@@ -168,15 +168,15 @@ describe("Server plugin", () => {
   it("should send a '_seed' command with the current state to newly attached clients", () => {
     let comm = new CommunicationMock();
 
-    let u = unison({bird: {wingspan: 6}})
-      .plugin(server({
-        communication: comm,
-        commands: {
-          frob(howHard) {
-            this.update({frobbed: howHard});
-          }
+    let u = unison({bird: {wingspan: 6}});
+    u.plugin(server({communication: comm}));
+    u.define({
+      commands: {
+        frob(howHard) {
+          this.update({frobbed: howHard});
         }
-      }));
+      }
+    });
 
     comm.attach('client1');
 
@@ -203,34 +203,21 @@ describe("Server plugin", () => {
     ]);
   });
 
-  it("should allow adding commands and intents after the fact", () => {
-    let comm = new CommunicationMock();
-    let u = unison({bird: {}})
-      .plugin(server({communication: comm}));
-
-    u.addIntent('pleaseFrob', function() { this.frob(); });
-    u.addCommand('frob', function() { this.update({frobbed: true}); });
-
-    u('bird').pleaseFrob();
-
-    assert.ok(u('bird').get.frobbed);
-  });
-
   it("should serialize and deserialize objects over the network correctly", () => {
     let comm = new CommunicationMock();
 
-    let u = unison({bird: {}, human: {}})
-      .plugin(server({
-        communication: comm,
-        commands: {
-          frob(who) { who.update({frobbedBy: this.path()}); }
-        },
-        intents: {
-          pleaseFrob(who) {
-            this.frob(who);
-          }
+    let u = unison({bird: {}, human: {}});
+    u.plugin(server({communication: comm}));
+    u.define({
+      commands: {
+        frob(who) { who.update({frobbedBy: this.path()}); }
+      },
+      intents: {
+        pleaseFrob(who) {
+          this.frob(who);
         }
-      }));
+      }
+    });
 
     comm.attach('client1');
     comm.pushClientMessage('client1', ['i', 'pleaseFrob', 'bird', [{_u: 'human'}], 1]);
@@ -244,15 +231,16 @@ describe("Server plugin", () => {
   it("should send correct responses when an intent function returns a value", (done) => {
     let comm = new CommunicationMock();
 
-    let srv = server({
-      communication: comm,
+    let u = unison({});
+    u.plugin(server({communication: comm}));
+    u.define({
       intents: {
         pleaseFrob() {
           return "Frobbed!";
         }
       }
     });
-    let u = unison({}).plugin(srv);
+
     comm.attach('client1');
 
     u.plugins.server.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(() => {
@@ -265,15 +253,16 @@ describe("Server plugin", () => {
   it("should act correctly when an intent function returns a promise", (done) => {
     let comm = new CommunicationMock();
 
-    let srv = server({
-      communication: comm,
+    let u = unison({});
+    u.plugin(server({communication: comm}));
+    u.define({
       intents: {
         pleaseFrob() {
           return wait(10).then(() => "Frobbed!");
         }
       }
     });
-    let u = unison({}).plugin(srv);
+
     comm.attach('client1');
 
     u.plugins.server.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(() => {
@@ -288,16 +277,18 @@ describe("Server plugin", () => {
 
     let srv = server({
       communication: comm,
+      unexpectedErrorMessage: 'Argh!',
+      errorHandler: errorSpy
+    });
+    let u = unison({}).plugin(srv);
+    u.define({
       intents: {
         pleaseFrob() {
           throw new Error("It hurts a lot.")
         }
-      },
-      unexpectedErrorMessage: 'Argh!',
-      errorHandler: errorSpy
+      }
     });
 
-    let u = unison({}).plugin(srv);
     comm.attach('client1');
 
     u.plugins.server.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(() => {
@@ -313,15 +304,17 @@ describe("Server plugin", () => {
     let comm = new CommunicationMock(), errorSpy = sinon.spy();
     let srv = server({
       communication: comm,
+      errorHandler: errorSpy
+    });
+    let u = unison({}).plugin(srv);
+    u.define({
       intents: {
         pleaseFrob() {
           throw new unison.UserError("Not frobbable.")
         }
-      },
-      errorHandler: errorSpy
+      }
     });
 
-    let u = unison({}).plugin(srv);
     comm.attach('client1');
 
     u.plugins.server.applyIntent('client1', ['i', 'pleaseFrob', '', [], 1]).then(() => {
@@ -335,15 +328,16 @@ describe("Server plugin", () => {
   it("should serialize objects returned from intents", (done) => {
     let comm = new CommunicationMock();
 
-    let srv = server({
-      communication: comm,
+    let u = unison({cockatoo: {}});
+    u.plugin(server({communication: comm}));
+    u.define({
       intents: {
         pleaseFrob() {
           return this;
         }
       }
     });
-    let u = unison({cockatoo: {}}).plugin(srv);
+
     comm.attach('client1');
 
     u.plugins.server.applyIntent('client1', ['i', 'pleaseFrob', 'cockatoo', [], 1]).then(() => {
@@ -362,15 +356,17 @@ describe("Server plugin", () => {
 
   it("should allow extra information to be sent along with commands by other plugins", () => {
     let comm = new CommunicationMock();
-    let u = unison({}).plugin(server({
-      communication: comm,
+
+    let u = unison({});
+    u.plugin(server({communication: comm}));
+    u.define({
       commands: {
         applySpecialSauce() {
           let u = this.u;
           u.plugins.server.getCommandExtras().specialSauce = 'applied';
         }
       }
-    }));
+    });
 
     comm.attach('client1');
     u().applySpecialSauce();
