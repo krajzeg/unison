@@ -25,8 +25,8 @@ var _ = require('lodash');function Unison() {var initialState = arguments.length
   // Node is the master-type that they all inherit from, and can be used
   // to add capabilities to all nodes
   this.types = {};
-  this.types.Node = { definitions: {}, proto: Object.create(UnisonNode.prototype) };
-  this.types.Root = { definitions: {}, proto: Object.create(this.types.Node.proto) };
+  this.types.Node = { name: 'Node', definitions: {}, proto: Object.create(UnisonNode.prototype) };
+  this.types.Root = { name: 'Root', definitions: {}, proto: Object.create(this.types.Node.proto) };
 
   // machinery behind the 'define' call
   this.onDefineCallbacks = [];}
@@ -116,6 +116,7 @@ Unison.prototype = {
   type: function type(name) {
     if (!this.types[name]) {
       this.types[name] = { 
+        name: name, 
         definitions: {}, 
         proto: Object.create(this.types.Node.proto) };}
 
@@ -190,7 +191,12 @@ UnisonNode = (function () {
   // === Properties of this node
   _createClass(UnisonNode, [{ key: 'path', value: 
     function path() {
-      return this._path;} }, { key: 'id', value: 
+      return this._path;} }, { key: 'type', value: 
+
+
+    function type() {
+      var typeName = this.get && this.get._t || 'Node';
+      return this.u.type(typeName);} }, { key: 'id', value: 
 
 
     function id() {

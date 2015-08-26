@@ -49,8 +49,8 @@ function Unison() {
   // Node is the master-type that they all inherit from, and can be used
   // to add capabilities to all nodes
   this.types = {};
-  this.types.Node = { definitions: {}, proto: Object.create(UnisonNode.prototype) };
-  this.types.Root = { definitions: {}, proto: Object.create(this.types.Node.proto) };
+  this.types.Node = { name: 'Node', definitions: {}, proto: Object.create(UnisonNode.prototype) };
+  this.types.Root = { name: 'Root', definitions: {}, proto: Object.create(this.types.Node.proto) };
 
   // machinery behind the 'define' call
   this.onDefineCallbacks = [];
@@ -157,6 +157,7 @@ Unison.prototype = {
   type: function type(name) {
     if (!this.types[name]) {
       this.types[name] = {
+        name: name,
         definitions: {},
         proto: Object.create(this.types.Node.proto)
       };
@@ -245,6 +246,12 @@ var UnisonNode = (function () {
     key: 'path',
     value: function path() {
       return this._path;
+    }
+  }, {
+    key: 'type',
+    value: function type() {
+      var typeName = this.get && this.get._t || 'Node';
+      return this.u.type(typeName);
     }
   }, {
     key: 'id',
@@ -1046,38 +1053,43 @@ function relations(rels) {
 
 var Relations = (function () {
   function Relations(relations) {
-    var _this = this;
-
     _classCallCheck(this, Relations);
 
-    this.relatives = {};
-
-    _.each(relations, function (rel) {
-      _this.relatives[rel.AtoB] = rel;
-      _this.relatives[rel.BtoA] = rel;
-    });
+    this.relations = relations;
   }
 
   _createClass(Relations, [{
-    key: 'find',
-    value: function find(name) {
-      var rel = this.relatives[name];
-      if (!rel) throw new Error('Unknown relation name: \'' + name + '\'');
-      return rel;
-    }
-  }, {
-    key: 'findInverse',
-    value: function findInverse(name) {
-      var rel = this.find(name);
-      return rel.AtoB == name ? rel.BtoA : rel.AtoB;
-    }
+    key: 'processDefinitions',
+    value: function processDefinitions(typeName, defs, prototype) {
+      var u = this.u,
+          rels = defs.relations || {};
 
-    // Returns 'true' if the object can only be in this relation with one other object (e.g. "is located in")
-  }, {
-    key: 'isSingular',
-    value: function isSingular(name) {
-      var rel = this.find(name);
-      return !!(rel.AtoB == name && rel.B || rel.BtoA == name && rel.A);
+      _.each(rels, function (rel) {
+        rel.withType = rel.withType || 'Node';
+        var aType = u.type(typeName),
+            bType = u.type(rel.withType);
+        var aProto = prototype,
+            bProto = bType.proto;
+
+        // add predicates
+        aProto[rel.AtoB] = makeCheckFn(rel.AtoB);
+        bProto[rel.BtoA] = makeCheckFn(rel.BtoA);
+
+        // add getters
+        if (rel.B) aProto[rel.B] = makeSingleGetter(rel.AtoB);
+        if (rel.Bs) aProto[rel.Bs] = makeMultipleGetter(rel.AtoB);
+        if (rel.A) bProto[rel.A] = makeSingleGetter(rel.BtoA);
+        if (rel.As) bProto[rel.As] = makeMultipleGetter(rel.BtoA);
+
+        // register relations for easy lookup
+        if (!aType.relations) aType.relations = {};
+        if (!bType.relations) bType.relations = {};
+
+        var aRels = aType.relations,
+            bRels = bType.relations || {};
+        var inverseRel = { withType: typeName, AtoB: rel.BtoA, BtoA: rel.AtoB, A: rel.B, B: rel.A, As: rel.Bs, Bs: rel.As };
+        aRels[rel.AtoB] = rel;bRels[rel.BtoA] = inverseRel;
+      });
     }
   }, {
     key: 'applyPlugin',
@@ -1100,24 +1112,13 @@ var Relations = (function () {
         };
       }
 
-      // add all relation predicates
-      var relationNames = _.keys(this.relatives);
-      var predicates = _.object(_.map(relationNames, function (name) {
-        return [name, makeCheckFn(name)];
-      }));
-
-      // add all relation getter methods
-      var getters = {};
-      _.each(this.relatives, function (rel) {
-        if (rel.A) getters[rel.A] = makeSingleGetter(rel.BtoA);
-        if (rel.B) getters[rel.B] = makeSingleGetter(rel.AtoB);
-        if (rel.As) getters[rel.As] = makeMultipleGetter(rel.BtoA);
-        if (rel.Bs) getters[rel.Bs] = makeMultipleGetter(rel.AtoB);
-      });
+      // apply definitions
+      u.define({ relations: this.relations });
 
       // done!
       return {
-        nodeMethods: _.extend(fallbackMethods, predicates, getters)
+        nodeMethods: _.extend(fallbackMethods),
+        onDefine: this.processDefinitions.bind(this)
       };
     }
   }]);
@@ -1127,17 +1128,24 @@ var Relations = (function () {
 
 function makeRelateFn(relations) {
   return function (name, otherSide) {
-    addRelation(relations, this, name, otherSide, relations.isSingular(name));
+    var rel = this.type().relations[name];
+    if (!rel) throw new Error(this.type().name + ' objects cannot enter into relations named \'' + name + '\'.');
 
-    var inverse = relations.findInverse(name);
-    addRelation(relations, otherSide, inverse, this, relations.isSingular(inverse));
+    var isSingularRelation = !!rel.B;
+    addRelation(this, name, otherSide, isSingularRelation);
+    var inverse = rel.BtoA,
+        isInverseSingular = rel.A;
+    addRelation(otherSide, inverse, this, isInverseSingular);
   };
 }
 
 function makeCeaseFn(relations) {
   return function (name, otherSide) {
-    removeRelation(relations, this, name, otherSide);
-    removeRelation(relations, otherSide, relations.findInverse(name), this);
+    var rel = this.type().relations[name];
+    if (!rel) throw new Error(this.type().name + ' objects cannot enter into relations named \'' + name + '\'.');
+
+    removeRelation(this, name, otherSide);
+    removeRelation(otherSide, rel.BtoA, this);
   };
 }
 
@@ -1159,30 +1167,36 @@ function makeSingleGetter(relationName) {
 
 function makeMultipleGetter(relationName) {
   return function () {
-    var _this2 = this;
+    var _this = this;
 
     var rels = this.get[relationName] || [];
     var time = this.timestamp();
     return _.map(rels, function (path) {
-      return _this2.u(path, time);
+      return _this.u(path, time);
     });
   };
 }
 
-function addRelation(relations, fromObj, name, toObj) {
-  var removePreviousRelations = arguments.length <= 4 || arguments[4] === undefined ? false : arguments[4];
+function addRelation(fromObj, name, toObj) {
+  var removePreviousRelations = arguments.length <= 3 || arguments[3] === undefined ? false : arguments[3];
 
   var u = fromObj.u,
       toPath = toObj.path();
+
+  var fromType = fromObj.type(),
+      toType = toObj.type();
+  var rel = fromType.relations[name];
+  if (!rel) throw new Error('Object of type \'' + fromType.name + '\' cannot enter relations named \'' + name + '\'.');
+  if (rel.withType != toType.name) throw new Error(fromType.name + ' objects enter \'' + name + '\' relations only with ' + rel.withType + ' objects.');
 
   var currentRels = fromObj.get[name] || [];
   if (_.contains(currentRels, toPath)) throw new Error('Relation \'' + fromObj.path() + ' ' + name + ' ' + toPath + '\' already exists.');
 
   if (removePreviousRelations && currentRels.length) {
     (function () {
-      var inverse = relations.findInverse(name);
+      var inverse = rel.BtoA;
       _.each(currentRels, function (path) {
-        removeRelation(relations, u(path), inverse, fromObj);
+        removeRelation(u(path), inverse, fromObj);
       });
       currentRels = [];
     })();
@@ -1194,11 +1208,11 @@ function addRelation(relations, fromObj, name, toObj) {
   fromObj.trigger('now:' + name, { target: toObj });
 }
 
-function removeRelation(relations, fromObj, name, toObj) {
+function removeRelation(fromObj, name, toObj) {
   var toPath = toObj.path();
 
   var rels = fromObj.get[name] || [];
-  if (!_.contains(rels, toPath)) throw new Error('Relation \'' + fromObj.path() + ' ' + name + ' ' + toPath + '\' can\'t be removed, because it doesn\'t exist.');
+  if (!_.contains(rels, toPath)) throw new Error('Relation \'' + fromObj.path() + ' ' + name + ' ' + toPath + '\' can\'t be removed because it doesn\'t exist.');
 
   fromObj.update(_defineProperty({}, name, _.without(rels, toPath)));
   fromObj.trigger('noLonger:' + name, { target: toObj });
