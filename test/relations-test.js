@@ -115,7 +115,12 @@ describe("Relations plugin", () => {
       tom: {}, jerry:{}
     });
     u.plugin(server({communication: comm}));
-    u.plugin(relations([{AtoB: 'likes', BtoA: 'likedBy', Bs: 'liked', As: 'likers'}]));
+    u.plugin(relations());
+    u.define({
+      relations: [
+        {AtoB: 'likes', BtoA: 'likedBy', Bs: 'liked', As: 'likers'}
+      ]
+    });
 
     comm.attach('test');
 
@@ -134,9 +139,12 @@ describe("Relations plugin", () => {
     let u = unison({
       doctor: {}, london: {}, tardis: {}, bobby: {}
     });
-    u.plugin(relations([
-      {AtoB: 'contains', BtoA: 'isIn', A: 'location', Bs: 'contents'}
-    ]));
+    u.plugin(relations());
+    u.define({
+      relations: [
+        {AtoB: 'contains', BtoA: 'isIn', A: 'location', Bs: 'contents'}
+      ]
+    });
 
     let [doctor, london, tardis, bobby] = _.map(['doctor', 'london', 'tardis', 'bobby'], (path) => u(path));
     london.now('contains', bobby);
@@ -153,9 +161,12 @@ describe("Relations plugin", () => {
     let u = unison({
       door: {}, redKnob: {}, blueKnob: {}
     });
-    u.plugin(relations([
-      {AtoB: 'opens', BtoA: 'openedBy', A: 'door', B: 'knob'}
-    ]));
+    u.plugin(relations());
+    u.define({
+      relations: [
+        {AtoB: 'opens', BtoA: 'openedBy', A: 'door', B: 'knob'}
+      ]
+    });
 
     let [door, redKnob, blueKnob] = _.map(['door', 'redKnob', 'blueKnob'], (path) => u(path));
     door.now('openedBy', redKnob);
@@ -196,6 +207,8 @@ function prepareUnisonInstance(rels) {
   let u = unison({
     tom: {}, jerry: {}, bob: {}, alice: {}
   });
-  u.plugin(relations(rels));
+  u.plugin(relations());
+  u.define({relations: rels});
+
   return u;
 }

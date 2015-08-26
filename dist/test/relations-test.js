@@ -115,7 +115,12 @@ describe("Relations plugin", function () {
       tom: {}, jerry: {} });
 
     u.plugin(server({ communication: comm }));
-    u.plugin(relations([{ AtoB: 'likes', BtoA: 'likedBy', Bs: 'liked', As: 'likers' }]));
+    u.plugin(relations());
+    u.define({ 
+      relations: [
+      { AtoB: 'likes', BtoA: 'likedBy', Bs: 'liked', As: 'likers' }] });
+
+
 
     comm.attach('test');
 
@@ -134,8 +139,11 @@ describe("Relations plugin", function () {
     var u = unison({ 
       doctor: {}, london: {}, tardis: {}, bobby: {} });
 
-    u.plugin(relations([
-    { AtoB: 'contains', BtoA: 'isIn', A: 'location', Bs: 'contents' }]));var _$map = 
+    u.plugin(relations());
+    u.define({ 
+      relations: [
+      { AtoB: 'contains', BtoA: 'isIn', A: 'location', Bs: 'contents' }] });var _$map = 
+
 
 
     _.map(['doctor', 'london', 'tardis', 'bobby'], function (path) {return u(path);});var _$map2 = _slicedToArray(_$map, 4);var doctor = _$map2[0];var london = _$map2[1];var tardis = _$map2[2];var bobby = _$map2[3];
@@ -153,8 +161,11 @@ describe("Relations plugin", function () {
     var u = unison({ 
       door: {}, redKnob: {}, blueKnob: {} });
 
-    u.plugin(relations([
-    { AtoB: 'opens', BtoA: 'openedBy', A: 'door', B: 'knob' }]));var _$map3 = 
+    u.plugin(relations());
+    u.define({ 
+      relations: [
+      { AtoB: 'opens', BtoA: 'openedBy', A: 'door', B: 'knob' }] });var _$map3 = 
+
 
 
     _.map(['door', 'redKnob', 'blueKnob'], function (path) {return u(path);});var _$map32 = _slicedToArray(_$map3, 3);var door = _$map32[0];var redKnob = _$map32[1];var blueKnob = _$map32[2];
@@ -196,6 +207,8 @@ function prepareUnisonInstance(rels) {
   var u = unison({ 
     tom: {}, jerry: {}, bob: {}, alice: {} });
 
-  u.plugin(relations(rels));
+  u.plugin(relations());
+  u.define({ relations: rels });
+
   return u;}
 //# sourceMappingURL=relations-test.js.map

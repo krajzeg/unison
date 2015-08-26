@@ -1033,148 +1033,98 @@ module.exports = exports['default'];
 Object.defineProperty(exports, '__esModule', {
   value: true
 });
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
 exports['default'] = relations;
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+var _util = require('../util');
 
 var _ = require('lodash');
 
-function relations(rels) {
-  var plugin = new Relations(rels);
-  return function (u) {
-    return plugin.applyPlugin(u);
-  };
+function relations() {
+  return (0, _util.functionized)(RelationsPlugin, [], 'applyPlugin');
 }
 
-var Relations = (function () {
-  function Relations(relations) {
-    _classCallCheck(this, Relations);
+function RelationsPlugin() {
+  // nothing to initialize
+}
+RelationsPlugin.prototype = {
+  applyPlugin: function applyPlugin(u) {
+    this.u = u;
 
-    this.relations = relations;
-  }
-
-  _createClass(Relations, [{
-    key: 'processDefinitions',
-    value: function processDefinitions(typeName, defs, prototype) {
-      var u = this.u,
-          rels = defs.relations || {};
-
-      _.each(rels, function (rel) {
-        rel.withType = rel.withType || 'Node';
-        var aType = u.type(typeName),
-            bType = u.type(rel.withType);
-        var aProto = prototype,
-            bProto = bType.proto;
-
-        // add predicates
-        aProto[rel.AtoB] = makeCheckFn(rel.AtoB);
-        bProto[rel.BtoA] = makeCheckFn(rel.BtoA);
-
-        // add getters
-        if (rel.B) aProto[rel.B] = makeSingleGetter(rel.AtoB);
-        if (rel.Bs) aProto[rel.Bs] = makeMultipleGetter(rel.AtoB);
-        if (rel.A) bProto[rel.A] = makeSingleGetter(rel.BtoA);
-        if (rel.As) bProto[rel.As] = makeMultipleGetter(rel.BtoA);
-
-        // register relations for easy lookup
-        if (!aType.relations) aType.relations = {};
-        if (!bType.relations) bType.relations = {};
-
-        var aRels = aType.relations,
-            bRels = bType.relations || {};
-        var inverseRel = { withType: typeName, AtoB: rel.BtoA, BtoA: rel.AtoB, A: rel.B, B: rel.A, As: rel.Bs, Bs: rel.As };
-        aRels[rel.AtoB] = rel;bRels[rel.BtoA] = inverseRel;
+    // add the core 'relate' and 'cease' commands (or methods if not in a client/server environment)
+    var fallbackMethods = {};
+    if (u.serverSide || u.clientSide) {
+      u.define({
+        commands: {
+          now: relateWith,
+          noLonger: ceaseRelationWith
+        }
       });
-    }
-  }, {
-    key: 'applyPlugin',
-    value: function applyPlugin(u) {
-      this.u = u;
-
-      // add the core 'relate' and 'cease' commands (or methods if not in a client/server environment)
-      var fallbackMethods = {};
-      if (u.serverSide || u.clientSide) {
-        u.define({
-          commands: {
-            now: makeRelateFn(this),
-            noLonger: makeCeaseFn(this)
-          }
-        });
-      } else {
-        fallbackMethods = {
-          now: makeRelateFn(this),
-          noLonger: makeCeaseFn(this)
-        };
-      }
-
-      // apply definitions
-      u.define({ relations: this.relations });
-
-      // done!
-      return {
-        nodeMethods: _.extend(fallbackMethods),
-        onDefine: this.processDefinitions.bind(this)
+    } else {
+      fallbackMethods = {
+        now: relateWith,
+        noLonger: ceaseRelationWith
       };
     }
-  }]);
 
-  return Relations;
-})();
+    // done!
+    return {
+      nodeMethods: fallbackMethods,
+      onDefine: this.processDefinitions.bind(this)
+    };
+  },
 
-function makeRelateFn(relations) {
-  return function (name, otherSide) {
-    var rel = this.type().relations[name];
-    if (!rel) throw new Error(this.type().name + ' objects cannot enter into relations named \'' + name + '\'.');
+  processDefinitions: function processDefinitions(typeName, defs, prototype) {
+    var u = this.u,
+        rels = defs.relations || {};
 
-    var isSingularRelation = !!rel.B;
-    addRelation(this, name, otherSide, isSingularRelation);
-    var inverse = rel.BtoA,
-        isInverseSingular = rel.A;
-    addRelation(otherSide, inverse, this, isInverseSingular);
-  };
-}
+    _.each(rels, function (rel) {
+      rel.withType = rel.withType || 'Node';
+      var aType = u.type(typeName),
+          bType = u.type(rel.withType);
+      var aProto = prototype,
+          bProto = bType.proto;
 
-function makeCeaseFn(relations) {
-  return function (name, otherSide) {
-    var rel = this.type().relations[name];
-    if (!rel) throw new Error(this.type().name + ' objects cannot enter into relations named \'' + name + '\'.');
+      // add predicates
+      aProto[rel.AtoB] = makeCheckFn(rel.AtoB);
+      bProto[rel.BtoA] = makeCheckFn(rel.BtoA);
 
-    removeRelation(this, name, otherSide);
-    removeRelation(otherSide, rel.BtoA, this);
-  };
-}
+      // add getters
+      if (rel.B) aProto[rel.B] = makeSingleGetter(rel.AtoB);
+      if (rel.Bs) aProto[rel.Bs] = makeMultipleGetter(rel.AtoB);
+      if (rel.A) bProto[rel.A] = makeSingleGetter(rel.BtoA);
+      if (rel.As) bProto[rel.As] = makeMultipleGetter(rel.BtoA);
 
-function makeCheckFn(relationName) {
-  return function (otherSide) {
-    var path = otherSide.path();
-    var rels = this.get[relationName] || [];
-    return rels.indexOf(path) >= 0;
-  };
-}
+      // register relations for easy lookup
+      if (!aType.relations) aType.relations = {};
+      if (!bType.relations) bType.relations = {};
 
-function makeSingleGetter(relationName) {
-  return function () {
-    var rels = this.get[relationName];
-    var time = this.timestamp();
-    if (rels && rels.length > 0) return this.u(_.first(rels), time);else return undefined;
-  };
-}
-
-function makeMultipleGetter(relationName) {
-  return function () {
-    var _this = this;
-
-    var rels = this.get[relationName] || [];
-    var time = this.timestamp();
-    return _.map(rels, function (path) {
-      return _this.u(path, time);
+      var aRels = aType.relations,
+          bRels = bType.relations || {};
+      var inverseRel = { withType: typeName, AtoB: rel.BtoA, BtoA: rel.AtoB, A: rel.B, B: rel.A, As: rel.Bs, Bs: rel.As };
+      aRels[rel.AtoB] = rel;bRels[rel.BtoA] = inverseRel;
     });
-  };
+  }
+};
+
+function relateWith(name, otherSide) {
+  var rel = this.type().relations[name];
+  if (!rel) throw new Error(this.type().name + ' objects cannot enter into relations named \'' + name + '\'.');
+
+  var isSingularRelation = !!rel.B;
+  addRelation(this, name, otherSide, isSingularRelation);
+  var inverse = rel.BtoA,
+      isInverseSingular = rel.A;
+  addRelation(otherSide, inverse, this, isInverseSingular);
+}
+
+function ceaseRelationWith(name, otherSide) {
+  var rel = this.type().relations[name];
+  if (!rel) throw new Error(this.type().name + ' objects cannot enter into relations named \'' + name + '\'.');
+
+  removeRelation(this, name, otherSide);
+  removeRelation(otherSide, rel.BtoA, this);
 }
 
 function addRelation(fromObj, name, toObj) {
@@ -1217,9 +1167,37 @@ function removeRelation(fromObj, name, toObj) {
   fromObj.update(_defineProperty({}, name, _.without(rels, toPath)));
   fromObj.trigger('noLonger:' + name, { target: toObj });
 }
+
+function makeCheckFn(relationName) {
+  return function (otherSide) {
+    var path = otherSide.path();
+    var rels = this.get[relationName] || [];
+    return rels.indexOf(path) >= 0;
+  };
+}
+
+function makeSingleGetter(relationName) {
+  return function () {
+    var rels = this.get[relationName];
+    var time = this.timestamp();
+    if (rels && rels.length > 0) return this.u(_.first(rels), time);else return undefined;
+  };
+}
+
+function makeMultipleGetter(relationName) {
+  return function () {
+    var _this = this;
+
+    var rels = this.get[relationName] || [];
+    var time = this.timestamp();
+    return _.map(rels, function (path) {
+      return _this.u(path, time);
+    });
+  };
+}
 module.exports = exports['default'];
 
-},{"lodash":18}],10:[function(require,module,exports){
+},{"../util":15,"lodash":18}],10:[function(require,module,exports){
 (function (process){
 'use strict';
 
