@@ -201,6 +201,63 @@ describe("Relations plugin", () => {
     assert.ok(oldJerry.childOf(oldTom));
     assert.ok(!oldAlice.childOf(oldTom));
   });
+
+  it("should allow different types to use the same relation differently", () => {
+    let u = unison({
+      london: {_t: 'City'}, manchester: {_t: 'City'}, england: {_t: 'Country'},
+      bucket: {_t: 'Vessel'}, water: {_t: 'Liquid'}
+    });
+    u.plugin(relations());
+    u.define('City');
+    u.define('Country', {
+      relations: [{withType: 'City', AtoB: 'contains', BtoA: 'isIn', A: 'country', Bs: 'cities'}]
+    });
+    u.define('Liquid');
+    u.define('Vessel', {
+      relations: [{withType: 'Liquid', AtoB: 'contains', BtoA: 'isIn', A: 'vessel', B: 'liquid'}]
+    });
+
+    let [london, manchester, england, bucket, water] = _.map(['london', 'manchester', 'england', 'bucket', 'water'], (n) => u(n));
+
+    london.now('isIn', england);
+    england.now('contains', manchester);
+    bucket.now('contains', water);
+
+    assert.ok(england.contains(london));
+    assert.ok(england.contains(manchester));
+    assert.ok(bucket.contains(water));
+    assert.ok(london.isIn(england));
+    assert.ok(manchester.isIn(england));
+    assert.ok(water.isIn(bucket));
+
+    assert.sameMembers(_.map(england.cities(), (c) => c.path()), ['london', 'manchester']);
+    assert.ok(london.country().is(england));
+    assert.ok(manchester.country().is(england));
+    assert.ok(bucket.liquid().is(water));
+    assert.ok(water.vessel().is(bucket));
+  });
+
+  it("should reject mis-typed relations", () => {
+    let u = unison({
+      london: {_t: 'City'}, manchester: {_t: 'City'}, england: {_t: 'Country'},
+      bucket: {_t: 'Vessel'}, water: {_t: 'Liquid'}
+    });
+    u.plugin(relations());
+    u.define('City');
+    u.define('Country', {
+      relations: [{withType: 'City', AtoB: 'contains', BtoA: 'isIn', A: 'country', Bs: 'cities'}]
+    });
+    u.define('Liquid');
+    u.define('Vessel', {
+      relations: [{withType: 'Liquid', AtoB: 'contains', BtoA: 'isIn', A: 'vessel', B: 'liquid'}]
+    });
+
+    let [london, manchester, england, bucket, water] = _.map(['london', 'manchester', 'england', 'bucket', 'water'], (n) => u(n));
+
+    assert.throws(() => { bucket.now('contains', london); });
+    assert.throws(() => { england.now('contains', water); });
+    assert.throws(() => { bucket.now('isIn', manchester); });
+  });
 });
 
 function prepareUnisonInstance(rels) {

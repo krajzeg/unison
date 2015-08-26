@@ -199,7 +199,64 @@ describe("Relations plugin", function () {
     assert.ok(oldTom.fatherOf(oldJerry));
     assert.ok(!oldTom.fatherOf(oldAlice));
     assert.ok(oldJerry.childOf(oldTom));
-    assert.ok(!oldAlice.childOf(oldTom));});});
+    assert.ok(!oldAlice.childOf(oldTom));});
+
+
+  it("should allow different types to use the same relation differently", function () {
+    var u = unison({ 
+      london: { _t: 'City' }, manchester: { _t: 'City' }, england: { _t: 'Country' }, 
+      bucket: { _t: 'Vessel' }, water: { _t: 'Liquid' } });
+
+    u.plugin(relations());
+    u.define('City');
+    u.define('Country', { 
+      relations: [{ withType: 'City', AtoB: 'contains', BtoA: 'isIn', A: 'country', Bs: 'cities' }] });
+
+    u.define('Liquid');
+    u.define('Vessel', { 
+      relations: [{ withType: 'Liquid', AtoB: 'contains', BtoA: 'isIn', A: 'vessel', B: 'liquid' }] });var _$map4 = 
+
+
+    _.map(['london', 'manchester', 'england', 'bucket', 'water'], function (n) {return u(n);});var _$map42 = _slicedToArray(_$map4, 5);var london = _$map42[0];var manchester = _$map42[1];var england = _$map42[2];var bucket = _$map42[3];var water = _$map42[4];
+
+    london.now('isIn', england);
+    england.now('contains', manchester);
+    bucket.now('contains', water);
+
+    assert.ok(england.contains(london));
+    assert.ok(england.contains(manchester));
+    assert.ok(bucket.contains(water));
+    assert.ok(london.isIn(england));
+    assert.ok(manchester.isIn(england));
+    assert.ok(water.isIn(bucket));
+
+    assert.sameMembers(_.map(england.cities(), function (c) {return c.path();}), ['london', 'manchester']);
+    assert.ok(london.country().is(england));
+    assert.ok(manchester.country().is(england));
+    assert.ok(bucket.liquid().is(water));
+    assert.ok(water.vessel().is(bucket));});
+
+
+  it("should reject mis-typed relations", function () {
+    var u = unison({ 
+      london: { _t: 'City' }, manchester: { _t: 'City' }, england: { _t: 'Country' }, 
+      bucket: { _t: 'Vessel' }, water: { _t: 'Liquid' } });
+
+    u.plugin(relations());
+    u.define('City');
+    u.define('Country', { 
+      relations: [{ withType: 'City', AtoB: 'contains', BtoA: 'isIn', A: 'country', Bs: 'cities' }] });
+
+    u.define('Liquid');
+    u.define('Vessel', { 
+      relations: [{ withType: 'Liquid', AtoB: 'contains', BtoA: 'isIn', A: 'vessel', B: 'liquid' }] });var _$map5 = 
+
+
+    _.map(['london', 'manchester', 'england', 'bucket', 'water'], function (n) {return u(n);});var _$map52 = _slicedToArray(_$map5, 5);var london = _$map52[0];var manchester = _$map52[1];var england = _$map52[2];var bucket = _$map52[3];var water = _$map52[4];
+
+    assert.throws(function () {bucket.now('contains', london);});
+    assert.throws(function () {england.now('contains', water);});
+    assert.throws(function () {bucket.now('isIn', manchester);});});});
 
 
 

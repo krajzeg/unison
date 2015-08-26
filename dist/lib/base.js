@@ -130,7 +130,11 @@ Unison.prototype = {
     // determine arguments (either define({...}) or define('Type', {...}))
     var typeName = undefined;
     if (!definitions) {
-      typeName = 'Node';definitions = typeOrDefinitions;} else 
+      if (typeof typeOrDefinitions == 'string') {
+        typeName = typeOrDefinitions;definitions = {};} else 
+      {
+        typeName = 'Node';definitions = typeOrDefinitions;}} else 
+
     {
       typeName = typeOrDefinitions;}
 
