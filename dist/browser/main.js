@@ -156,10 +156,16 @@ Unison.prototype = {
 
   type: function type(name) {
     if (!this.types[name]) {
+      // create the type object
       this.types[name] = {
         name: name,
         definitions: {},
         proto: Object.create(this.types.Node.proto)
+      };
+
+      // create a spawner function for easy adding of typed objects
+      this[name] = function (properties) {
+        return _.extend(properties, { _t: name });
       };
     }
     return this.types[name];
