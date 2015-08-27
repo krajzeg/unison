@@ -50,7 +50,7 @@ function Unison() {
   // to add capabilities to all nodes
   this.types = {};
   this.types.Node = { name: 'Node', definitions: {}, proto: Object.create(UnisonNode.prototype) };
-  this.types.Root = { name: 'Root', definitions: {}, proto: Object.create(this.types.Node.proto) };
+  this.types.Root = { name: 'Root', definitions: { extend: 'Node' }, extend: this.types.Node, proto: Object.create(this.types.Node.proto) };
 
   // machinery behind the 'define' call
   this.onDefineCallbacks = [];
@@ -159,12 +159,15 @@ Unison.prototype = {
       // create the type object
       this.types[name] = {
         name: name,
-        definitions: {},
+        extend: this.types.Node,
+        definitions: { extend: 'Node' },
         proto: Object.create(this.types.Node.proto)
       };
 
       // create a spawner function for easy adding of typed objects
-      this[name] = function (properties) {
+      this[name] = function () {
+        var properties = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
         return _.extend(properties, { _t: name });
       };
     }
@@ -188,6 +191,9 @@ Unison.prototype = {
 
     // grab the type object
     var typeObj = this.type(typeName);
+
+    // go through the standard processing
+    this.processDefinitions(typeName, definitions, typeObj.proto);
 
     // go through all plugins that process definitions
     _.each(this.onDefineCallbacks, function (callback) {
@@ -236,6 +242,18 @@ Unison.prototype = {
     }
 
     return this;
+  },
+
+  // Standard handling of type definitions, only 'extend' for now.
+  processDefinitions: function processDefinitions(typeName, definitions, prototypes) {
+    // set up extension relations
+    var extend = definitions.extend;
+    if (extend) {
+      var child = this.type(typeName),
+          _parent = this.type(extend);
+      child['extends'] = _parent;
+      prototype.__proto__ = _parent.proto;
+    }
   }
 };
 
@@ -262,6 +280,25 @@ var UnisonNode = (function () {
     value: function type() {
       var typeName = this.get && this.get._t || 'Node';
       return this.u.type(typeName);
+    }
+  }, {
+    key: 'types',
+    value: function types() {
+      var types = [this.type()];
+      var type = types[0];
+      while (type.extend) {
+        type = type.extend;
+        types.push(type);
+      }
+      return types;
+    }
+  }, {
+    key: 'isA',
+    value: function isA(typeName) {
+      var types = this.types();
+      return types.filter(function (t) {
+        return t.name == typeName;
+      }).length > 0;
     }
   }, {
     key: 'id',
@@ -1118,9 +1155,18 @@ RelationsPlugin.prototype = {
   }
 };
 
+function findRelation(node, relationName) {
+  var type = node.type();
+  while (type) {
+    if (type.relations && type.relations[relationName]) return type.relations[relationName];
+    type = type.extend;
+  }
+
+  throw new Error(node.type().name + ' objects cannot enter into relations named \'' + relationName + '\'.');
+}
+
 function relateWith(name, otherSide) {
-  var rel = this.type().relations[name];
-  if (!rel) throw new Error(this.type().name + ' objects cannot enter into relations named \'' + name + '\'.');
+  var rel = findRelation(this, name);
 
   var isSingularRelation = !!rel.B;
   addRelation(this, name, otherSide, isSingularRelation);
@@ -1130,8 +1176,7 @@ function relateWith(name, otherSide) {
 }
 
 function ceaseRelationWith(name, otherSide) {
-  var rel = this.type().relations[name];
-  if (!rel) throw new Error(this.type().name + ' objects cannot enter into relations named \'' + name + '\'.');
+  var rel = findRelation(this, name);
 
   removeRelation(this, name, otherSide);
   removeRelation(otherSide, rel.BtoA, this);
@@ -1145,9 +1190,8 @@ function addRelation(fromObj, name, toObj) {
 
   var fromType = fromObj.type(),
       toType = toObj.type();
-  var rel = fromType.relations[name];
-  if (!rel) throw new Error('Object of type \'' + fromType.name + '\' cannot enter relations named \'' + name + '\'.');
-  if (rel.withType != toType.name) throw new Error(fromType.name + ' objects enter \'' + name + '\' relations only with ' + rel.withType + ' objects.');
+  var rel = findRelation(fromObj, name);
+  if (!toObj.isA(rel.withType)) throw new Error(fromType.name + ' objects enter \'' + name + '\' relations only with ' + rel.withType + ' objects.');
 
   var currentRels = fromObj.get[name] || [];
   if (_.contains(currentRels, toPath)) throw new Error('Relation \'' + fromObj.path() + ' ' + name + ' ' + toPath + '\' already exists.');

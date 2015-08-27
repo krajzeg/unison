@@ -258,6 +258,31 @@ describe("Relations plugin", () => {
     assert.throws(() => { england.now('contains', water); });
     assert.throws(() => { bucket.now('isIn', manchester); });
   });
+
+  it("should allow inheritance of relations from Node", () => {
+    let u = unison({});
+    u.plugin(relations());
+    u.define('Vegetable');
+    u.define('Node', {
+      relations: [{AtoB: 'contains', BtoA: 'isIn', A: 'location', B: 'content'}]
+    });
+
+    let bag = u().add('bag', {}), box = u().add('box', {});
+    let cucumber = u().add('cucumber', u.Vegetable({}));
+    let tomato = u().add('tomato', u.Vegetable({}));
+    let seed1 = u().add({}), seed2 = u().add({});
+
+    bag.now('contains', cucumber);
+    tomato.now('isIn', box);
+
+    cucumber.now('contains', seed1);
+    seed2.now('isIn', tomato);
+
+    assert.ok(bag.content().is(cucumber));
+    assert.ok(box.content().is(tomato));
+    assert.ok(cucumber.content().is(seed1));
+    assert.ok(tomato.content().is(seed2));
+  });
 });
 
 function prepareUnisonInstance(rels) {
