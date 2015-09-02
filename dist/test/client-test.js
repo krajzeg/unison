@@ -119,6 +119,16 @@ describe("Client plugin", function () {
     assert.ok(listener.calledOnce);});
 
 
+  it("should produce the same IDs as the server after being seeded", function () {
+    var comm = new CommunicationMock();
+    var u = unison({});
+    u.plugin(client({ communication: comm }));
+
+    comm.pushServerCommand('_seed', '', { _nextId: 6, bird: { wingspan: 6 }, seeded: true });
+
+    assert.equal(u().add({}).id(), '6');});
+
+
   it("should serialize objects in intent arguments correctly", function () {
     var comm = new CommunicationMock();
 

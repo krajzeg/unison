@@ -9,9 +9,8 @@
 Unison;function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { 'default': obj };}function _defineProperty(obj, key, value) {if (key in obj) {Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });} else {obj[key] = value;}return obj;}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError('Cannot call a class as a function');}}var _util = require('./util');var _immutableStates = require('./immutable-states');var _events3 = require('./events');var _events4 = _interopRequireDefault(_events3); // Main Unison object.
 // Uses classical instead of ES6 classes to allow Unison.apply(...) down the road.
 var _ = require('lodash');function Unison() {var initialState = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];this._events = new _events4['default'](this);
-  this._states = { 0: _.extend(initialState, { _t: 'Root' }) };
+  this._states = { 0: _.extend(initialState, { _t: 'Root', _nextId: 1 }) };
   this._current = 0;
-  this._nextId = 1;
 
   this.config = _.defaults(options, { 
     backlogSize: 1000 });
@@ -89,7 +88,8 @@ Unison.prototype = {
 
 
   nextId: function nextId() {
-    return (this._nextId++).toString();}, 
+    var id = this.currentState()._nextId++;
+    return id.toString();}, 
 
 
   registerGlobalProperties: function registerGlobalProperties(props) {

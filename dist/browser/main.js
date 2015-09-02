@@ -33,9 +33,8 @@ function Unison() {
 
   this._events = new _events4['default'](this);
 
-  this._states = { 0: _.extend(initialState, { _t: 'Root' }) };
+  this._states = { 0: _.extend(initialState, { _t: 'Root', _nextId: 1 }) };
   this._current = 0;
-  this._nextId = 1;
 
   this.config = _.defaults(options, {
     backlogSize: 1000
@@ -127,7 +126,8 @@ Unison.prototype = {
   },
 
   nextId: function nextId() {
-    return (this._nextId++).toString();
+    var id = this.currentState()._nextId++;
+    return id.toString();
   },
 
   registerGlobalProperties: function registerGlobalProperties(props) {

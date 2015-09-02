@@ -139,7 +139,7 @@ describe("Server plugin", () => {
     let messages = comm.messagesSentTo('client1').slice(1); // remove the _seed command
     assert.equal(messages.length, 1);
     assert.deepEqual(messages[0], ['c', 'frob', '', []]);
-    assert.deepEqual(u().state(), {_t: 'Root', frobbed: true, futzed: true});
+    assert.deepEqual(u().state(), {_t: 'Root', _nextId: 1, frobbed: true, futzed: true});
   });
 
   it("should not send commands to clients that have already detached", () => {
@@ -182,7 +182,7 @@ describe("Server plugin", () => {
 
     var messages = comm.messagesSentTo('client1');
     assert.deepEqual(messages, [
-      ['c', '_seed', '', [{_t: 'Root', bird: {wingspan: 6}}]]
+      ['c', '_seed', '', [{_t: 'Root', _nextId: 1, bird: {wingspan: 6}}]]
     ]);
   });
 
@@ -199,7 +199,23 @@ describe("Server plugin", () => {
 
     var messages = comm.messagesSentTo('client1');
     assert.deepEqual(messages, [
-      ['c', '_seed', '', [{_t: 'Root', answer: 42}]]
+      ['c', '_seed', '', [{_t: 'Root', _nextId: 1, answer: 42}]]
+    ]);
+  });
+
+  it("should correctly send the next ID to be used when seeding", () => {
+    let comm = new CommunicationMock();
+    let u = unison({});
+    u.plugin(server({communication: comm}));
+
+    // add two objects, generate two IDs
+    u().add({});
+    u().add({});
+
+    comm.attach('client1');
+    var messages = comm.messagesSentTo('client1');
+    assert.deepEqual(messages, [
+      ['c', '_seed', '', [{_t: 'Root', _nextId: 3, '1': {}, '2': {}}] ]
     ]);
   });
 
