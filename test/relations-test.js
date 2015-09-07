@@ -283,6 +283,22 @@ describe("Relations plugin", () => {
     assert.ok(cucumber.content().is(seed1));
     assert.ok(tomato.content().is(seed2));
   });
+
+  it("should automatically sever relations to destroyed objects", () => {
+    let u = prepareUnisonInstance([
+      {AtoB: 'fatherOf', BtoA: 'childOf', A: 'father', Bs: 'children'}
+    ]);
+    let tom = u('tom'), jerry = u('jerry'), alice = u('alice'), bob = u('bob');
+
+    tom.now('fatherOf', jerry);
+    bob.now('fatherOf', alice);
+
+    jerry.destroy();
+    bob.destroy();
+
+    assert.deepEqual(tom.children(), []);
+    assert.equal(alice.father(), undefined);
+  });
 });
 
 function prepareUnisonInstance(rels) {

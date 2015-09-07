@@ -107,13 +107,39 @@ describe("When children are removed", () => {
     });
   });
 
-  it("a correct 'destroyed' event should trigger on the child", () => {
-    let spy = sinon.spy();
+  it("a correct 'destroying' and 'destroyed' event should trigger on the child", () => {
+    let spy1 = sinon.spy(), spy2 = sinon.spy();
 
-    u('food.apple.seed.inside').on('destroyed', spy);
+    u('food.apple.seed.inside').on('destroying', spy1);
+    u('food.apple.seed.inside').on('destroyed', spy2);
     u('food.apple.seed.inside').destroy();
 
-    assert.ok(spy.calledOnce);
+    assert.ok(spy1.calledOnce);
+    assert.ok(spy2.calledOnce);
+  });
+
+  it("'destroying' events should trigger while the object still exists", () => {
+    let state, snapshotState;
+    u('food.apple.seed').on('destroying', (evt) => {
+      state = evt.source.get; snapshotState = evt.snapshot.get;
+    });
+
+    u('food.apple.seed').destroy();
+
+    assert.ok(state && state.inside);
+    assert.ok(snapshotState && snapshotState.inside);
+  });
+
+  it("'destroyed' events should trigger when the object is already removed", () => {
+    let state = "listener not called", snapshotState = "listener not called";
+    u('food.apple.seed').on('destroyed', (evt) => {
+      state = evt.source.get; snapshotState = evt.snapshot.get;
+    });
+
+    u('food.apple.seed').destroy();
+
+    assert.strictEqual(state, undefined);
+    assert.strictEqual(snapshotState, undefined);
   });
 
   it("'destroyed' events should trigger for nested objects", () => {

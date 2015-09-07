@@ -429,13 +429,13 @@ var UnisonNode = (function () {
 
       // store events for later, as the object themselves will disappear
       var pathToChild = (0, _util.childPath)(this._path, id);
-      var events = this.u.collectEvents(pathToChild, 'destroyed');
+      var preEvents = this.u.collectEvents(pathToChild, 'destroying');
+      var postEvents = this.u.collectEvents(pathToChild, 'destroyed');
 
-      // remove the object
+      // remove the object, triggering events along the way
+      this.u._events.triggerAll(preEvents);
       this.u.applyChange(this._path, {}, [id]);
-
-      // trigger the events
-      this.u._events.triggerAll(events);
+      this.u._events.triggerAll(postEvents);
 
       // done
       return true;
@@ -1115,6 +1115,9 @@ RelationsPlugin.prototype = {
       };
     }
 
+    // add the global 'destroying' listener so relations are cleaned up before object destruction
+    u.listen('**', 'destroying', relationPluginOnDestroyListener);
+
     // done!
     return {
       nodeMethods: fallbackMethods,
@@ -1186,14 +1189,15 @@ function addRelation(fromObj, name, toObj) {
   var removePreviousRelations = arguments.length <= 3 || arguments[3] === undefined ? false : arguments[3];
 
   var u = fromObj.u,
-      toPath = toObj.path();
+      toPath = toObj.path(),
+      propName = prop(name);
 
   var fromType = fromObj.type(),
       toType = toObj.type();
   var rel = findRelation(fromObj, name);
   if (!toObj.isA(rel.withType)) throw new Error(fromType.name + ' objects enter \'' + name + '\' relations only with ' + rel.withType + ' objects.');
 
-  var currentRels = fromObj.get[name] || [];
+  var currentRels = fromObj.get[propName] || [];
   if (_.contains(currentRels, toPath)) throw new Error('Relation \'' + fromObj.path() + ' ' + name + ' ' + toPath + '\' already exists.');
 
   if (removePreviousRelations && currentRels.length) {
@@ -1208,31 +1212,32 @@ function addRelation(fromObj, name, toObj) {
 
   var updatedRels = currentRels.concat([toObj.path()]);
 
-  fromObj.update(_defineProperty({}, name, updatedRels));
+  fromObj.update(_defineProperty({}, propName, updatedRels));
   fromObj.trigger('now:' + name, { target: toObj });
 }
 
 function removeRelation(fromObj, name, toObj) {
-  var toPath = toObj.path();
+  var toPath = toObj.path(),
+      propName = prop(name);
 
-  var rels = fromObj.get[name] || [];
+  var rels = fromObj.get[propName] || [];
   if (!_.contains(rels, toPath)) throw new Error('Relation \'' + fromObj.path() + ' ' + name + ' ' + toPath + '\' can\'t be removed because it doesn\'t exist.');
 
-  fromObj.update(_defineProperty({}, name, _.without(rels, toPath)));
+  fromObj.update(_defineProperty({}, propName, _.without(rels, toPath)));
   fromObj.trigger('noLonger:' + name, { target: toObj });
 }
 
 function makeCheckFn(relationName) {
   return function (otherSide) {
     var path = otherSide.path();
-    var rels = this.get[relationName] || [];
+    var rels = this.get[prop(relationName)] || [];
     return rels.indexOf(path) >= 0;
   };
 }
 
 function makeSingleGetter(relationName) {
   return function () {
-    var rels = this.get[relationName];
+    var rels = this.get[prop(relationName)];
     var time = this.timestamp();
     if (rels && rels.length > 0) return this.u(_.first(rels), time);else return undefined;
   };
@@ -1242,12 +1247,36 @@ function makeMultipleGetter(relationName) {
   return function () {
     var _this = this;
 
-    var rels = this.get[relationName] || [];
+    var propName = prop(relationName);
+    var rels = this.get[propName] || [];
     var time = this.timestamp();
     return _.map(rels, function (path) {
       return _this.u(path, time);
     });
   };
+}
+
+function prop(relationName) {
+  return "rel_" + relationName;
+}
+
+function relationPluginOnDestroyListener(evt) {
+  // this runs whenever an object is destroyed and ensures that all relations this object had
+  // are severed
+  var object = evt.source,
+      u = object.u;
+  _.keys(object.get || {}).forEach(function (propertyName) {
+    if (/^rel_.*/.test(propertyName)) {
+      (function () {
+        // this is a relation, we should sever all instances of it
+        var relatedPaths = object.get[propertyName],
+            relation = propertyName.substring(4);
+        relatedPaths.forEach(function (path) {
+          return object.noLonger(relation, u(path));
+        });
+      })();
+    }
+  });
 }
 module.exports = exports['default'];
 
