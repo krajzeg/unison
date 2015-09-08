@@ -512,7 +512,7 @@ function validateId(id) {
 }
 module.exports = exports['default'];
 
-},{"./events":4,"./immutable-states":5,"./util":15,"lodash":18}],2:[function(require,module,exports){
+},{"./events":4,"./immutable-states":5,"./util":16,"lodash":19}],2:[function(require,module,exports){
 // Root file for the browser version of Unison.
 'use strict';
 
@@ -685,7 +685,7 @@ var UnisonEvent = (function () {
 
 module.exports = exports['default'];
 
-},{"./util":15,"lodash":18}],5:[function(require,module,exports){
+},{"./util":16,"lodash":19}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -738,7 +738,7 @@ function stateWithDelete(state, path) {
   return stateWithUpdate(state, parent, {}, [id]);
 }
 
-},{"./util":15,"lodash":18}],6:[function(require,module,exports){
+},{"./util":16,"lodash":19}],6:[function(require,module,exports){
 'use strict';
 
 var _ = require('lodash');
@@ -758,10 +758,11 @@ module.exports.views = require('./plugins/views');
 module.exports.relations = require('./plugins/relations');
 module.exports.templates = require('./plugins/templates');
 module.exports.rng = require('./plugins/rng');
+module.exports.properties = require('./plugins/properties');
 
 module.exports.UserError = require('./errors/user-error.js');
 
-},{"./base":1,"./errors/user-error.js":3,"./plugins/client":8,"./plugins/relations":9,"./plugins/rng":10,"./plugins/server":11,"./plugins/templates":12,"./plugins/views":13,"./util":15,"lodash":18}],7:[function(require,module,exports){
+},{"./base":1,"./errors/user-error.js":3,"./plugins/client":8,"./plugins/properties":9,"./plugins/relations":10,"./plugins/rng":11,"./plugins/server":12,"./plugins/templates":13,"./plugins/views":14,"./util":16,"lodash":19}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -875,7 +876,7 @@ function messageValid(message) {
   return true;
 }
 
-},{"../util":15,"lodash":18}],8:[function(require,module,exports){
+},{"../util":16,"lodash":19}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1074,7 +1075,48 @@ ClientPlugin.prototype = {
 };
 module.exports = exports['default'];
 
-},{"../util":15,"./client-server-base":7,"bluebird":16,"lodash":18}],9:[function(require,module,exports){
+},{"../util":16,"./client-server-base":7,"bluebird":17,"lodash":19}],9:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+exports['default'] = properties;
+
+var _util = require('../util');
+
+var _ = require('lodash');
+
+function properties() {
+  return (0, _util.functionized)(PropertiesPlugin, [], 'applyPlugin');
+}
+
+function PropertiesPlugin() {
+  // nothing to initialize
+}
+PropertiesPlugin.prototype = {
+  applyPlugin: function applyPlugin(u) {
+    this.u = u;
+
+    // we're basically allowing to define properties and that's it,
+    // a very simple plugin
+    return {
+      onDefine: this.processDefinitions.bind(this)
+    };
+  },
+
+  processDefinitions: function processDefinitions(typeName, defs, prototype) {
+    var props = defs.properties || {};
+
+    // properties are just methods with no magic about them
+    _.each(props, function (impl, name) {
+      prototype[name] = impl;
+    });
+  }
+};
+module.exports = exports['default'];
+
+},{"../util":16,"lodash":19}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1280,7 +1322,7 @@ function relationPluginOnDestroyListener(evt) {
 }
 module.exports = exports['default'];
 
-},{"../util":15,"lodash":18}],10:[function(require,module,exports){
+},{"../util":16,"lodash":19}],11:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -1388,7 +1430,7 @@ ClientRNGPlugin.prototype = _lodash2['default'].extend(Object.create(CommonRNG),
 module.exports = exports['default'];
 
 }).call(this,require('_process'))
-},{"../util":15,"_process":17,"lodash":18,"rng":22}],11:[function(require,module,exports){
+},{"../util":16,"_process":18,"lodash":19,"rng":23}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1622,7 +1664,7 @@ function defaultErrorHandler(err) {
 }
 module.exports = exports['default'];
 
-},{"../util":15,"./client-server-base":7,"bluebird":16,"lodash":18}],12:[function(require,module,exports){
+},{"../util":16,"./client-server-base":7,"bluebird":17,"lodash":19}],13:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1702,7 +1744,7 @@ function spawn(template, properties) {
 }
 module.exports = exports['default'];
 
-},{"../util":15,"lodash":18}],13:[function(require,module,exports){
+},{"../util":16,"lodash":19}],14:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1809,7 +1851,7 @@ function view() {
 }
 module.exports = exports['default'];
 
-},{"../task-queues":14,"../util":15,"lodash":18}],14:[function(require,module,exports){
+},{"../task-queues":15,"../util":16,"lodash":19}],15:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1912,7 +1954,7 @@ var Queue = (function () {
 
 exports.Queue = Queue;
 
-},{"bluebird":16}],15:[function(require,module,exports){
+},{"bluebird":17}],16:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1985,7 +2027,7 @@ function idFromPath(path) {
   }
 }
 
-},{"lodash":18}],16:[function(require,module,exports){
+},{"lodash":19}],17:[function(require,module,exports){
 (function (process,global){
 /* @preserve
  * The MIT License (MIT)
@@ -6845,7 +6887,7 @@ module.exports = ret;
 },{"./es5.js":14}]},{},[4])(4)
 });                    ;if (typeof window !== 'undefined' && window !== null) {                               window.P = window.Promise;                                                     } else if (typeof self !== 'undefined' && self !== null) {                             self.P = self.Promise;                                                         }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":17}],17:[function(require,module,exports){
+},{"_process":18}],18:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -6937,7 +6979,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 (function (global){
 /**
  * @license
@@ -19292,7 +19334,7 @@ process.umask = function() { return 0; };
 }.call(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 (function() {
   
   var Random
@@ -19385,7 +19427,7 @@ process.umask = function() { return 0; };
   }
   
 })()
-},{"../":22}],20:[function(require,module,exports){
+},{"../":23}],21:[function(require,module,exports){
 (function() {
   
   var Random
@@ -19437,7 +19479,7 @@ process.umask = function() { return 0; };
   }
   
 })()
-},{"../":22}],21:[function(require,module,exports){
+},{"../":23}],22:[function(require,module,exports){
 (function() {
   
   var Random
@@ -19499,7 +19541,7 @@ process.umask = function() { return 0; };
   }
   
 })()
-},{"../":22}],22:[function(require,module,exports){
+},{"../":23}],23:[function(require,module,exports){
 function Random() {
   this._normal = null
 }
@@ -19667,4 +19709,4 @@ if( typeof module !== 'undefined' ) {
   
 }
 
-},{"./lib/mersenne-twister":19,"./lib/park-miller":20,"./lib/xor":21}]},{},[2]);
+},{"./lib/mersenne-twister":20,"./lib/park-miller":21,"./lib/xor":22}]},{},[2]);
