@@ -21,6 +21,12 @@ describe("Templates plugin", function () {
     assert.equal(u('goblin').get.template, 'creatures.goblin');});
 
 
+  it("should do nothing to objects that don't want templates", function () {
+    u().add('banana', { juiciness: 7 });
+    assert.ok(u('banana').get);
+    assert.equal(u('banana').get.juiciness, 7);});
+
+
   it("should expose a spawn() method to easily create templated objects", function () {
     u().spawn('creatures.goblin', { life: 12 });
     assert.equal(u('goblin#1').get.name, 'Goblin');

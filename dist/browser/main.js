@@ -1724,7 +1724,7 @@ TemplatesPlugin.prototype = {
 
 function applyTemplateIfNeeded(templates, obj) {
   // does this object want us to do something?
-  if (!(0, _util.isObject)(obj) || !obj.template) return;
+  if (!(0, _util.isObject)(obj) || !obj.template) return obj;
 
   // find the right template
   var templateName = obj.template;
