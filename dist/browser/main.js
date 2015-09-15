@@ -715,7 +715,7 @@ function stateWithUpdate(_x2, _x3, _x4) {
     var currentObject = path ? _.get(state, path) : state;
     if (!(0, _util.isObject)(currentObject)) throw new Error('Cannot apply update at \'' + path + '\': the thing under this path is not an object.');
 
-    var changedObject = _.extend({}, currentObject, changedProperties);
+    var changedObject = _.extend(Object.create(Object.getPrototypeOf(currentObject)), currentObject, changedProperties);
     if (deletedProperties) deletedProperties.forEach(function (prop) {
       delete changedObject[prop];
     });

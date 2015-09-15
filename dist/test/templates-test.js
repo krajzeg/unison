@@ -27,6 +27,13 @@ describe("Templates plugin", function () {
     assert.equal(u('banana').get.juiciness, 7);});
 
 
+  it("should keep the template after updates", function () {
+    var goblin = u().add('goblin', { template: 'creatures.goblin', life: 12 });
+    goblin.update({ life: 6 });
+    assert.equal(goblin.get.life, 6);
+    assert.equal(goblin.get.name, 'Goblin');});
+
+
   it("should expose a spawn() method to easily create templated objects", function () {
     u().spawn('creatures.goblin', { life: 12 });
     assert.equal(u('goblin#1').get.name, 'Goblin');

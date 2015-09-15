@@ -12,7 +12,7 @@ function stateWithUpdate(_x2, _x3, _x4) {var _arguments = arguments;var _again =
 
 
 
-    changedObjectId = _parent = undefined;_again = false;var deletedProperties = _arguments.length <= 3 || _arguments[3] === undefined ? undefined : _arguments[3];var currentObject = path ? _.get(state, path) : state;if (!(0, _util.isObject)(currentObject)) throw new Error('Cannot apply update at \'' + path + '\': the thing under this path is not an object.');var changedObject = _.extend({}, currentObject, changedProperties);if (deletedProperties) deletedProperties.forEach(function (prop) {delete changedObject[prop];});if (path != '') {var changedObjectId = (0, _util.idFromPath)(path), _parent = (0, _util.parentPath)(path);_arguments = [_x2 = 
+    changedObjectId = _parent = undefined;_again = false;var deletedProperties = _arguments.length <= 3 || _arguments[3] === undefined ? undefined : _arguments[3];var currentObject = path ? _.get(state, path) : state;if (!(0, _util.isObject)(currentObject)) throw new Error('Cannot apply update at \'' + path + '\': the thing under this path is not an object.');var changedObject = _.extend(Object.create(Object.getPrototypeOf(currentObject)), currentObject, changedProperties);if (deletedProperties) deletedProperties.forEach(function (prop) {delete changedObject[prop];});if (path != '') {var changedObjectId = (0, _util.idFromPath)(path), _parent = (0, _util.parentPath)(path);_arguments = [_x2 = 
       state, _x3 = _parent, _x4 = _defineProperty({}, changedObjectId, changedObject)];_again = true;continue _function;} else 
     {
       return changedObject;}}}
