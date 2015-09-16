@@ -3,6 +3,11 @@ var assert = require('chai').assert;
 var unison = require('../lib');
 var templates = require('../lib').templates;
 
+var client = require('../lib').client;
+var CommunicationMock = require('./mocks/client-comm');
+
+
+
 describe("Templates plugin", function () {
   var u = undefined;
 
@@ -14,7 +19,7 @@ describe("Templates plugin", function () {
 
 
 
-  it("should automatically apply templates specified in add()-ed objects", function () {
+  it("should automatically apply templates to add()-ed objects", function () {
     u().add('goblin', { template: 'creatures.goblin', life: 12 });
     assert.equal(u('goblin').get.name, 'Goblin');
     assert.equal(u('goblin').get.life, 12);
@@ -32,6 +37,19 @@ describe("Templates plugin", function () {
     goblin.update({ life: 6 });
     assert.equal(goblin.get.life, 6);
     assert.equal(goblin.get.name, 'Goblin');});
+
+
+  it("should apply templates for objects seeded from server", function () {
+    var comm = new CommunicationMock();
+    u.plugin(client({ communication: comm }));
+
+    comm.pushServerCommand('_seed', '', { 
+      creatures: { 
+        creature1: { template: 'creatures.goblin', life: 10 } } });
+
+
+
+    assert.equal(u('creatures.creature1').get.name, 'Goblin');});
 
 
   it("should expose a spawn() method to easily create templated objects", function () {
