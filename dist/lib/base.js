@@ -258,7 +258,7 @@ UnisonNode = (function () {
 
 
     function is(otherNode) {
-      return this._path == otherNode._path;} }, { key: 'children', value: 
+      return otherNode && this._path == otherNode._path;} }, { key: 'children', value: 
 
 
     function children() {var _this5 = this;

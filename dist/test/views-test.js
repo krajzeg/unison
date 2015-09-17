@@ -57,7 +57,7 @@ describe("Views plugin", function () {
 
 
   describe("view()", function () {
-    it("should let you find views registered earlier with registerObject()", function () {
+    it("should let you find views registered earlier with registerView()", function () {
       var v = {};
       u('stuff').registerView(v);
       assert.equal(u('stuff').view(), v);});

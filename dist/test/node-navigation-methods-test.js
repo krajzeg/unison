@@ -61,8 +61,12 @@ describe("Node operations", function () {
       assert.ok(!u('creatures.goblin').is(u('creatures.orc')));});
 
     it("should return true for objects pointing to the same node at different timestamps", function () {
-      assert.ok(u('creatures.goblin').at(0).is(u('creatures.goblin')));});});
+      assert.ok(u('creatures.goblin').at(0).is(u('creatures.goblin')));});
 
+    /*it("should return false when asked if we are null or undefined", () => {
+      assert.ok(!u('creatures.goblin').is(null));
+      assert.ok(!u('creatures.goblin').is(undefined));
+    });*/});
 
 
   describe("children()", function () {
