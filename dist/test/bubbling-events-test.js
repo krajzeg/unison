@@ -93,5 +93,17 @@ describe("X.Y.** (double star) wildcard listeners", function () {
     u('bird.wings.left').update({ length: 30 });
 
     assert.ok(listenSpy.called);
-    assert.ok(onAnySpy.called);});});
+    assert.ok(onAnySpy.called);});
+
+
+  it('should be triggered after direct listeners by default, but with possibility to change this', function () {
+    var value = 1;
+
+    u('thing').on('created', function (evt) {value *= evt.snapshot.get.number;}); // default priority, 0
+    u('**').on('created', function (evt) {value += evt.snapshot.get.number;}, { priority: -3 }); // run first
+    u('**').on('created', function (evt) {value -= evt.snapshot.get.number;}); // run last
+
+    u().add('thing', { number: 3 });
+
+    assert.equal(value, 9);});});
 //# sourceMappingURL=bubbling-events-test.js.map

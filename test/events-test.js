@@ -33,6 +33,18 @@ describe("Multiple listeners per event", () => {
     assert.ok(spy1.calledTwice);
     assert.ok(spy2.calledTwice);
   });
+
+  it("should be executed in order of priority, if specified", () => {
+    let u = unison({});
+    let value = 1;
+    u('').on('updated', (evt) => { value *= evt.snapshot.get.number }); // default priority, 0
+    u('').on('updated', (evt) => { value += evt.snapshot.get.number }, {priority: -3}); // run first
+    u('').on('updated', (evt) => { value -= evt.snapshot.get.number }, {priority: 5});  // run last
+
+    u('').update({number: 3});
+
+    assert.equal(value, 9);
+  });
 });
 
 describe("Event objects passed to listeners", () => {

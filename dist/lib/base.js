@@ -368,28 +368,28 @@ UnisonNode = (function () {
       return this.parent().remove(this.id());} }, { key: 'on', value: 
 
 
-    function on(event, callback) {
-      this.u._events.listen(this._path, event, callback);} }, { key: 'off', value: 
+    function on(event, callback, options) {
+      this.u._events.listen(this._path, event, callback, options);} }, { key: 'off', value: 
 
 
     function off(event, callback) {
       this.u._events.unlisten(this._path, event, callback);} }, { key: 'onAny', value: 
 
 
-    function onAny(event, callback) {
-      this.u._events.listen((0, _util.childPath)(this._path, '**'), event, callback);} }, { key: 'offAny', value: 
+    function onAny(event, callback, options) {
+      this.u._events.listen((0, _util.childPath)(this._path, '**'), event, callback, options);} }, { key: 'offAny', value: 
 
 
     function offAny(event, callback) {
       this.u._events.unlisten((0, _util.childPath)(this._path, '**'), event, callback);} }, { key: 'onChild', value: 
 
 
-    function onChild(event, callback) {
+    function onChild(event, callback, options) {
       this.u._events.listen((0, _util.childPath)(this._path, '*'), event, callback);} }, { key: 'offChild', value: 
 
 
     function offChild(event, callback) {
-      this.u._events.unlisten((0, _util.childPath)(this._path, '*'), event, callback);} }, { key: 'trigger', value: 
+      this.u._events.unlisten((0, _util.childPath)(this._path, '*'), event, callback, options);} }, { key: 'trigger', value: 
 
 
     function trigger(event, payload) {

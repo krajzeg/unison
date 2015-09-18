@@ -95,5 +95,17 @@ describe("X.Y.** (double star) wildcard listeners", () => {
     assert.ok(listenSpy.called);
     assert.ok(onAnySpy.called);
   });
+
+  it('should be triggered after direct listeners by default, but with possibility to change this', () => {
+    let value = 1;
+
+    u('thing').on('created', (evt) => { value *= evt.snapshot.get.number }); // default priority, 0
+    u('**').on('created', (evt) => { value += evt.snapshot.get.number }, {priority: -3}); // run first
+    u('**').on('created', (evt) => { value -= evt.snapshot.get.number });  // run last
+
+    u().add('thing', {number: 3});
+
+    assert.equal(value, 9);
+  });
 });
 

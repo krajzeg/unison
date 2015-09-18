@@ -449,8 +449,8 @@ var UnisonNode = (function () {
     }
   }, {
     key: 'on',
-    value: function on(event, callback) {
-      this.u._events.listen(this._path, event, callback);
+    value: function on(event, callback, options) {
+      this.u._events.listen(this._path, event, callback, options);
     }
   }, {
     key: 'off',
@@ -459,8 +459,8 @@ var UnisonNode = (function () {
     }
   }, {
     key: 'onAny',
-    value: function onAny(event, callback) {
-      this.u._events.listen((0, _util.childPath)(this._path, '**'), event, callback);
+    value: function onAny(event, callback, options) {
+      this.u._events.listen((0, _util.childPath)(this._path, '**'), event, callback, options);
     }
   }, {
     key: 'offAny',
@@ -469,13 +469,13 @@ var UnisonNode = (function () {
     }
   }, {
     key: 'onChild',
-    value: function onChild(event, callback) {
+    value: function onChild(event, callback, options) {
       this.u._events.listen((0, _util.childPath)(this._path, '*'), event, callback);
     }
   }, {
     key: 'offChild',
     value: function offChild(event, callback) {
-      this.u._events.unlisten((0, _util.childPath)(this._path, '*'), event, callback);
+      this.u._events.unlisten((0, _util.childPath)(this._path, '*'), event, callback, options);
     }
   }, {
     key: 'trigger',
@@ -557,6 +557,8 @@ Object.defineProperty(exports, '__esModule', {
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var _util = require('./util');
@@ -581,16 +583,20 @@ var UnisonEvents = (function () {
   }, {
     key: 'listen',
     value: function listen(path, event, callback) {
+      var options = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
+
+      var priority = options.priority || 0;
+
       var key = this.key(path, event);
       var existingListeners = this._listeners[key] || [];
-      this._listeners[key] = existingListeners.concat([callback]);
+      this._listeners[key] = existingListeners.concat([{ callback: callback, priority: priority, path: path }]);
     }
   }, {
     key: 'unlisten',
     value: function unlisten(path, event, callback) {
       var key = this.key(path, event);
-      var listeners = (this._listeners[key] || []).filter(function (cb) {
-        return cb != callback;
+      var listeners = (this._listeners[key] || []).filter(function (l) {
+        return l.callback != callback;
       });
       if (listeners.length == 0) {
         delete this._listeners[key];
@@ -599,19 +605,13 @@ var UnisonEvents = (function () {
       }
     }
   }, {
-    key: 'handle',
-    value: function handle(path, eventObj) {
-      var key = this.key(path, eventObj.name);
-      var listeners = this._listeners[key];
-      if (listeners) {
-        listeners.map(function (l) {
-          try {
-            l(eventObj);
-          } catch (e) {
-            console.error('Error in listener in response to ' + path + '|' + eventObj.name);
-            console.error(e.stack || e);
-          }
-        });
+    key: 'executeListener',
+    value: function executeListener(listener, eventObj) {
+      try {
+        listener.callback(eventObj);
+      } catch (e) {
+        console.error('Error in listener in response to ' + listener.path + '|' + eventObj.name);
+        console.error(e.stack || e);
       }
     }
   }, {
@@ -624,6 +624,7 @@ var UnisonEvents = (function () {
       var source = this.u(path);
       var eventObj = new UnisonEvent(event, source, this.u.currentTime(), payload);
 
+      // gather all paths that should be considered in order
       var paths = undefined;
       if (path != '') {
         paths = [path, (0, _util.childPath)((0, _util.parentPath)(path), '*')]; // X.Y.Z, X.Y.*
@@ -638,8 +639,21 @@ var UnisonEvents = (function () {
         paths = ['', '**'];
       }
 
+      // grab listeners from all the paths
+      var listeners = [];
       paths.forEach(function (path) {
-        _this.handle(path, eventObj);
+        var _listeners;
+
+        var listenersForPath = _this._listeners[_this.key(path, event)];
+        if (listenersForPath) (_listeners = listeners).push.apply(_listeners, _toConsumableArray(listenersForPath));
+      });
+
+      // sort them by priority
+      listeners = _.sortBy(listeners, 'priority');
+
+      // execute them in turn
+      listeners.forEach(function (l) {
+        return _this.executeListener(l, eventObj);
       });
     }
   }, {
