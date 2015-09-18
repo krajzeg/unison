@@ -1689,7 +1689,9 @@ TemplatesPlugin.prototype = {
   applyPlugin: function applyPlugin(u) {
     this.u = u;
 
-    u.listen('**', 'created', this.applyTemplateIfNeeded.bind(this));
+    // register a listener that should *always* run first when an object is created,
+    // so that other listeners don't see an uninitialized state
+    u.listen('**', 'created', this.applyTemplateIfNeeded.bind(this), { priority: -10000 });
 
     return {
       methods: {
