@@ -52,6 +52,15 @@ describe("Templates plugin", () => {
     assert.equal(u('creatures.creature1').get.name, 'Goblin');
   });
 
+  it("should apply the template before 'created' listeners run", () => {
+    let names = {};
+    u().onChild('created', (evt) => {
+      names[evt.snapshot.path()] = evt.snapshot.get.name;
+    });
+    u().add('goblin', {template: 'creatures.goblin'});
+    assert.equal(names['goblin'], 'Goblin');
+  });
+
   it("should expose a spawn() method to easily create templated objects", () => {
     u().spawn('creatures.goblin', {life: 12});
     assert.equal(u('goblin#1').get.name, 'Goblin');

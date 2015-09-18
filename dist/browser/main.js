@@ -639,7 +639,7 @@ var UnisonEvents = (function () {
       }
 
       paths.forEach(function (path) {
-        if (!eventObj._handled) _this.handle(path, eventObj);
+        _this.handle(path, eventObj);
       });
     }
   }, {
@@ -658,30 +658,18 @@ var UnisonEvents = (function () {
 
 exports['default'] = UnisonEvents;
 
-var UnisonEvent = (function () {
-  function UnisonEvent(name, source, timestamp) {
-    var additionalProps = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
+var UnisonEvent = function UnisonEvent(name, source, timestamp) {
+  var additionalProps = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
 
-    _classCallCheck(this, UnisonEvent);
+  _classCallCheck(this, UnisonEvent);
 
-    this.name = name;
-    this.source = source;
-    this.snapshot = source.at(timestamp);
-    this.timestamp = timestamp;
-    this._handled = false;
+  this.name = name;
+  this.source = source;
+  this.snapshot = source.at(timestamp);
+  this.timestamp = timestamp;
 
-    _.extend(this, additionalProps);
-  }
-
-  _createClass(UnisonEvent, [{
-    key: 'stopBubbling',
-    value: function stopBubbling() {
-      this._handled = true;
-    }
-  }]);
-
-  return UnisonEvent;
-})();
+  _.extend(this, additionalProps);
+};
 
 module.exports = exports['default'];
 
